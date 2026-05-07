@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>VloerAssistent</title>
+<style>
+/* ── Reset & base ────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Roboto,sans-serif;background:#f0f0f0;color:#1a1a1a;width:100%;overflow-x:hidden;min-height:100vh}
+button,select,input,textarea{font-family:inherit;-webkit-appearance:none;appearance:none;border-radius:0}
+input[type="number"]{-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+/* ── Layout ──────────────────────────────────────────── */
+.app{width:100%;max-width:480px;margin:0 auto;background:#fff;min-height:100vh}
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.active{display:flex}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+
+/* ── Topbar ──────────────────────────────────────────── */
+.topbar{background:#BA7517;color:#fff;padding:14px 16px 12px;display:flex;align-items:center;gap:10px;min-height:54px;flex-shrink:0}
+.btn-back{background:none;border:none;color:#fff;font-size:26px;line-height:1;cursor:pointer;padding:4px 10px 4px 0;min-width:44px;min-height:44px;display:flex;align-items:center}
+.topbar-title{font-size:17px;font-weight:600;flex:1}
+.topbar-icon{font-size:22px}
+.btn-settings{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;margin-left:auto}
+
+/* ── Home header ─────────────────────────────────────── */
+.home-header{background:#BA7517;color:#fff;padding:22px 16px 18px;flex-shrink:0}
+.home-header h1{font-size:24px;font-weight:700;margin-bottom:2px}
+.home-header p{font-size:14px;opacity:.85}
+.project-pill{margin-top:12px;background:rgba(255,255,255,.18);border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.4}
+.project-pill strong{font-weight:700}
+
+/* ── Alert bar ───────────────────────────────────────── */
+.alert-bar{margin:12px 14px 0;border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+.alert-bar.warn{background:#FFF8EC;border:1px solid #FAC775}
+.alert-bar.err{background:#FDECEA;border:1px solid #F5C6C2}
+.alert-bar.ok{background:#EAF3DE;border:1px solid #C0DD97}
+.alert-bar .ai{font-size:18px;flex-shrink:0;margin-top:1px}
+.alert-bar .at{font-size:14px;line-height:1.5}
+.alert-bar.warn .at{color:#7A4F00}
+.alert-bar.err .at{color:#A32D2D}
+.alert-bar.ok .at{color:#3B6D11}
+
+/* ── Weather box ─────────────────────────────────────── */
+.weather-box{margin:12px 14px;background:#f7f7f7;border-radius:12px;padding:14px;cursor:pointer}
+.weather-lbl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.weather-refresh{font-size:14px;color:#BA7517}
+.weather-grid{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:6px}
+.weather-item .wsub{font-size:11px;color:#888;margin-bottom:4px}
+.weather-item .wval{font-size:22px;font-weight:700}
+
+/* ── Menu grid ───────────────────────────────────────── */
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px}
+.menu-btn{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:20px 10px 16px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;min-height:44px;transition:background .12s}
+.menu-btn:active{background:#f5f5f5;transform:scale(.98)}
+.menu-btn .ico{font-size:34px;line-height:1}
+.menu-btn .lbl{font-size:15px;font-weight:600;color:#1a1a1a}
+.menu-btn .sub{font-size:12px;color:#888}
+
+/* ── Bottom nav ──────────────────────────────────────── */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:#fff;border-top:1px solid #e5e5e5;z-index:200;padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-item{flex:1;padding:10px 4px 10px;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px}
+.nav-item .ni{font-size:24px;line-height:1}
+.nav-item .nl{font-size:10px;color:#888;font-weight:500}
+.nav-item.active .nl{color:#BA7517;font-weight:700}
+
+/* ── Search & filters ────────────────────────────────── */
+.search-bar{padding:14px 14px 8px}
+.search-input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #ddd;font-size:16px;background:#f7f7f7;color:#1a1a1a;outline:none;min-height:44px}
+.search-input:focus{border-color:#BA7517;background:#fff}
+.filter-row{display:flex;gap:8px;padding:0 14px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.chip{padding:9px 16px;border-radius:20px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;border:1px solid #ddd;background:#fff;color:#666;flex-shrink:0;min-height:44px;display:inline-flex;align-items:center}
+.chip.active{background:#BA7517;color:#fff;border-color:#BA7517}
+
+/* ── Product cards ───────────────────────────────────── */
+.prod-list{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.prod-card{background:#fff;border:1px solid #eee;border-radius:14px;padding:16px;cursor:pointer;min-height:44px;transition:background .1s}
+.prod-card:active{background:#f7f7f7}
+.prod-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
+.prod-name{font-weight:700;font-size:16px}
+.badge{font-size:12px;padding:4px 10px;border-radius:10px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.badge-epoxy{background:#E6F1FB;color:#185FA5}
+.badge-pu{background:#EAF3DE;color:#3B6D11}
+.badge-ucrete{background:#FAEEDA;color:#BA7517}
+.badge-egaline{background:#f0f0f0;color:#555}
+.prod-sub{font-size:13px;color:#666;margin-bottom:8px}
+.prod-meta{font-size:13px;color:#777;display:flex;flex-wrap:wrap;gap:6px 12px}
+
+/* ── Detail ──────────────────────────────────────────── */
+.detail-pad{padding:16px}
+.det-sec{margin-bottom:18px}
+.det-sec h3{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.spec-item{background:#f7f7f7;border-radius:10px;padding:12px}
+.spec-lbl{font-size:11px;color:#888;margin-bottom:4px}
+.spec-val{font-size:14px;font-weight:600;line-height:1.3}
+.temp-row{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#f7f7f7;border-radius:10px;margin-top:8px;font-size:14px;flex-wrap:wrap}
+.step-list{display:flex;flex-direction:column;gap:12px}
+.step-item{display:flex;gap:12px;align-items:flex-start}
+.step-num{width:30px;height:30px;border-radius:50%;background:#BA7517;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;margin-top:2px}
+.step-txt{font-size:14px;line-height:1.55;padding-top:4px;flex:1}
+.fout-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#FDECEA;border-radius:10px;margin-bottom:8px}
+.fout-item .fi{font-size:16px;flex-shrink:0}
+.fout-item .ft{font-size:14px;color:#A32D2D;line-height:1.45}
+.aandacht-box{background:#FFF8EC;border-radius:10px;padding:14px;margin-bottom:18px}
+.aandacht-lbl{font-size:11px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.aandacht-txt{font-size:14px;line-height:1.5}
+
+/* ── Forms ───────────────────────────────────────────── */
+.form-pad{padding:16px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:14px;font-weight:600;color:#444;margin-bottom:6px;display:block}
+.form-select,.form-input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #ddd;font-size:16px;background:#fff;color:#1a1a1a;outline:none;min-height:44px;-webkit-appearance:none}
+.form-select:focus,.form-input:focus{border-color:#BA7517}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.input-row .form-group{margin:0}
+.sec-hdr{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 10px;padding-bottom:5px;border-bottom:1px solid #eee}
+.sec-hdr:first-child{margin-top:0}
+textarea.form-input{min-height:80px;resize:vertical}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn-primary{width:100%;padding:15px;background:#BA7517;color:#fff;border:none;border-radius:10px;font-size:17px;font-weight:600;cursor:pointer;min-height:54px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:active{opacity:.85}
+.btn-green{background:#3B6D11}
+.btn-photo{width:100%;padding:14px;border:1.5px dashed #ccc;border-radius:10px;background:#f7f7f7;color:#888;font-size:15px;cursor:pointer;text-align:center;margin-bottom:12px;min-height:54px}
+
+/* ── Berekening resultaat ────────────────────────────── */
+.result-box{background:#EAF3DE;border:1px solid #c0dd97;border-radius:14px;padding:16px;margin-top:16px}
+.result-box h3{font-size:15px;font-weight:700;color:#3B6D11;margin-bottom:12px}
+.result-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #c0dd97;font-size:14px}
+.result-line:last-child{border-bottom:none;font-weight:700}
+.rl{color:#555}
+.rv{color:#3B6D11;font-weight:600}
+.laag-bar{height:26px;border-radius:6px;display:flex;align-items:center;padding-left:12px;font-size:12px;font-weight:600;color:#fff;margin-bottom:5px}
+.warn-box{background:#FFF8EC;border:1px solid #FAC775;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:14px;color:#7A4F00;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.err-box{background:#FDECEA;border:1px solid #F5C6C2;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:14px;color:#A32D2D;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.ok-box{background:#EAF3DE;border-radius:10px;padding:10px 14px;font-size:14px;color:#3B6D11;margin-bottom:10px}
+
+/* ── Dauwpunt ────────────────────────────────────────── */
+.dauwpunt-row{background:#E6F1FB;border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:15px;color:#185FA5;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.s-chip{display:inline-block;padding:5px 12px;border-radius:10px;font-size:13px;font-weight:700}
+.s-ok{background:#EAF3DE;color:#3B6D11}
+.s-warn{background:#FFF8EC;color:#BA7517}
+.s-err{background:#FDECEA;color:#A32D2D}
+
+/* ── Rapport ─────────────────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:#f7f7f7;border-radius:12px;padding:14px}
+.stat-lbl{font-size:12px;color:#888;margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:700;line-height:1.1}
+.stat-sub{font-size:12px;color:#888;margin-top:4px}
+.rapp-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #eee;font-size:15px;gap:8px}
+.rapp-row:last-child{border-bottom:none}
+.rapp-lbl{color:#666}
+.v-ok{color:#3B6D11;font-weight:600}
+.v-warn{color:#BA7517;font-weight:600}
+.v-err{color:#A32D2D;font-weight:600}
+.sec-title{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin:16px 0 10px}
+
+/* ── Instellingen modal ──────────────────────────────── */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 20px 40px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+.modal-close{float:right;background:none;border:none;font-size:24px;cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+
+/* ── Loading ─────────────────────────────────────────── */
+.loading-bar{height:3px;background:linear-gradient(90deg,#BA7517,#FAC775,#BA7517);background-size:200% 100%;animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sync-badge{font-size:11px;color:#888;text-align:center;padding:6px;display:flex;align-items:center;justify-content:center;gap:4px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ HOME ═══════════════════════════════════════════════ -->
+<div class="screen active" id="s-home">
+  <div class="home-header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><h1>VloerAssistent</h1><p>Goedemorgen, Teamleader</p></div>
+      <button class="btn-settings" onclick="openSettings()" aria-label="Instellingen">⚙️</button>
+    </div>
+    <div class="project-pill" id="active-project-pill">
+      <span style="opacity:.85">Actief project:</span> <strong id="active-project-name">Laden...</strong>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div id="weather-alert-wrap"></div>
+    <div class="weather-box" onclick="refreshWeather()">
+      <div class="weather-lbl">
+        <span>📍 LOKAAL WEER</span>
+        <span class="weather-refresh" id="weather-time">Tik om te vernieuwen</span>
+      </div>
+      <div class="weather-grid" id="weather-grid">
+        <div class="weather-item"><div class="wsub">Temp.</div><div class="wval" id="w-temp">–</div></div>
+        <div class="weather-item"><div class="wsub">RV</div><div class="wval" id="w-rv">–</div></div>
+        <div class="weather-item"><div class="wsub">Dauwpunt</div><div class="wval" id="w-dp">–</div></div>
+      </div>
+      <div id="weather-desc" style="font-size:12px;color:#888;margin-top:8px;text-align:center"></div>
+    </div>
+    <div class="menu-grid">
+      <button class="menu-btn" onclick="go('s-producten')"><div class="ico">📦</div><div class="lbl">Producten</div><div class="sub">Info & instructies</div></button>
+      <button class="menu-btn" onclick="go('s-berekening')"><div class="ico">🔢</div><div class="lbl">Berekening</div><div class="sub">Hoeveelheden</div></button>
+      <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Opvolging werf</div></button>
+      <button class="menu-btn" onclick="go('s-rapport')"><div class="ico">📊</div><div class="lbl">Dagrapport</div><div class="sub">Mijn registraties</div></button>
+    </div>
+    <div class="sync-badge" id="sync-status">🔄 Data laden...</div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
+    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+  </div>
+</div>
+
+<!-- ══ PRODUCTEN ═══════════════════════════════════════════ -->
+<div class="screen" id="s-producten">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Producten</div>
+    <span class="topbar-icon">📦</span>
+  </div>
+  <div class="scroll-area">
+    <div class="search-bar"><input class="search-input" type="text" placeholder="Zoek product..." id="prod-search" oninput="renderProds()" autocomplete="off" autocorrect="off"></div>
+    <div class="filter-row">
+      <div class="chip active" onclick="setFilter(this,'alle')">Alle</div>
+      <div class="chip" onclick="setFilter(this,'epoxy')">Epoxy</div>
+      <div class="chip" onclick="setFilter(this,'pu')">PU</div>
+      <div class="chip" onclick="setFilter(this,'ucrete')">Ucrete</div>
+      <div class="chip" onclick="setFilter(this,'egaline')">Egaline</div>
+    </div>
+    <div class="prod-list" id="prod-list"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item active"><div class="ni">📦</div><span class="nl">Producten</span></button>
+    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+  </div>
+</div>
+
+<!-- ══ PRODUCT DETAIL ══════════════════════════════════════ -->
+<div class="screen" id="s-proddetail">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-producten')" aria-label="Terug">←</button>
+    <div class="topbar-title" id="detail-title">Product</div>
+  </div>
+  <div class="scroll-area"><div class="detail-pad" id="detail-body"></div></div>
+</div>
+
+<!-- ══ BEREKENING ══════════════════════════════════════════ -->
+<div class="screen" id="s-berekening">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Berekening</div>
+    <span class="topbar-icon">🔢</span>
+  </div>
+  <div class="scroll-area">
+    <div class="form-pad">
+      <div class="form-group">
+        <label class="form-label">Type ondervloer</label>
+        <select class="form-select" id="c-vloer">
+          <option value="">Kies ondergrond...</option>
+          <option value="nieuwbeton">Nieuw beton (&lt; 28 dagen)</option>
+          <option value="oudbeton">Oud beton (&gt; 28 dagen)</option>
+          <option value="coating">Bestaande coating</option>
+          <option value="tegel">Tegel</option>
+          <option value="onbekend">Onbekend / te beoordelen</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Systeem / product</label>
+        <select class="form-select" id="c-systeem">
+          <option value="">Kies systeem...</option>
+          <option value="epoxy-giet">Epoxy gietvloer – Sikafloor-264</option>
+          <option value="epoxy-schraap">Epoxy schraaplaag – Sikafloor-220W</option>
+          <option value="pu-top">PU topcoat – Sikafloor-359N</option>
+          <option value="ucrete">Ucrete UD 200 (PU-cement)</option>
+          <option value="weber-egal">Weber.floor 4310 (egaline)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Oppervlakte (m²)</label>
+        <input type="number" class="form-input" id="c-opp" placeholder="bv. 250" min="1" inputmode="numeric">
+      </div>
+      <button class="btn-primary" onclick="berekenAlles()">Bereken hoeveelheden</button>
+      <div id="calc-result"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
+    <button class="nav-item active"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+  </div>
+</div>
+
+<!-- ══ DAGREGISTRATIE ══════════════════════════════════════ -->
+<div class="screen" id="s-registratie">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Dagregistratie</div>
+    <span class="topbar-icon">📋</span>
+  </div>
+  <div class="scroll-area">
+    <div class="form-pad">
+      <div class="sec-hdr">Algemeen</div>
+      <div class="form-group">
+        <label class="form-label">Projectnaam</label>
+        <input type="text" class="form-input" id="r-project" value="">
+      </div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Datum</label>
+          <input type="date" class="form-input" id="r-datum">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teamleader</label>
+          <select class="form-select" id="r-teamleader">
+            <option>Jan V.</option><option>Peter D.</option><option>Luc M.</option>
+          </select>
+        </div>
+      </div>
+      <div class="sec-hdr">Uitvoering</div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Opp. uitgevoerd (m²)</label>
+          <input type="number" class="form-input" id="r-opp" placeholder="m²" inputmode="numeric" oninput="checkVerbruik()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product gebruikt</label>
+          <select class="form-select" id="r-prod" onchange="checkVerbruik()">
+            <option value="epoxy-giet">Sikafloor-264</option>
+            <option value="ucrete">Ucrete UD 200</option>
+            <option value="pu-top">Sikafloor-359N</option>
+            <option value="weber-egal">Weber.floor 4310</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Verbruikt (kg)</label>
+          <input type="number" class="form-input" id="r-kg" placeholder="kg" inputmode="numeric" oninput="checkVerbruik()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Resterend stock (kg)</label>
+          <input type="number" class="form-input" id="r-rest" placeholder="kg" inputmode="numeric">
+        </div>
+      </div>
+      <div id="verbruik-check"></div>
+      <div class="sec-hdr">Omgevingscondities</div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Temp. lucht (°C)</label>
+          <input type="number" class="form-input" id="r-temp" placeholder="°C" inputmode="decimal" oninput="calcDauwpunt()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">RV (%)</label>
+          <input type="number" class="form-input" id="r-rv" placeholder="%" inputmode="numeric" oninput="calcDauwpunt()">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Temp. ondergrond (°C)</label>
+          <input type="number" class="form-input" id="r-ondergrond" placeholder="°C" inputmode="decimal" oninput="calcDauwpunt()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vocht ondergrond (%)</label>
+          <input type="number" class="form-input" id="r-vocht" placeholder="%" inputmode="decimal" oninput="checkVocht()">
+        </div>
+      </div>
+      <div id="dauwpunt-info"></div>
+      <div id="vocht-warn"></div>
+      <div class="sec-hdr">Extra</div>
+      <div class="btn-photo">📷 Foto toevoegen (bewijs / opvolging)</div>
+      <div class="form-group">
+        <label class="form-label">Opmerkingen / problemen</label>
+        <textarea class="form-input" id="r-opmerking" placeholder="Schrijf hier..."></textarea>
+      </div>
+      <button class="btn-primary btn-green" onclick="submitRegistratie()">✓ Dagregistratie opslaan</button>
+      <div style="height:10px"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
+    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
+    <button class="nav-item active"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+  </div>
+</div>
+
+<!-- ══ DAGRAPPORT ══════════════════════════════════════════ -->
+<div class="screen" id="s-rapport">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Dagrapport</div>
+    <span class="topbar-icon">📊</span>
+  </div>
+  <div class="scroll-area">
+    <div class="form-pad" id="rapport-content">
+      <div style="text-align:center;padding:40px 20px;color:#888">
+        <div style="font-size:40px;margin-bottom:12px">📋</div>
+        <div style="font-size:15px">Nog geen dagregistratie ingegeven.</div>
+        <div style="font-size:13px;margin-top:6px">Vul eerst een registratie in om het rapport te zien.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INSTELLINGEN MODAL ══════════════════════════════════ -->
+<div class="modal-overlay" id="settings-modal" onclick="closeSettingsOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" style="margin:0">⚙️ Instellingen</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Google Sheets ID</label>
+      <input type="text" class="form-input" id="s-sheets-url" placeholder="1f6prR7vMUq9lygsofmvqsuEhuJ5rw3Dmlif6Y3evz3w" style="font-size:13px" autocomplete="off" autocorrect="off" autocapitalize="off">
+      <div style="font-size:12px;color:#888;margin-top:6px;line-height:1.5">
+        Plak hier het <strong>Sheet ID</strong> van je Google Sheet — of de volledige URL.<br>
+        <strong>Waar vind je het?</strong> Open je Google Sheet → kijk in de adresbalk naar het lange ID tussen <code>/d/</code> en <code>/edit</code>.<br>
+        Zorg dat het sheet <strong>publiek deelbaar</strong> is (Delen → Iedereen met de link → Viewer).
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Power Automate Webhook URL (dagregistratie → Excel)</label>
+      <input type="url" class="form-input" id="s-pa-url" placeholder="https://prod.westeurope.logic.azure.com/..." style="font-size:13px">
+      <div style="font-size:12px;color:#888;margin-top:4px">URL van je Power Automate HTTP trigger flow</div>
+    </div>
+    <button class="btn-primary" onclick="saveSettings()" style="margin-bottom:10px">💾 Instellingen opslaan</button>
+    <button class="btn-primary" onclick="testConnection()" style="background:#555;margin-bottom:10px">🔗 Verbinding testen</button>
+    <div id="settings-feedback" style="font-size:13px;color:#888;text-align:center;margin-top:4px"></div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eee">
+      <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px;text-transform:uppercase">App versie</div>
+      <div style="font-size:13px;color:#666">VloerAssistent v3.0 — Industriële vloersystemen<br>Ontwikkeld voor teamleiders op de werf</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE & STORAGE
+// ═══════════════════════════════════════════════════════════
+let activeFilter = 'alle';
+let appData = {
+  products: [],
+  projects: [],
+  teamleaders: [],
+  registraties: JSON.parse(localStorage.getItem('registraties') || '[]'),
+  sheetsUrl: localStorage.getItem('sheetsUrl') || '',
+  paUrl: localStorage.getItem('paUrl') || '',
+};
+
+// Fallback productdata (offline / voor demo)
+const fallbackProducts = [
+  {id:1,naam:'Sikafloor-264',type:'epoxy',toepassing:'Gietvloer / topcoat',mengverhouding:'A:B = 4:1 (gewicht)',verbruikNorm:2.2,verbruik:'2,0–2,5 kg/m²',potlife:'30 min bij 20°C',droogtijd:'24u lopen | 7d vollast',tmin:10,tmax:30,rv:75,norm:2.2,
+   aandacht:'Meng per volledige set. Niet verdunnen. Stofvrije en droge ondergrond verplicht.',
+   steps:['Controleer ondergrond: droog, stofvrij, gefraisd of gezandstraald','Meng component A volledig homogeen (2 min, circulaire bewegingen)','Voeg component B toe, meng nogmaals 3 min met langzame menger','Giet uit en verdeel met sleepkrabber (3–4 mm)','Ontluchten met stekelprikker binnen potlife','Niet betreden tot 24u bij 20°C'],
+   fouten:['Gedeeltelijk mengen = zachte plekken in de vloer','Te dik aanbrengen = luchtbellen en barsten','RV > 75% = blushing (witte waas)']},
+  {id:2,naam:'Sikafloor-220W',type:'epoxy',toepassing:'Schraaplaag / egalisatie',mengverhouding:'A:B = 5:1 (gewicht)',verbruikNorm:2.0,verbruik:'1,5–3,0 kg/m²',potlife:'40 min bij 20°C',droogtijd:'16u lopen | 5d vollast',tmin:8,tmax:35,rv:80,norm:2.0,
+   aandacht:'Watergedragen systeem. Geschikt op licht vochtige ondergrond. Primer niet vereist op ruw beton.',
+   steps:['Ondergrond schuren of frezen','Meng A + B (5:1 gewicht) 3 min','Breng aan als schraaplaag met krabber','Vlak volledig af','Wacht droogtijd per laag'],
+   fouten:['Nooit op staand water','Dikte > 6 mm per laag vermijden']},
+  {id:3,naam:'Sikafloor-359N',type:'pu',toepassing:'PU topcoat (kleurlaag)',mengverhouding:'A:B = 6,7:1 (gewicht)',verbruikNorm:0.25,verbruik:'0,2–0,3 kg/m²',potlife:'60 min bij 20°C',droogtijd:'12u lopen | 5d vollast',tmin:10,tmax:30,rv:70,norm:0.25,
+   aandacht:'Zeer gevoelig voor vochtigheid. Altijd op uitgeharde epoxy primer aanbrengen.',
+   steps:['Controleer primer: volledig uitgehard (min. 16u)','Meng A + B 3 min','Verdun NOOIT','Rol met korte haarmohair rol (4mm)','Werk in kruisrichting'],
+   fouten:['RV > 70% = blushing en matting','Te dik = lopen','Op niet-uitgeharde primer = slechte hechting']},
+  {id:4,naam:'Ucrete UD 200',type:'ucrete',toepassing:'PU-cementvloer industrieel',mengverhouding:'Set: A+B+C poeder',verbruikNorm:8.0,verbruik:'7–9 kg/m² (6mm)',potlife:'25 min bij 20°C',droogtijd:'3u lopen | 24u vollast',tmin:5,tmax:35,rv:90,norm:8.0,
+   aandacht:'Snelhardend! Max 5 min na mengen aanbrengen. Geen water toevoegen.',
+   steps:['Meng A+B 30 sec op lage toeren','Voeg C-poeder toe, meng 3-4 min','Giet uit op gewenste dikte','Onmiddellijk afwerken (textuur)','Afdekken tegen zon/tocht'],
+   fouten:['Langer dan 5 min na mengen = verloren product','Watertoevoeging verboden','T < 5°C = verminderde harding']},
+  {id:5,naam:'Weber.floor 4310',type:'egaline',toepassing:'Cementgebonden zelfnivellerende egaline',mengverhouding:'25kg + 5,5-6L water',verbruikNorm:3.0,verbruik:'1,5 kg/m² per mm',potlife:'30 min bij 20°C',droogtijd:'4u lopen | 24u vollast',tmin:5,tmax:30,rv:80,norm:3.0,
+   aandacht:'Zelfnivellerend. Max 30mm laagdikte. Primer Weber.prim 801 verplicht op absorberend beton.',
+   steps:['Primer aanbrengen, drogen min. 2u','Meng poeder in water (NIET andersom)','Mix 3 min met spiraalroerder','Giet uit, laat zelfnivelleren','Bescherm tegen tocht en zon'],
+   fouten:['Primer weglaten = onthechting','Te veel water = krachtverlies','Aanbrengen op drijfwater = catastrofaal']}
+];
+
+const fallbackProjects = [{naam:'Depot Gent – Hal 3',status:'ACTIEF'}];
+const fallbackTeamleaders = [{naam:'Jan V.'},{naam:'Peter D.'},{naam:'Luc M.'}];
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATIE
+// ═══════════════════════════════════════════════════════════
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  // Update nav active state
+  const navMap = {'s-home':0,'s-producten':1,'s-berekening':2,'s-registratie':3};
+  document.querySelectorAll('.nav-item').forEach((el,i) => {
+    el.classList.toggle('active', i === (navMap[id] ?? -1));
+  });
+  if (id === 's-rapport') renderRapport();
+}
+
+// ═══════════════════════════════════════════════════════════
+// DATA LADEN (Google Sheets of fallback)
+// ═══════════════════════════════════════════════════════════
+// Bouw CSV-URL op via gviz/tq — werkt met tabnamen, geen CORS-problemen
+// Verwacht Sheet ID zoals: 1f6prR7vMUq9lygsofmvqsuEhuJ5rw3Dmlif6Y3evz3w
+function buildTabUrl(sheetId, tabName) {
+  const encoded = encodeURIComponent(tabName);
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encoded}`;
+}
+
+async function fetchTab(sheetId, tabName) {
+  const url = buildTabUrl(sheetId, tabName);
+  const resp = await fetch(url, {cache: 'no-store'});
+  if (!resp.ok) throw new Error('HTTP ' + resp.status + ' voor tab=' + tabName);
+  return parseCSV(await resp.text());
+}
+
+async function loadRemoteData() {
+  const base = appData.sheetsUrl.trim();
+  if (!base) {
+    useFallback('Geen Sheet ID ingesteld. Demo-data geladen.');
+    return;
+  }
+  // Accepteer zowel puur ID als volledige URL — extraheer altijd het ID
+  const idMatch = base.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const sheetId = idMatch ? idMatch[1] : base;
+  try {
+    document.getElementById('sync-status').textContent = '🔄 Data synchroniseren...';
+
+    // Tabs ophalen via naam — robuuster dan gid-nummers
+    const [prodRows, projRows, tlRows] = await Promise.all([
+      fetchTab(sheetId, 'Producten'),
+      fetchTab(sheetId, 'Projecten'),
+      fetchTab(sheetId, 'Teamleaders'),
+    ]);
+
+    // Producten (sla headerrij over, filter op Actief=JA en gevulde naam)
+    if (prodRows.length > 1) {
+      appData.products = prodRows.slice(1).filter(r => r[13] === 'JA' && r[1]).map(r => ({
+        id: parseInt(r[0])||0, naam:r[1], type:r[2], toepassing:r[3],
+        mengverhouding:r[4], verbruikNorm:parseFloat(r[5])||1,
+        verbruik:r[6], potlife:r[7], droogtijd:r[8],
+        tmin:parseInt(r[9])||0, tmax:parseInt(r[10])||40,
+        rv:parseInt(r[11])||80, aandacht:r[12], norm:parseFloat(r[5])||1,
+        steps:[], fouten:[]
+      }));
+    }
+
+    // Projecten (kolom 0=ID, 1=naam, 7=status)
+    if (projRows.length > 1) {
+      appData.projects = projRows.slice(1).filter(r => r[1]).map(r => ({
+        id: parseInt(r[0])||0, naam:r[1], klant:r[2],
+        start:r[3], einde:r[4], teamleader:r[5],
+        opp:parseFloat(r[6])||0, status:r[7]
+      }));
+    }
+
+    // Teamleaders (kolom 0=ID, 1=naam, 2=weergave, 5=actief)
+    if (tlRows.length > 1) {
+      appData.teamleaders = tlRows.slice(1).filter(r => r[5] !== 'NEE' && r[2]).map(r => ({
+        id: parseInt(r[0])||0, naam:r[1], weergave:r[2],
+        tel:r[3], email:r[4], actief:r[5]
+      }));
+    }
+
+    document.getElementById('sync-status').innerHTML =
+      '✅ Gesynchroniseerd — ' + new Date().toLocaleTimeString('nl-BE');
+    renderProds();
+    updateActiveProject();
+    updateTeamleaderDropdown();
+  } catch(e) {
+    console.warn('Sync fout:', e);
+    useFallback('Offline of URL fout — demo-data actief');
+  }
+}
+
+function useFallback(msg) {
+  if (!appData.products.length) appData.products = [...fallbackProducts];
+  if (!appData.projects.length) appData.projects = [...fallbackProjects];
+  if (!appData.teamleaders.length) appData.teamleaders = [...fallbackTeamleaders];
+  document.getElementById('sync-status').innerHTML = '📴 ' + msg;
+  renderProds();
+  updateActiveProject();
+  updateTeamleaderDropdown();
+}
+
+function parseCSV(text) {
+  return text.split('\n').map(line => {
+    const cols = []; let cur = ''; let inQ = false;
+    for (let ch of line) {
+      if (ch === '"') inQ = !inQ;
+      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    return cols;
+  });
+}
+
+function updateActiveProject() {
+  const active = (appData.projects || fallbackProjects).find(p => p.status === 'ACTIEF');
+  document.getElementById('active-project-name').textContent = active ? active.naam : 'Geen actief project';
+  const pi = document.getElementById('r-project');
+  if (pi) pi.value = active ? active.naam : '';
+}
+
+function updateTeamleaderDropdown() {
+  const sel = document.getElementById('r-teamleader');
+  if (!sel) return;
+  const tls = appData.teamleaders.length ? appData.teamleaders : fallbackTeamleaders;
+  sel.innerHTML = tls.map(t => `<option>${t.weergave||t.naam||t}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// WEER (OpenMeteo — gratis, geen API key)
+// ═══════════════════════════════════════════════════════════
+function refreshWeather() {
+  if (!navigator.geolocation) { showWeatherError('Locatie niet beschikbaar'); return; }
+  document.getElementById('w-temp').textContent = '⏳';
+  document.getElementById('w-rv').textContent = '⏳';
+  document.getElementById('w-dp').textContent = '⏳';
+  navigator.geolocation.getCurrentPosition(pos => {
+    fetchWeather(pos.coords.latitude, pos.coords.longitude);
+  }, () => {
+    // Fallback: Antwerpen
+    fetchWeather(51.2194, 4.4025);
+  }, {timeout:8000});
+}
+
+async function fetchWeather(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&timezone=auto`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const cur = d.current;
+    const temp = cur.temperature_2m;
+    const rv = cur.relative_humidity_2m;
+    const dp = Math.round((temp - ((100 - rv) / 5)) * 10) / 10;
+    const rain = cur.precipitation > 0;
+    const code = cur.weather_code;
+
+    document.getElementById('w-temp').textContent = temp + '°C';
+    document.getElementById('w-rv').textContent = rv + '%';
+    document.getElementById('w-dp').textContent = dp + '°C';
+
+    const rvEl = document.getElementById('w-rv');
+    rvEl.style.color = rv > 80 ? '#A32D2D' : rv > 70 ? '#BA7517' : '#3B6D11';
+
+    document.getElementById('weather-time').textContent = new Date().toLocaleTimeString('nl-BE', {hour:'2-digit',minute:'2-digit'});
+
+    // Weersbeschrijving
+    const desc = weatherDesc(code, rain);
+    document.getElementById('weather-desc').textContent = desc;
+
+    // Automatische alertwaarschuwingen
+    buildWeatherAlerts(temp, rv, dp, rain, code);
+
+  } catch(e) { showWeatherError('Weersdata niet beschikbaar'); }
+}
+
+function weatherDesc(code, rain) {
+  if (code <= 1) return '☀️ Helder';
+  if (code <= 3) return '⛅ Bewolkt';
+  if (code <= 49) return '🌫️ Mist';
+  if (code <= 67) return '🌧️ Regen';
+  if (code <= 77) return '❄️ Sneeuw';
+  if (code <= 82) return '🌦️ Regenbuien';
+  return '⛈️ Onweer';
+}
+
+function buildWeatherAlerts(temp, rv, dp, rain, code) {
+  const wrap = document.getElementById('weather-alert-wrap');
+  const alerts = [];
+
+  if (temp < 5) alerts.push({cls:'err', icon:'🥶', msg:`<strong>Lage temperatuur (${temp}°C)</strong> — Coating NIET aanbrengen onder 5°C!`});
+  else if (temp < 10) alerts.push({cls:'warn', icon:'🌡️', msg:`<strong>Koude omstandigheden (${temp}°C)</strong> — Controleer minimumtemperatuur van het gekozen systeem.`});
+
+  if (rv > 80) alerts.push({cls:'err', icon:'💧', msg:`<strong>Hoge luchtvochtigheid (${rv}%)</strong> — Risico op blushing. Wacht tot RV &lt; 75%.`});
+  else if (rv > 70) alerts.push({cls:'warn', icon:'💧', msg:`<strong>Verhoogde RV (${rv}%)</strong> — Let op bij PU systemen. Max RV = 70%.`});
+
+  if (rain || code >= 51) alerts.push({cls:'err', icon:'🌧️', msg:`<strong>Kans op neerslag</strong> — Geen coating aanbrengen bij regen of nat oppervlak.`});
+
+  if (temp > 30) alerts.push({cls:'warn', icon:'☀️', msg:`<strong>Hoge temperatuur (${temp}°C)</strong> — Potlife verkort. Snel werken!`});
+
+  wrap.innerHTML = alerts.map(a =>
+    `<div class="alert-bar ${a.cls}" style="margin:12px 14px 0"><div class="ai">${a.icon}</div><div class="at">${a.msg}</div></div>`
+  ).join('');
+
+  if (!alerts.length) {
+    wrap.innerHTML = `<div class="alert-bar ok" style="margin:12px 14px 0"><div class="ai">✅</div><div class="at" style="color:#3B6D11"><strong>Weersomstandigheden OK</strong> — Geen bijzondere waarschuwingen.</div></div>`;
+  }
+}
+
+function showWeatherError(msg) {
+  document.getElementById('w-temp').textContent = '–';
+  document.getElementById('w-rv').textContent = '–';
+  document.getElementById('w-dp').textContent = '–';
+  document.getElementById('weather-desc').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRODUCTEN
+// ═══════════════════════════════════════════════════════════
+function renderProds() {
+  const q = (document.getElementById('prod-search')?.value || '').toLowerCase();
+  const list = document.getElementById('prod-list');
+  const prods = appData.products.length ? appData.products : fallbackProducts;
+  const filtered = prods.filter(p =>
+    (activeFilter === 'alle' || p.type === activeFilter) &&
+    (!q || p.naam.toLowerCase().includes(q) || p.toepassing.toLowerCase().includes(q))
+  );
+  if (!filtered.length) { list.innerHTML = '<div style="text-align:center;padding:30px;color:#888">Geen producten gevonden</div>'; return; }
+  list.innerHTML = filtered.map(p => `
+    <div class="prod-card" onclick="showDetail(${p.id})">
+      <div class="prod-card-top">
+        <div class="prod-name">${p.naam}</div>
+        <div class="badge badge-${p.type}">${p.type.toUpperCase()}</div>
+      </div>
+      <div class="prod-sub">${p.toepassing}</div>
+      <div class="prod-meta">
+        <span>⚖️ ${p.verbruik}</span>
+        <span>⏱️ ${p.potlife}</span>
+        <span>🌡️ ${p.tmin}–${p.tmax}°C</span>
+      </div>
+    </div>`).join('');
+}
+
+function setFilter(el, f) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = f;
+  renderProds();
+}
+
+function showDetail(id) {
+  const prods = appData.products.length ? appData.products : fallbackProducts;
+  const p = prods.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('detail-title').textContent = p.naam;
+  const steps = (p.steps||[]).map((s,i) => `<div class="step-item"><div class="step-num">${i+1}</div><div class="step-txt">${s}</div></div>`).join('') || '<div style="color:#888;font-size:14px">Zie productfiche van de fabrikant.</div>';
+  const warns = (p.fouten||[]).map(f => `<div class="fout-item"><div class="fi">⛔</div><div class="ft">${f}</div></div>`).join('');
+  document.getElementById('detail-body').innerHTML = `
+    <div class="det-sec">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:4px">
+        <span class="badge badge-${p.type}">${p.type.toUpperCase()}</span>
+        <span style="font-size:14px;color:#666">${p.toepassing}</span>
+      </div>
+    </div>
+    <div class="det-sec">
+      <h3>Specificaties</h3>
+      <div class="spec-grid">
+        <div class="spec-item"><div class="spec-lbl">Mengverhouding</div><div class="spec-val">${p.mengverhouding}</div></div>
+        <div class="spec-item"><div class="spec-lbl">Verbruik</div><div class="spec-val">${p.verbruik}</div></div>
+        <div class="spec-item"><div class="spec-lbl">Potlife</div><div class="spec-val">${p.potlife}</div></div>
+        <div class="spec-item"><div class="spec-lbl">Droogtijd</div><div class="spec-val">${p.droogtijd}</div></div>
+      </div>
+      <div class="temp-row">🌡️ <strong>${p.tmin}°C – ${p.tmax}°C</strong> &nbsp;|&nbsp; Max RV: <strong>${p.rv}%</strong></div>
+    </div>
+    <div class="aandacht-box">
+      <div class="aandacht-lbl">Aandachtspunt</div>
+      <div class="aandacht-txt">${p.aandacht}</div>
+    </div>
+    ${steps ? `<div class="det-sec"><h3>Stap voor stap uitvoering</h3><div class="step-list">${steps}</div></div>` : ''}
+    ${warns ? `<div class="det-sec"><h3>Veelgemaakte fouten</h3>${warns}</div>` : ''}
+  `;
+  go('s-proddetail');
+}
+
+// ═══════════════════════════════════════════════════════════
+// BEREKENING
+// ═══════════════════════════════════════════════════════════
+function berekenAlles() {
+  const vloer = document.getElementById('c-vloer').value;
+  const sys = document.getElementById('c-systeem').value;
+  const opp = parseFloat(document.getElementById('c-opp').value);
+  const res = document.getElementById('calc-result');
+  if (!vloer || !sys || !opp) { res.innerHTML = '<div class="warn-box" style="margin-top:12px">⚠️ Vul alle velden in.</div>'; return; }
+
+  const sysData = {
+    'epoxy-giet':{naam:'Sikafloor-264',kg:2.2,verpakking:25,extra:['Sikafloor Primer (0,3 kg/m²)'],lagen:[{l:'Primer epoxy',k:'#B5D4F4',w:'40%'},{l:'Epoxy gietvloer',k:'#378ADD',w:'70%'},{l:'Topcoat (opt.)',k:'#185FA5',w:'55%'}]},
+    'epoxy-schraap':{naam:'Sikafloor-220W',kg:2.0,verpakking:20,extra:[],lagen:[{l:'Schraaplaag',k:'#378ADD',w:'80%'}]},
+    'pu-top':{naam:'Sikafloor-359N',kg:0.25,verpakking:10,extra:['Epoxy primer verplicht als basis'],lagen:[{l:'Epoxy basis',k:'#85B7EB',w:'65%'},{l:'PU topcoat',k:'#185FA5',w:'50%'}]},
+    'ucrete':{naam:'Ucrete UD 200',kg:8.0,verpakking:35,extra:[],lagen:[{l:'Ucrete UD 200 – 6mm',k:'#EF9F27',w:'85%'}]},
+    'weber-egal':{naam:'Weber.floor 4310',kg:3.0,verpakking:25,extra:['Weber.prim 801 op absorberende ondergrond'],lagen:[{l:'Primer',k:'#C0DD97',w:'35%'},{l:'Egaline 2mm',k:'#639922',w:'75%'}]}
+  };
+  const d = sysData[sys];
+  const totkg = Math.round(opp * d.kg * 10) / 10;
+  const sets = Math.ceil(totkg / d.verpakking);
+  const extraH = d.extra.map(e => `<div class="result-line"><span class="rl">Extra product</span><span>${e}</span></div>`).join('');
+  const lagenH = d.lagen.map(l => `<div class="laag-bar" style="background:${l.k};width:${l.w}">${l.l}</div>`).join('');
+
+  let warns = '';
+  if (vloer === 'nieuwbeton') warns += '<div class="warn-box">⚠️ Nieuw beton: wacht min. 28 dagen. Vochtgehalte &lt; 4% verplicht.</div>';
+  if (vloer === 'coating') warns += '<div class="warn-box">⚠️ Bestaande coating: altijd trekproef uitvoeren vóór aanbrengen!</div>';
+  if (vloer === 'tegel') warns += '<div class="warn-box">⚠️ Tegel: hechting onzeker. Trekproef + klopproef verplicht.</div>';
+  if (vloer === 'onbekend') warns += '<div class="err-box">⛔ Onbekende ondergrond: eerst volledig beoordelen! Risico op onthechting.</div>';
+  if (sys === 'pu-top') warns += '<div class="warn-box">⚠️ PU topcoat vereist volledig uitgeharde epoxy primer als basis.</div>';
+
+  res.innerHTML = `
+    <div class="result-box">
+      <h3>✓ Berekening – ${d.naam}</h3>
+      <div class="result-line"><span class="rl">Oppervlakte</span><span class="rv">${opp} m²</span></div>
+      <div class="result-line"><span class="rl">Norm verbruik</span><span>${d.kg} kg/m²</span></div>
+      <div class="result-line"><span class="rl">Totaal benodigd</span><span class="rv">${totkg} kg</span></div>
+      <div class="result-line"><span class="rl">Aantal sets (${d.verpakking} kg/set)</span><span class="rv">${sets} sets</span></div>
+      ${extraH}
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Laagopbouw</div>
+      ${lagenH}
+    </div>
+    ${warns}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// DAUWPUNT & VOCHT
+// ═══════════════════════════════════════════════════════════
+function calcDauwpunt() {
+  const T = parseFloat(document.getElementById('r-temp').value);
+  const RV = parseFloat(document.getElementById('r-rv').value);
+  const Tg = parseFloat(document.getElementById('r-ondergrond').value);
+  const el = document.getElementById('dauwpunt-info');
+  if (isNaN(T) || isNaN(RV)) { el.innerHTML = ''; return; }
+  const dp = Math.round((T - ((100 - RV) / 5)) * 10) / 10;
+  const diff = isNaN(Tg) ? 99 : Tg - dp;
+  let cls = 's-ok', lbl = 'OK', msg = 'Dauwpunt ruim onder ondergrondtemp. Veilig om te starten.';
+  if (RV > 80) { cls='s-warn'; lbl='Hoge RV'; msg='RV > 80%: risico op blushing. Ventileer of wacht.'; }
+  if (!isNaN(Tg) && diff < 3 && diff >= 0) { cls='s-warn'; lbl='Let op!'; msg=`Slechts ${diff.toFixed(1)}°C marge tot dauwpunt. Condensatierisico!`; }
+  if (!isNaN(Tg) && diff < 0) { cls='s-err'; lbl='⛔ STOP'; msg='Dauwpunt boven ondergrondtemp.! Absoluut NIET aanbrengen!'; }
+  el.innerHTML = `<div class="dauwpunt-row"><span>Dauwpunt: <strong>${dp}°C</strong></span><span class="s-chip ${cls}">${lbl}</span></div>
+  <div style="font-size:13px;color:#666;margin-bottom:10px;line-height:1.45">${msg}</div>`;
+}
+
+function checkVocht() {
+  const v = parseFloat(document.getElementById('r-vocht').value);
+  const el = document.getElementById('vocht-warn');
+  if (isNaN(v)) { el.innerHTML = ''; return; }
+  if (v > 6) el.innerHTML = `<div class="err-box" style="margin-bottom:10px">⛔ Vochtgehalte ${v}% te hoog! Max 4–6% voor epoxy. NIET aanbrengen!</div>`;
+  else if (v > 4) el.innerHTML = `<div class="warn-box" style="margin-bottom:10px">⚠️ Vochtgehalte ${v}% is grenswaarde. Gebruik watergedragen primer.</div>`;
+  else el.innerHTML = `<div class="ok-box">✓ Vochtgehalte ${v}% — OK voor epoxy systemen</div>`;
+}
+
+function checkVerbruik() {
+  const opp = parseFloat(document.getElementById('r-opp').value);
+  const kg = parseFloat(document.getElementById('r-kg').value);
+  const prod = document.getElementById('r-prod').value;
+  const el = document.getElementById('verbruik-check');
+  if (isNaN(opp) || isNaN(kg)) { el.innerHTML = ''; return; }
+  const norms = {'epoxy-giet':2.2,'ucrete':8.0,'pu-top':0.25,'weber-egal':3.0};
+  const norm = norms[prod] || 2.0;
+  const theo = Math.round(opp * norm * 10) / 10;
+  const perc = Math.round(((kg - theo) / theo) * 100);
+  if (perc > 15) el.innerHTML = `<div class="err-box" style="margin-bottom:10px">⚠️ Oververbruik +${perc}%! Theoretisch: ${theo} kg. Controleer laagdikte of verspilling.</div>`;
+  else if (perc < -15) el.innerHTML = `<div class="warn-box" style="margin-bottom:10px">⚠️ Onderverbruik ${perc}%. Te dunne laag? Controleer verdeling.</div>`;
+  else el.innerHTML = `<div class="ok-box">✓ Verbruik OK — ${perc >= 0 ? '+' : ''}${perc}% t.o.v. norm (${theo} kg)</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// DAGREGISTRATIE OPSLAAN & NAAR POWER AUTOMATE
+// ═══════════════════════════════════════════════════════════
+async function submitRegistratie() {
+  const opp = parseFloat(document.getElementById('r-opp').value) || 0;
+  const kg = parseFloat(document.getElementById('r-kg').value) || 0;
+  const prod = document.getElementById('r-prod').value;
+  const norms = {'epoxy-giet':2.2,'ucrete':8.0,'pu-top':0.25,'weber-egal':3.0};
+  const norm = norms[prod] || 2.0;
+  const theo = Math.round(opp * norm * 10) / 10;
+  const perc = theo > 0 ? Math.round(((kg - theo) / theo) * 100) : 0;
+  const T = parseFloat(document.getElementById('r-temp').value) || null;
+  const RV = parseFloat(document.getElementById('r-rv').value) || null;
+  const dp = (T && RV) ? Math.round((T - ((100 - RV) / 5)) * 10) / 10 : null;
+
+  const prodNamen = {'epoxy-giet':'Sikafloor-264','epoxy-schraap':'Sikafloor-220W','pu-top':'Sikafloor-359N','ucrete':'Ucrete UD 200','weber-egal':'Weber.floor 4310'};
+
+  const reg = {
+    timestamp: new Date().toISOString(),
+    datum: document.getElementById('r-datum').value,
+    project: document.getElementById('r-project').value,
+    teamleader: document.getElementById('r-teamleader').value,
+    opp, productCode: prod,
+    product: prodNamen[prod] || prod,
+    kg, resterend: parseFloat(document.getElementById('r-rest').value) || 0,
+    theoretisch: theo, verschilKg: Math.round((kg - theo) * 10) / 10, verschilPerc: perc,
+    tempLucht: T, rv: RV, dauwpunt: dp,
+    tempOndergrond: parseFloat(document.getElementById('r-ondergrond').value) || null,
+    vochtOndergrond: parseFloat(document.getElementById('r-vocht').value) || null,
+    opmerking: document.getElementById('r-opmerking').value,
+    statusCheck: perc > 15 ? '⚠️ Oververbruik' : perc < -15 ? '⚠️ Onderverbruik' : '✅ OK'
+  };
+
+  // Lokaal opslaan
+  appData.registraties.push(reg);
+  localStorage.setItem('registraties', JSON.stringify(appData.registraties));
+
+  // Naar Power Automate sturen (als URL ingesteld)
+  if (appData.paUrl) {
+    try {
+      await fetch(appData.paUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(reg)
+      });
+    } catch(e) { /* offline — lokaal opgeslagen */ }
+  }
+
+  alert('✓ Dagregistratie opgeslagen!\n\n' + (appData.paUrl ? 'Data verstuurd naar Excel via Power Automate.' : 'Lokaal opgeslagen (geen Power Automate URL ingesteld).'));
+  go('s-rapport');
+}
+
+// ═══════════════════════════════════════════════════════════
+// RAPPORT (gebaseerd op lokale registraties)
+// ═══════════════════════════════════════════════════════════
+function renderRapport() {
+  const regs = appData.registraties;
+  const el = document.getElementById('rapport-content');
+  if (!regs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#888"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:15px">Nog geen dagregistratie ingegeven.</div><div style="font-size:13px;margin-top:6px">Vul eerst een registratie in om het rapport te zien.</div></div>`;
+    return;
+  }
+  const last = regs[regs.length - 1];
+  const allToday = regs.filter(r => r.datum === last.datum);
+  const totOpp = allToday.reduce((s, r) => s + (r.opp || 0), 0);
+  const totKg = allToday.reduce((s, r) => s + (r.kg || 0), 0);
+  const totTheo = allToday.reduce((s, r) => s + (r.theoretisch || 0), 0);
+  const afgPerc = totTheo > 0 ? Math.round(((totKg - totTheo) / totTheo) * 100) : 0;
+
+  const afwClass = afgPerc > 15 ? 'v-err' : afgPerc < -15 ? 'v-warn' : 'v-ok';
+  const rvClass = last.rv > 80 ? 'v-err' : last.rv > 70 ? 'v-warn' : 'v-ok';
+
+  let alertHtml = '';
+  if (afgPerc > 15) alertHtml = `<div class="err-box" style="margin-bottom:14px"><span style="flex-shrink:0">⚠️</span><span><strong>Oververbruik gesignaleerd:</strong> +${Math.round(totKg - totTheo)} kg boven theoretisch. Controleer laagdikte of verspilling.</span></div>`;
+  else if (afgPerc < -15) alertHtml = `<div class="warn-box" style="margin-bottom:14px"><span>⚠️</span><span><strong>Onderverbruik:</strong> Te dunne laag? Controleer verdeling.</span></div>`;
+  else alertHtml = `<div class="ok-box" style="margin-bottom:14px">✅ Materiaalverbruik binnen normen.</div>`;
+
+  // Historiek (laatste 5 dagen)
+  const days = {};
+  regs.forEach(r => { if (!days[r.datum]) days[r.datum] = []; days[r.datum].push(r); });
+  const dayKeys = Object.keys(days).sort().reverse().slice(0, 5);
+  const histHtml = dayKeys.map(d => {
+    const dRegs = days[d];
+    const dOpp = dRegs.reduce((s,r) => s+r.opp,0);
+    const dKg = dRegs.reduce((s,r) => s+r.kg,0);
+    const dTheo = dRegs.reduce((s,r) => s+r.theoretisch,0);
+    const dPerc = dTheo > 0 ? Math.round(((dKg-dTheo)/dTheo)*100) : 0;
+    return `<div class="rapp-row"><span class="rapp-lbl">${d}</span><span>${dOpp} m² | ${dKg} kg <span class="${dPerc>15?'v-err':dPerc<-15?'v-warn':'v-ok'}">(${dPerc>=0?'+':''}${dPerc}%)</span></span></div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="font-size:14px;color:#888;margin-bottom:14px">${last.project} &nbsp;|&nbsp; ${last.datum}</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-lbl">Uitgevoerd</div><div class="stat-val">${totOpp} m²</div><div class="stat-sub">${last.teamleader}</div></div>
+      <div class="stat-card"><div class="stat-lbl">Verbruikt</div><div class="stat-val">${totKg} kg</div><div class="stat-sub">${last.product}</div></div>
+      <div class="stat-card"><div class="stat-lbl">Theoretisch</div><div class="stat-val">${totTheo} kg</div><div class="stat-sub">norm</div></div>
+      <div class="stat-card"><div class="stat-lbl">Afwijking</div><div class="stat-val ${afwClass}">${afgPerc >= 0 ? '+' : ''}${afgPerc}%</div><div class="stat-sub">${Math.abs(totKg - totTheo)} kg</div></div>
+    </div>
+    ${alertHtml}
+    <div class="sec-title">Omgevingscondities</div>
+    <div class="rapp-row"><span class="rapp-lbl">Temperatuur lucht</span><span>${last.tempLucht !== null ? last.tempLucht + '°C' : '–'}</span></div>
+    <div class="rapp-row"><span class="rapp-lbl">RV</span><span class="${rvClass}">${last.rv !== null ? last.rv + '%' : '–'}</span></div>
+    <div class="rapp-row"><span class="rapp-lbl">Dauwpunt</span><span>${last.dauwpunt !== null ? last.dauwpunt + '°C' : '–'}</span></div>
+    <div class="rapp-row"><span class="rapp-lbl">Temp. ondergrond</span><span>${last.tempOndergrond !== null ? last.tempOndergrond + '°C' : '–'}</span></div>
+    <div class="rapp-row"><span class="rapp-lbl">Vocht ondergrond</span><span>${last.vochtOndergrond !== null ? last.vochtOndergrond + '%' : '–'}</span></div>
+    ${last.opmerking ? `<div class="sec-title">Opmerkingen</div><div style="background:#f7f7f7;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.5">${last.opmerking}</div>` : ''}
+    ${dayKeys.length > 1 ? `<div class="sec-title">Historiek (per dag)</div>${histHtml}` : ''}
+    <div style="margin-top:16px">
+      <button class="btn-primary" onclick="go('s-registratie')" style="margin-bottom:10px">+ Nieuwe registratie</button>
+      <button class="btn-primary" onclick="clearRegistraties()" style="background:#ccc;color:#333;margin-bottom:10px">🗑 Registraties wissen</button>
+    </div>
+    <div style="height:10px"></div>
+  `;
+}
+
+function clearRegistraties() {
+  if (confirm('Alle lokale registraties wissen?')) {
+    appData.registraties = [];
+    localStorage.removeItem('registraties');
+    renderRapport();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INSTELLINGEN
+// ═══════════════════════════════════════════════════════════
+function openSettings() {
+  document.getElementById('s-sheets-url').value = appData.sheetsUrl;
+  document.getElementById('s-pa-url').value = appData.paUrl;
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+function closeSettingsOutside(e) { if (e.target === document.getElementById('settings-modal')) closeSettings(); }
+
+function saveSettings() {
+  appData.sheetsUrl = document.getElementById('s-sheets-url').value.trim();
+  appData.paUrl = document.getElementById('s-pa-url').value.trim();
+  localStorage.setItem('sheetsUrl', appData.sheetsUrl);
+  localStorage.setItem('paUrl', appData.paUrl);
+  document.getElementById('settings-feedback').textContent = '✅ Opgeslagen! Data wordt opnieuw geladen...';
+  setTimeout(() => { closeSettings(); loadRemoteData(); }, 1000);
+}
+
+async function testConnection() {
+  const base = document.getElementById('s-sheets-url').value.trim();
+  const fb = document.getElementById('settings-feedback');
+  if (!base) { fb.textContent = '❌ Geen Sheet ID of URL ingevuld.'; return; }
+  const idMatch = base.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const sheetId = idMatch ? idMatch[1] : base;
+  fb.textContent = '⏳ Verbinding testen (3 tabs)...';
+  const tabs = ['Producten','Projecten','Teamleaders'];
+  const results = [];
+  for (const tab of tabs) {
+    try {
+      const r = await fetch(buildTabUrl(sheetId, tab), {cache:'no-store'});
+      if (r.ok) {
+        const txt = await r.text();
+        const rowCount = txt.split('\n').length - 1;
+        results.push('✅ ' + tab + ' (' + rowCount + ' rijen)');
+      } else {
+        results.push('❌ ' + tab + ' (HTTP ' + r.status + ' — tab bestaat niet of sheet niet publiek)');
+      }
+    } catch {
+      results.push('❌ ' + tab + ' (geen verbinding)');
+    }
+  }
+  fb.innerHTML = results.join('<br>');
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('r-datum').value = new Date().toISOString().split('T')[0];
+  useFallback('Demo-data actief. Stel Google Sheets URL in via ⚙️');
+  refreshWeather();
+});
+</script>
+</body>
+</html>
