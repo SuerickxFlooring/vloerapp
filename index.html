@@ -61,11 +61,15 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .alert-bar.warn{background:#FFF8EC;border:1px solid #FAC775}
 .alert-bar.err{background:#FDECEA;border:1px solid #F5C6C2}
 .alert-bar.ok{background:#EAF3DE;border:1px solid #C0DD97}
+.alert-bar.blauw{background:#E8F0FE;border:1px solid #93B4F7}
+.alert-bar.oranje{background:#FFF0E0;border:1px solid #FFAA55}
 .alert-bar .ai{font-size:18px;flex-shrink:0;margin-top:1px}
 .alert-bar .at{font-size:14px;line-height:1.5}
 .alert-bar.warn .at{color:#7A4F00}
 .alert-bar.err .at{color:#A32D2D}
 .alert-bar.ok .at{color:#3B6D11}
+.alert-bar.blauw .at{color:#1A3A8A}
+.alert-bar.oranje .at{color:#7A3800}
 
 /* ── Weather box ─────────────────────────────────────── */
 .weather-box{margin:16px 14px;background:#fff;border:1px solid #eef0f7;border-radius:var(--card-radius);box-shadow:var(--shadow-sm);padding:16px;cursor:pointer}
@@ -487,46 +491,18 @@ textarea.form-input{min-height:80px;resize:vertical}
       </div>
       <div class="form-group">
         <label class="form-label">Systeem / product</label>
-        <input type="text" class="search-input" id="c-prod-zoek" placeholder="🔍 Zoek product op naam..." oninput="filterBerekeningProds()" autocomplete="off" style="margin-bottom:8px">
-        <div class="filter-row" id="c-prod-filters" style="padding:0 0 8px;gap:6px">
-          <button class="chip active" onclick="setBerekeningFilter(this,'alle')">Alle</button>
-          <button class="chip" onclick="setBerekeningFilter(this,'epoxy')">Epoxy</button>
-          <button class="chip" onclick="setBerekeningFilter(this,'pu')">PU</button>
-          <button class="chip" onclick="setBerekeningFilter(this,'ucrete')">Ucrete</button>
-          <button class="chip" onclick="setBerekeningFilter(this,'egaline')">Egaline</button>
-          <button class="chip" onclick="setBerekeningFilter(this,'mortel')">Mortel</button>
-          <button class="chip" onclick="setBerekeningFilter(this,'overige')">Overige</button>
-        </div>
-        <!-- Verborgen select voor logica compatibiliteit -->
-        <select class="form-select" id="c-systeem" onchange="onSysteemChange()" style="display:none">
+        <select class="form-select" id="c-systeem" onfocus="vulSysteemDropdown()" onchange="onSysteemChange()">
           <option value="">Kies systeem...</option>
         </select>
-        <!-- Zichtbare product-picker lijst -->
-        <div id="c-prod-lijst" style="border:1px solid #ddd;border-radius:10px;max-height:200px;overflow-y:auto;background:#fff;display:none"></div>
-        <!-- Geselecteerd product weergave -->
-        <div id="c-prod-selected" style="display:none;background:#EAF3DE;border:1px solid #c0dd97;border-radius:10px;padding:12px 14px;margin-top:4px;cursor:pointer" onclick="clearBerekeningProduct()">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:700;font-size:15px" id="c-prod-sel-naam"></div>
-              <div style="font-size:13px;color:#555" id="c-prod-sel-sub"></div>
-            </div>
-            <span style="color:#888;font-size:18px;flex-shrink:0">✕</span>
-          </div>
-        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Oppervlakte (m²)</label>
         <input type="number" class="form-input" id="c-opp" placeholder="bv. 250" min="1" inputmode="numeric">
       </div>
       <div class="form-group" id="c-dikte-wrap" style="display:none">
-        <label class="form-label">Dikte aan te brengen laag
-          <span style="float:right;display:flex;gap:0;border:1px solid #ddd;border-radius:8px;overflow:hidden">
-            <button id="c-dikte-mm" onclick="setDikteEenheid('mm')" style="padding:4px 12px;font-size:13px;font-weight:600;border:none;background:#3547C8;color:#fff;cursor:pointer;min-height:30px">mm</button>
-            <button id="c-dikte-cm" onclick="setDikteEenheid('cm')" style="padding:4px 12px;font-size:13px;font-weight:600;border:none;background:#fff;color:#666;cursor:pointer;min-height:30px">cm</button>
-          </span>
-        </label>
-        <input type="number" class="form-input" id="c-dikte" placeholder="bv. 5" min="0.1" max="1000" step="0.1" inputmode="decimal">
-        <div style="font-size:12px;color:#888;margin-top:4px" id="c-dikte-hint">Verbruik wordt berekend per mm dikte</div>
+        <label class="form-label">Dikte aan te brengen laag (mm)</label>
+        <input type="number" class="form-input" id="c-dikte" placeholder="bv. 5" min="1" max="100" inputmode="numeric">
+        <div style="font-size:12px;color:#888;margin-top:4px">Verbruik wordt berekend per mm dikte</div>
       </div>
       <button class="btn-primary" onclick="berekenAlles()">Bereken hoeveelheden</button>
       <div id="calc-result"></div>
@@ -2214,108 +2190,17 @@ async function syncPendingUren() {
   if (syncCount > 0) localStorage.setItem('uren', JSON.stringify(appData.uren));
 }
 
-// ═══════════════════════════════════════════════════════════
-// BEREKENING — PRODUCT ZOEK + FILTER
-// ═══════════════════════════════════════════════════════════
-let berekeningFilter = 'alle';
-
 function vulSysteemDropdown() {
-  // Backward compat — vult ook de hidden select
-  updateProductDropdowns();
-}
-
-function setBerekeningFilter(btn, filter) {
-  berekeningFilter = filter;
-  document.querySelectorAll('#c-prod-filters .chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  filterBerekeningProds();
-}
-
-function filterBerekeningProds() {
+  const cSys = document.getElementById('c-systeem');
+  if (!cSys || cSys.dataset.filled === '1') return; // al gevuld
   const prods = appData.products.length ? appData.products : fallbackProducts;
-  const zoek = (document.getElementById('c-prod-zoek').value || '').toLowerCase().trim();
-  const filtered = prods.filter(p => {
-    const type = (p.type || '').toLowerCase();
-    const typeMatch = berekeningFilter === 'alle' || type === berekeningFilter;
-    const searchMatch = !zoek || (p.naam || '').toLowerCase().includes(zoek) || (p.toepassing || '').toLowerCase().includes(zoek);
-    return typeMatch && searchMatch;
-  });
-  const lijst = document.getElementById('c-prod-lijst');
-  if (!lijst) return;
-  if (!zoek && berekeningFilter === 'alle') {
-    lijst.style.display = 'none';
-    return;
-  }
-  lijst.style.display = 'block';
-  if (!filtered.length) {
-    lijst.innerHTML = '<div style="padding:14px;text-align:center;color:#888;font-size:14px">Geen producten gevonden</div>';
-    return;
-  }
-  lijst.innerHTML = filtered.map(p => {
-    const type = (p.type || 'overige').toLowerCase();
-    return `<div onclick="selectBerekeningProduct(${p.id})" style="padding:12px 14px;border-bottom:1px solid #eef0f7;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div>
-        <div style="font-weight:600;font-size:14px">${p.naam}</div>
-        <div style="font-size:12px;color:#888">${p.toepassing || ''}</div>
-      </div>
-      <span class="badge badge-${type}" style="flex-shrink:0">${type}</span>
-    </div>`;
-  }).join('');
+  cSys.innerHTML = '<option value="">Kies systeem...</option>' +
+    prods.map(p => `<option value="${p.id}">${p.naam} – ${p.toepassing}</option>`).join('');
+  cSys.dataset.filled = '1';
 }
-
-function selectBerekeningProduct(id) {
-  const prods = appData.products.length ? appData.products : fallbackProducts;
-  const p = prods.find(x => x.id === id);
-  if (!p) return;
-  // Stel hidden select in
-  const sel = document.getElementById('c-systeem');
-  if (sel) sel.value = id;
-  // Toon geselecteerd
-  document.getElementById('c-prod-selected').style.display = 'block';
-  document.getElementById('c-prod-sel-naam').textContent = p.naam;
-  document.getElementById('c-prod-sel-sub').textContent = p.toepassing || '';
-  document.getElementById('c-prod-lijst').style.display = 'none';
-  // Dikte-eenheid reset + dikte-veld tonen indien nodig
-  onSysteemChange();
-}
-
-function clearBerekeningProduct() {
-  const sel = document.getElementById('c-systeem');
-  if (sel) sel.value = '';
-  document.getElementById('c-prod-selected').style.display = 'none';
-  document.getElementById('c-prod-sel-naam').textContent = '';
-  document.getElementById('c-prod-sel-sub').textContent = '';
-  const dikteWrap = document.getElementById('c-dikte-wrap');
-  if (dikteWrap) dikteWrap.style.display = 'none';
-  document.getElementById('c-dikte').value = '';
-  document.getElementById('calc-result').innerHTML = '';
-}
-
-// ═══════════════════════════════════════════════════════════
-// DIKTE EENHEID TOGGLE
-// ═══════════════════════════════════════════════════════════
-let dikteEenheid = 'mm'; // 'mm' of 'cm'
-
-function setDikteEenheid(eenheid) {
-  dikteEenheid = eenheid;
-  document.getElementById('c-dikte-mm').style.background = eenheid === 'mm' ? '#3547C8' : '#fff';
-  document.getElementById('c-dikte-mm').style.color = eenheid === 'mm' ? '#fff' : '#666';
-  document.getElementById('c-dikte-cm').style.background = eenheid === 'cm' ? '#3547C8' : '#fff';
-  document.getElementById('c-dikte-cm').style.color = eenheid === 'cm' ? '#fff' : '#666';
-  const hint = document.getElementById('c-dikte-hint');
-  if (hint) hint.textContent = eenheid === 'cm' ? 'Verbruik wordt berekend per mm dikte (1 cm = 10 mm)' : 'Verbruik wordt berekend per mm dikte';
-  const input = document.getElementById('c-dikte');
-  if (input) input.placeholder = eenheid === 'cm' ? 'bv. 0.5' : 'bv. 5';
-}
-
-function getDikteInMm() {
-  const val = parseFloat((document.getElementById('c-dikte') ? document.getElementById('c-dikte').value : '').replace(',', '.')) || 0;
-  return dikteEenheid === 'cm' ? val * 10 : val;
-}
-
-
 
 function onSysteemChange() {
+  vulSysteemDropdown();
   // Toon dikte-veld enkel voor mortel en egaline
   const prodId = parseInt(document.getElementById('c-systeem').value);
   const prods = appData.products.length ? appData.products : fallbackProducts;
@@ -2360,7 +2245,7 @@ function updateProductDropdowns() {
   const prods = sheetsLoaded ? appData.products : fallbackProducts;
   const bron = sheetsLoaded ? '' : ' (demo)';
 
-  // Berekening: vul hidden select (voor logica) en toon zoeklijst klaar
+  // Berekening systeem dropdown
   const cSys = document.getElementById('c-systeem');
   if (cSys) {
     cSys.innerHTML = `<option value="">Kies systeem${bron}...</option>` +
@@ -2432,10 +2317,45 @@ function weatherDesc(code, rain) {
   return '⛈️ Onweer';
 }
 
-function buildWeatherAlerts(temp, rv, dp, rain, code) {
-  const wrap = document.getElementById('weather-alert-wrap');
-  const alerts = [];
+// Kleur-mapping: Supabase-waarde → CSS-klasse + emoji
+const MELDING_KLEUR_MAP = {
+  groen:  { cls: 'ok',     icon: '🟢' },
+  blauw:  { cls: 'blauw',  icon: '🔵' },
+  rood:   { cls: 'err',    icon: '🔴' },
+  geel:   { cls: 'warn',   icon: '🟡' },
+  oranje: { cls: 'oranje', icon: '🟠' },
+};
 
+// Cache voor coordinator-meldingen (geladen bij app-start & na opslaan)
+let _cachedMeldingen = null;
+
+async function loadHomeMeldingen(force) {
+  if (!force && _cachedMeldingen !== null) return _cachedMeldingen;
+  if (!sb) return [];
+  try {
+    const { data, error } = await sb
+      .from('home_meldingen')
+      .select('*')
+      .eq('actief', true)
+      .order('volgorde', { ascending: true })
+      .order('aangemaakt_op', { ascending: true });
+    _cachedMeldingen = error ? [] : (data || []);
+  } catch(e) { _cachedMeldingen = []; }
+  return _cachedMeldingen;
+}
+
+async function buildWeatherAlerts(temp, rv, dp, rain, code) {
+  const wrap = document.getElementById('weather-alert-wrap');
+
+  // 1. Coordinator-meldingen bovenaan (altijd zichtbaar, ongeacht weer)
+  const eigenmeldingen = await loadHomeMeldingen(false);
+  let html = eigenmeldingen.map(m => {
+    const k = MELDING_KLEUR_MAP[m.kleur] || MELDING_KLEUR_MAP.geel;
+    return `<div class="alert-bar ${k.cls}" style="margin:12px 14px 0"><div class="ai">${k.icon}</div><div class="at">${escapeHtml(m.tekst)}</div></div>`;
+  }).join('');
+
+  // 2. Automatische weermeldingen
+  const alerts = [];
   if (temp < 5) alerts.push({cls:'err', icon:'🥶', msg:`<strong>Lage temperatuur (${temp}°C)</strong> — Coating NIET aanbrengen onder 5°C!`});
   else if (temp < 10) alerts.push({cls:'warn', icon:'🌡️', msg:`<strong>Koude omstandigheden (${temp}°C)</strong> — Controleer minimumtemperatuur van het gekozen systeem.`});
 
@@ -2443,16 +2363,17 @@ function buildWeatherAlerts(temp, rv, dp, rain, code) {
   else if (rv > 70) alerts.push({cls:'warn', icon:'💧', msg:`<strong>Verhoogde RV (${rv}%)</strong> — Let op bij PU systemen. Max RV = 70%.`});
 
   if (rain || code >= 51) alerts.push({cls:'err', icon:'🌧️', msg:`<strong>Kans op neerslag</strong> — Geen coating aanbrengen bij regen of nat oppervlak.`});
-
   if (temp > 30) alerts.push({cls:'warn', icon:'☀️', msg:`<strong>Hoge temperatuur (${temp}°C)</strong> — Potlife verkort. Snel werken!`});
 
-  wrap.innerHTML = alerts.map(a =>
+  html += alerts.map(a =>
     `<div class="alert-bar ${a.cls}" style="margin:12px 14px 0"><div class="ai">${a.icon}</div><div class="at">${a.msg}</div></div>`
   ).join('');
 
   if (!alerts.length) {
-    wrap.innerHTML = `<div class="alert-bar ok" style="margin:12px 14px 0"><div class="ai">✅</div><div class="at" style="color:#3B6D11"><strong>Weersomstandigheden OK</strong> — Geen bijzondere waarschuwingen.</div></div>`;
+    html += `<div class="alert-bar ok" style="margin:12px 14px 0"><div class="ai">✅</div><div class="at" style="color:#3B6D11"><strong>Weersomstandigheden OK</strong> — Geen bijzondere waarschuwingen.</div></div>`;
   }
+
+  wrap.innerHTML = html;
 }
 
 function showWeatherError(msg) {
@@ -2495,10 +2416,7 @@ function renderProds() {
 }
 
 function setFilter(el, f) {
-  // Alleen chips IN de producten screen resetten (niet berekening-chips)
-  const prodScreen = document.getElementById('s-producten');
-  if (prodScreen) prodScreen.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  else document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   activeFilter = f;
   renderProds();
@@ -2582,8 +2500,7 @@ function berekenAlles() {
     : p.verbruikNorm;
   const type = (p.type || '').toLowerCase();
   const isDikte = type === 'mortel' || type === 'egaline';
-  const dikte = isDikte ? getDikteInMm() : 1;
-  const dikteLabel = isDikte ? `${dikteEenheid === 'cm' ? (dikte/10).toFixed(1) + ' cm' : dikte + ' mm'}` : '';
+  const dikte = isDikte ? (pf((document.getElementById('c-dikte') ? document.getElementById('c-dikte').value : ''), 0)) : 1;
   const kg = isDikte ? kgPerMm * (dikte || 1) : kgPerMm;
   const verpakking = p.verpakking || 25;
   const totkg = Math.round(opp * kg * 100) / 100;
@@ -2650,7 +2567,7 @@ function berekenAlles() {
   }
 
   if (isDikte && !dikte) {
-    res.innerHTML = '<div class="warn-box" style="margin-top:12px">⚠️ Vul de dikte in voor ' + p.naam + '.</div>';
+    res.innerHTML = '<div class="warn-box" style="margin-top:12px">⚠️ Vul de dikte in mm in voor ' + p.naam + '.</div>';
     return;
   }
 
@@ -2658,7 +2575,7 @@ function berekenAlles() {
     <div class="result-box">
       <h3>✓ Berekening – ${p.naam}</h3>
       <div class="result-line"><span class="rl">Oppervlakte</span><span class="rv">${opp} m²</span></div>
-      ${isDikte ? `<div class="result-line"><span class="rl">Dikte</span><span class="rv">${dikteLabel}</span></div>` : ''}
+      ${isDikte ? `<div class="result-line"><span class="rl">Dikte</span><span class="rv">${dikte} mm</span></div>` : ''}
       <div class="result-line"><span class="rl">Verbruik ${isDikte ? '('+kgPerMm+' kg/m²/mm)' : '('+vloer+')'}</span><span>${kg} kg/m²</span></div>
       <div class="result-line"><span class="rl">Totaal benodigd</span><span class="rv">${totkg} kg</span></div>
       <div class="result-line"><span class="rl">Aantal sets (${verpakking} kg/set)</span><span class="rv">${sets} sets</span></div>
@@ -3212,8 +3129,7 @@ const BEHEER_TABLES = [
       {key:'status', label:'Status (bv. Bevestigd)', type:'text'},
     ]
   },
-  {
-    key: 'teamleaders', label: 'Teamleaders', icon: '👷', pk: 'id', orderBy: 'id',
+  {\n    key: 'teamleaders', label: 'Teamleaders', icon: '👷', pk: 'id', orderBy: 'id',
     listTitle: r => r.naam,
     listSubtitle: r => [r.weergave, (r.actief || 'JA').toUpperCase() !== 'JA' ? '⛔ inactief' : ''].filter(Boolean).join(' · '),
     fields: [
@@ -3221,9 +3137,22 @@ const BEHEER_TABLES = [
       {key:'weergave', label:'Weergave in app', type:'text'},
       {key:'actief', label:'Actief', type:'select', options:['JA','NEE']},
     ]
+  },
+  {
+    key: 'home_meldingen', label: 'Meldingen', icon: '🔔', pk: 'id', orderBy: 'volgorde',
+    listTitle: r => r.tekst,
+    listSubtitle: r => {
+      const kl = {groen:'🟢 Groen',blauw:'🔵 Blauw',rood:'🔴 Rood',geel:'🟡 Geel',oranje:'🟠 Oranje'}[r.kleur] || r.kleur;
+      return kl + (r.actief ? '' : ' · ⛔ inactief');
+    },
+    fields: [
+      {key:'tekst',    label:'Tekst van de melding', type:'textarea', required:true},
+      {key:'kleur',    label:'Kleur kader', type:'select', options:['groen','blauw','rood','geel','oranje']},
+      {key:'actief',   label:'Zichtbaar op homescherm', type:'select', options:['true','false']},
+      {key:'volgorde', label:'Volgorde (laag = bovenaan)', type:'number'},
+    ]
   }
 ];
-
 let beheerActiveTable = 'rapport';
 let beheerRows = [];
 let beheerEditingRow = null;
@@ -3508,6 +3437,8 @@ async function saveBeheerEdit() {
     const el = document.getElementById('bf-' + f.key);
     let v = el.value;
     if (f.type === 'number') v = v === '' ? null : parseFloat(String(v).replace(',', '.'));
+    // Boolean-velden (actief bij home_meldingen)
+    if (f.type === 'select' && (v === 'true' || v === 'false')) v = (v === 'true');
     payload[f.key] = (v === '' ? null : v);
   }
   for (const f of cfg.fields) {
@@ -3518,16 +3449,28 @@ async function saveBeheerEdit() {
   }
   statusEl.textContent = '⏳ Opslaan...';
   let error;
-  if (beheerEditingRow) {
+  if (cfg.key === 'home_meldingen') {
+    // Via RPC (SECURITY DEFINER) voor correcte RLS
+    const pkVal = beheerEditingRow ? beheerEditingRow[cfg.pk] : null;
+    const { error: rpcErr } = await sb.rpc('upsert_home_melding', {
+      p_id:       pkVal || 0,
+      p_tekst:    payload.tekst,
+      p_kleur:    payload.kleur || 'geel',
+      p_actief:   payload.actief !== false,
+      p_volgorde: payload.volgorde || 0,
+    });
+    error = rpcErr;
+    if (!error) _cachedMeldingen = null; // cache invalideren
+  } else if (beheerEditingRow) {
     const pkVal = beheerEditingRow[cfg.pk];
-    delete payload[cfg.pk]; // primary key niet mee-updaten
+    delete payload[cfg.pk];
     ({ error } = await sb.from(cfg.key).update(payload).eq(cfg.pk, pkVal));
   } else {
     ({ error } = await sb.from(cfg.key).insert(payload));
   }
   if (error) { statusEl.textContent = '❌ ' + error.message; return; }
   statusEl.textContent = '✅ Opgeslagen';
-  setTimeout(() => { closeBeheerEdit(); loadBeheerRows(); loadRemoteData(); }, 500);
+  setTimeout(() => { closeBeheerEdit(); loadBeheerRows(); if (cfg.key !== 'home_meldingen') loadRemoteData(); }, 500);
 }
 
 async function deleteBeheerEdit() {
@@ -3536,11 +3479,17 @@ async function deleteBeheerEdit() {
   const cfg = getBeheerTableConfig(beheerEditingTableKey);
   const statusEl = document.getElementById('beheer-edit-status');
   statusEl.textContent = '⏳ Verwijderen...';
-  const { error } = await sb.from(cfg.key).delete().eq(cfg.pk, beheerEditingRow[cfg.pk]);
+  let error;
+  if (cfg.key === 'home_meldingen') {
+    ({ error } = await sb.rpc('delete_home_melding', { p_id: beheerEditingRow[cfg.pk] }));
+    if (!error) _cachedMeldingen = null;
+  } else {
+    ({ error } = await sb.from(cfg.key).delete().eq(cfg.pk, beheerEditingRow[cfg.pk]));
+  }
   if (error) { statusEl.textContent = '❌ ' + error.message; return; }
   closeBeheerEdit();
   loadBeheerRows();
-  loadRemoteData();
+  if (cfg.key !== 'home_meldingen') loadRemoteData();
 }
 
 // ── CSV-import (Producten/Projecten/Teamleaders) ──────────
@@ -3621,6 +3570,16 @@ document.addEventListener('DOMContentLoaded', () => {
     loadRemoteData();
   }
   checkBeheerSession();
+  // Toon coordinator-meldingen alvast vóór het weer laadt
+  loadHomeMeldingen(true).then(() => {
+    const wrap = document.getElementById('weather-alert-wrap');
+    if (!wrap.innerHTML && _cachedMeldingen && _cachedMeldingen.length) {
+      wrap.innerHTML = _cachedMeldingen.map(m => {
+        const k = MELDING_KLEUR_MAP[m.kleur] || MELDING_KLEUR_MAP.geel;
+        return `<div class="alert-bar ${k.cls}" style="margin:12px 14px 0"><div class="ai">${k.icon}</div><div class="at">${escapeHtml(m.tekst)}</div></div>`;
+      }).join('');
+    }
+  });
   refreshWeather();
   syncPendingRegistraties();
   syncPendingUren();
