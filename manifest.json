@@ -1,0 +1,25 @@
+﻿{
+    "description":  "Vloerlegger assistent app van Group Suerickx",
+    "short_name":  "VloerAssistent",
+    "background_color":  "#1B2B7A",
+    "icons":  [
+                  {
+                      "purpose":  "any maskable",
+                      "type":  "image/png",
+                      "sizes":  "192x192",
+                      "src":  "icon-192x192.png"
+                  },
+                  {
+                      "purpose":  "any maskable",
+                      "type":  "image/png",
+                      "sizes":  "512x512",
+                      "src":  "icon-512x512.png"
+                  }
+              ],
+    "orientation":  "portrait",
+    "theme_color":  "#1B2B7A",
+    "display":  "standalone",
+    "name":  "VloerAssistent",
+    "scope":  ".",
+    "start_url":  "."
+}
