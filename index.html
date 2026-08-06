@@ -317,6 +317,12 @@ textarea.form-input{min-height:80px;resize:vertical}
   /* Topbar op desktop */
   .topbar { padding: 0 32px; }
   .env-banner { display: flex !important; }
+  /* Home header op desktop: verberg logo (sidebar heeft het al) */
+  .home-header { padding: 14px 32px; }
+  .home-header svg { display: none !important; }
+  .home-header h1 { font-size: 20px; }
+  .home-header p { font-size: 11px; }
+  .home-header > button { display: none !important; }
 
   /* Scrollgebied breder */
   .form-pad { padding: 24px 32px; max-width: 800px; }
@@ -396,19 +402,12 @@ textarea.form-input{min-height:80px;resize:vertical}
 <!-- ══ HOME ═══════════════════════════════════════════════ -->
 <div class="screen active" id="s-home">
   <div class="home-header">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 2 44 56" height="38" style="flex-shrink:0;display:block">
-      <polygon points="8,2 42,2 26,24 8,24" fill="white"/>
-      <polygon points="26,2 42,2 42,10" fill="white"/>
-      <polygon points="8,27 26,27 42,45 24,45" fill="rgba(255,255,255,0.45)"/>
-      <polygon points="24,48 42,48 42,56 8,56" fill="white"/>
-      <polygon points="8,48 24,48 8,56" fill="white"/>
-    </svg>
+    <img src="icon-192x192.png" height="42" width="42" style="border-radius:10px;flex-shrink:0;display:block" alt="Suerickx Flooring">
     <div style="flex:1;min-width:0">
       <h1><b>Vloer</b>Assistent</h1>
       <p>Suerickx Flooring</p>
     </div>
     <button onclick="go('s-beheer')" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:10px;width:40px;height:40px;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center" title="Beheer">🔐</button>
-  </div>
   </div>
   <div class="scroll-area">
     <div class="project-pill" id="active-project-pill">
