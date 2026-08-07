@@ -832,11 +832,11 @@ textarea.form-input{min-height:80px;resize:vertical}
         <div class="seg" data-seg="4"></div>
       </div>
 
-      <!-- ── STAP 1: Project & product ── -->
+      <!-- ── STAP 1: Project & datum ── -->
       <div class="reg-step" data-step="1">
-        <div class="reg-step-meta">Stap 1 van 4 — Project & product</div>
+        <div class="reg-step-meta">Stap 1 van 4 — Project & datum</div>
         <div id="r-copy-prev-wrap" style="display:none;margin-bottom:14px">
-          <button type="button" onclick="kopieerVorigeRegistratie()" style="width:100%;padding:12px;border:1px dashed #3547C8;border-radius:10px;background:#EEF0FC;color:#3547C8;font-weight:600;font-size:14px;cursor:pointer">🔁 Vorige keer overnemen (project & product)</button>
+          <button type="button" onclick="kopieerVorigeRegistratie()" style="width:100%;padding:12px;border:1px dashed #3547C8;border-radius:10px;background:#EEF0FC;color:#3547C8;font-weight:600;font-size:14px;cursor:pointer">🔁 Vorige keer overnemen (project & context)</button>
         </div>
         <div class="form-group">
           <label class="form-label">Projectnaam</label>
@@ -862,38 +862,6 @@ textarea.form-input{min-height:80px;resize:vertical}
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Product gebruikt</label>
-          <input type="text" class="search-input" id="r-prod-zoek" placeholder="🔍 Zoek product op naam..." oninput="filterRegProds()" autocomplete="off" style="margin-bottom:8px">
-          <div class="filter-row" id="r-prod-filters" style="padding:0 0 8px;gap:6px">
-            <button class="chip active" onclick="setRegFilter(this,'alle')">Alle</button>
-            <button class="chip" onclick="setRegFilter(this,'epoxy')">Epoxy</button>
-            <button class="chip" onclick="setRegFilter(this,'pu')">PU</button>
-            <button class="chip" onclick="setRegFilter(this,'ucrete')">Ucrete</button>
-            <button class="chip" onclick="setRegFilter(this,'egaline')">Egaline</button>
-            <button class="chip" onclick="setRegFilter(this,'mortel')">Mortel</button>
-            <button class="chip" onclick="setRegFilter(this,'overige')">Overige</button>
-          </div>
-          <!-- Verborgen select voor logica compatibiliteit -->
-          <select class="form-select" id="r-prod" onchange="onProdChange()" style="display:none">
-            <option value="">Kies product...</option>
-          </select>
-          <!-- Vrij invoer knop -->
-          <button type="button" onclick="toggleManualProduct()" style="padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer;width:100%;text-align:left;margin-bottom:4px" id="btn-manual-prod">✏️ Product niet in lijst? Vrij invoeren</button>
-          <input type="text" class="form-input" id="r-prod-manual" placeholder="Typ productnaam..." style="display:none" oninput="checkVerbruik()">
-          <!-- Zichtbare product-picker lijst -->
-          <div id="r-prod-lijst" style="border:1px solid #ddd;border-radius:10px;max-height:200px;overflow-y:auto;background:#fff;display:none"></div>
-          <!-- Geselecteerd product -->
-          <div id="r-prod-selected" style="display:none;background:#EAF3DE;border:1px solid #c0dd97;border-radius:10px;padding:12px 14px;margin-top:4px;cursor:pointer" onclick="clearRegProduct()">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <div style="font-weight:700;font-size:15px" id="r-prod-sel-naam"></div>
-                <div style="font-size:13px;color:#555" id="r-prod-sel-sub"></div>
-              </div>
-              <span style="color:#888;font-size:18px;flex-shrink:0">✕</span>
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
           <label class="form-label">Type ondervloer</label>
           <select class="form-select" id="r-vloer" onchange="checkVerbruik()">
             <option value="">Kies ondergrond...</option>
@@ -908,44 +876,88 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
       </div>
 
-      <!-- ── STAP 2: Hoeveelheden ── -->
+      <!-- ── STAP 2: Producten toevoegen ── -->
       <div class="reg-step" data-step="2">
-        <div class="reg-step-meta">Stap 2 van 4 — Hoeveelheden</div>
-        <div class="input-row">
-          <div class="form-group">
-            <label class="form-label">Opp. uitgevoerd (m²)</label>
-            <input type="text" class="form-input" id="r-opp" placeholder="m²" inputmode="decimal" oninput="checkVerbruik()">
+        <div class="reg-step-meta">Stap 2 van 4 — Producten</div>
+
+        <!-- Product zoeken & selecteren -->
+        <div class="form-group">
+          <label class="form-label">Product toevoegen</label>
+          <input type="text" class="search-input" id="r-prod-zoek" placeholder="🔍 Zoek product op naam..." oninput="filterRegProds()" autocomplete="off" style="margin-bottom:8px">
+          <div class="filter-row" id="r-prod-filters" style="padding:0 0 8px;gap:6px">
+            <button class="chip active" onclick="setRegFilter(this,'alle')">Alle</button>
+            <button class="chip" onclick="setRegFilter(this,'epoxy')">Epoxy</button>
+            <button class="chip" onclick="setRegFilter(this,'pu')">PU</button>
+            <button class="chip" onclick="setRegFilter(this,'ucrete')">Ucrete</button>
+            <button class="chip" onclick="setRegFilter(this,'egaline')">Egaline</button>
+            <button class="chip" onclick="setRegFilter(this,'mortel')">Mortel</button>
+            <button class="chip" onclick="setRegFilter(this,'overige')">Overige</button>
           </div>
-          <div class="form-group">
-            <label class="form-label" id="r-kg-label">Verbruikt (kg)</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="text" class="form-input" id="r-kg" placeholder="kg" inputmode="decimal" oninput="checkVerbruik()" style="flex:1">
-              <select id="r-eenheid" onchange="updateRegEenheid()" style="padding:10px 8px;border:1.5px solid #d1d5db;border-radius:10px;font-size:15px;background:#fff;color:#333;min-width:80px">
-                <option value="kg">kg</option>
-                <option value="liter">liter</option>
-                <option value="sets">sets</option>
-              </select>
+          <select class="form-select" id="r-prod" onchange="onProdChange()" style="display:none">
+            <option value="">Kies product...</option>
+          </select>
+          <button type="button" onclick="toggleManualProduct()" style="padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer;width:100%;text-align:left;margin-bottom:4px" id="btn-manual-prod">✏️ Product niet in lijst? Vrij invoeren</button>
+          <input type="text" class="form-input" id="r-prod-manual" placeholder="Typ productnaam..." style="display:none" oninput="checkVerbruik()">
+          <div id="r-prod-lijst" style="border:1px solid #ddd;border-radius:10px;max-height:200px;overflow-y:auto;background:#fff;display:none"></div>
+          <div id="r-prod-selected" style="display:none;background:#EAF3DE;border:1px solid #c0dd97;border-radius:10px;padding:12px 14px;margin-top:4px;cursor:pointer" onclick="clearRegProduct()">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:700;font-size:15px" id="r-prod-sel-naam"></div>
+                <div style="font-size:13px;color:#555" id="r-prod-sel-sub"></div>
+              </div>
+              <span style="color:#888;font-size:18px;flex-shrink:0">✕</span>
             </div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" id="r-rest-label">Resterend stock (kg)</label>
-          <input type="text" class="form-input" id="r-rest" placeholder="kg" inputmode="decimal">
+
+        <!-- Hoeveelheden sub-form (getoond zodra product geselecteerd) -->
+        <div id="r-prod-form" style="display:none">
+          <div class="input-row">
+            <div class="form-group">
+              <label class="form-label">Opp. uitgevoerd (m²)</label>
+              <input type="text" class="form-input" id="r-opp" placeholder="m²" inputmode="decimal" oninput="checkVerbruik()">
+            </div>
+            <div class="form-group">
+              <label class="form-label" id="r-kg-label">Verbruikt (kg)</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="text" class="form-input" id="r-kg" placeholder="kg" inputmode="decimal" oninput="checkVerbruik()" style="flex:1">
+                <select id="r-eenheid" onchange="updateRegEenheid()" style="padding:10px 8px;border:1.5px solid #d1d5db;border-radius:10px;font-size:15px;background:#fff;color:#333;min-width:80px">
+                  <option value="kg">kg</option>
+                  <option value="liter">liter</option>
+                  <option value="sets">sets</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="r-rest-label">Resterend stock (kg)</label>
+            <input type="text" class="form-input" id="r-rest" placeholder="kg" inputmode="decimal">
+          </div>
+          <div class="form-group" id="r-dikte-wrap" style="display:none">
+            <label class="form-label">Dikte aangebrachte laag
+              <span style="float:right;display:flex;gap:0;border:1px solid #ddd;border-radius:8px;overflow:hidden">
+                <button id="r-dikte-mm" onclick="setRegDikteEenheid('mm')" style="padding:4px 12px;font-size:13px;font-weight:600;border:none;background:#3547C8;color:#fff;cursor:pointer;min-height:30px">mm</button>
+                <button id="r-dikte-cm" onclick="setRegDikteEenheid('cm')" style="padding:4px 12px;font-size:13px;font-weight:600;border:none;background:#fff;color:#666;cursor:pointer;min-height:30px">cm</button>
+              </span>
+            </label>
+            <input type="text" class="form-input" id="r-dikte" placeholder="bv. 5" inputmode="decimal" oninput="checkVerbruik()">
+            <div style="font-size:12px;color:#888;margin-top:4px" id="r-dikte-hint">Verbruik wordt berekend per mm dikte</div>
+          </div>
+          <div id="verbruik-check"></div>
+          <button type="button" onclick="addRegProduct()" style="width:100%;padding:13px;background:#3547C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px">＋ Product toevoegen aan lijst</button>
         </div>
-        <div class="form-group" id="r-dikte-wrap" style="display:none">
-          <label class="form-label">Dikte aangebrachte laag
-            <span style="float:right;display:flex;gap:0;border:1px solid #ddd;border-radius:8px;overflow:hidden">
-              <button id="r-dikte-mm" onclick="setRegDikteEenheid('mm')" style="padding:4px 12px;font-size:13px;font-weight:600;border:none;background:#3547C8;color:#fff;cursor:pointer;min-height:30px">mm</button>
-              <button id="r-dikte-cm" onclick="setRegDikteEenheid('cm')" style="padding:4px 12px;font-size:13px;font-weight:600;border:none;background:#fff;color:#666;cursor:pointer;min-height:30px">cm</button>
-            </span>
-          </label>
-          <input type="text" class="form-input" id="r-dikte" placeholder="bv. 5" inputmode="decimal" oninput="checkVerbruik()">
-          <div style="font-size:12px;color:#888;margin-top:4px" id="r-dikte-hint">Verbruik wordt berekend per mm dikte</div>
+
+        <!-- Toegevoegde producten -->
+        <div style="margin-top:16px">
+          <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Toegevoegde producten (<span id="reg-prod-count">0</span>)</div>
+          <div id="reg-prod-fout" style="display:none;color:#A32D2D;font-size:13px;margin-bottom:6px;font-weight:600"></div>
+          <div id="reg-prod-lijst"><div style="color:#bbb;font-size:13px;padding:4px 0">Nog geen producten toegevoegd</div></div>
         </div>
-        <div id="verbruik-check"></div>
+
+        <div style="height:8px"></div>
         <div class="step-nav-row">
           <button class="btn-secondary" onclick="regGoToStep(1)">← Vorige</button>
-          <button class="btn-primary" onclick="regGoToStep(3)">Volgende →</button>
+          <button class="btn-primary" onclick="regStap2Volgende()">Volgende →</button>
         </div>
       </div>
 
@@ -2024,12 +2036,14 @@ function toggleManualProduct() {
   const sel = document.getElementById('r-prod');
   const selected = document.getElementById('r-prod-selected');
   const lijst = document.getElementById('r-prod-lijst');
+  const prodForm = document.getElementById('r-prod-form');
   if (manual.style.display === 'none') {
     // Schakel over naar vrije invoer
     manual.style.display = 'block';
     if (selected) selected.style.display = 'none';
     if (lijst) lijst.style.display = 'none';
     if (sel) { sel.value = ''; }
+    if (prodForm) prodForm.style.display = 'block';
     btn.style.background = '#3547C8';
     btn.style.color = '#fff';
     btn.textContent = '✕ Terug naar lijst';
@@ -2038,6 +2052,7 @@ function toggleManualProduct() {
   } else {
     manual.style.display = 'none';
     manual.value = '';
+    if (prodForm) prodForm.style.display = 'none';
     btn.style.background = '#f7f7f7';
     btn.style.color = '#1a1a1a';
     btn.textContent = '✏️ Product niet in lijst? Vrij invoeren';
@@ -2313,6 +2328,9 @@ function resetRegStappen() {
   // Verbruik-check wissen
   const vc = document.getElementById('verbruik-check');
   if (vc) vc.innerHTML = '';
+  // Productenlijst wissen
+  regProducten = [];
+  updateRegProductenLijst();
   regGoToStep(1);
 }
 
@@ -2340,22 +2358,10 @@ function kopieerVorigeRegistratie() {
   if (vloer && last.ondervloer) vloer.value = last.ondervloer;
 
   vulProdDropdown();
-  const prodSel = document.getElementById('r-prod');
-  const prodMan = document.getElementById('r-prod-manual');
-  if (last.productCode === 'MANUEEL') {
-    if (prodMan.style.display === 'none') toggleManualProduct();
-    prodMan.value = last.product || '';
-  } else if (last.productCode) {
-    if (prodMan.style.display !== 'none') toggleManualProduct();
-    prodSel.value = last.productCode;
-  }
-  onProdChange();
-  checkVerbruik();
 
   const wrap = document.getElementById('r-copy-prev-wrap');
   if (wrap) wrap.style.display = 'none';
-  regGoToStep(2);
-  document.getElementById('r-opp').focus();
+  // Blijf op stap 1 — de gebruiker voegt producten toe in stap 2
 }
 
 function kopieerVorigeUren() {
@@ -2646,9 +2652,9 @@ function selectRegProduct(id) {
   document.getElementById('r-prod-sel-sub').textContent = p.toepassing || '';
   document.getElementById('r-prod-lijst').style.display = 'none';
   document.getElementById('r-prod-zoek').value = '';
-  // Verborgen manual-veld uitschakelen
   const manual = document.getElementById('r-prod-manual');
   if (manual) { manual.style.display = 'none'; manual.value = ''; }
+  document.getElementById('r-prod-form').style.display = 'block';
   onProdChange();
 }
 
@@ -2663,7 +2669,84 @@ function clearRegProduct() {
   const dikte = document.getElementById('r-dikte');
   if (dikte) dikte.value = '';
   document.getElementById('verbruik-check').innerHTML = '';
+  document.getElementById('r-prod-form').style.display = 'none';
+  // reset hoeveelheden velden
+  ['r-opp','r-kg','r-rest','r-dikte'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  const eenheid = document.getElementById('r-eenheid');
+  if(eenheid) eenheid.value = 'kg';
   checkVerbruik();
+}
+
+// ── MEERDERE PRODUCTEN PER REGISTRATIE ───────────────────────
+let regProducten = [];
+
+function addRegProduct() {
+  const { id: prodId, naam: prodNaam, prodObj, manual: prodManual } = getGekozenProduct();
+  if (!prodNaam) {
+    const fout = document.getElementById('reg-prod-fout');
+    fout.textContent = 'Selecteer eerst een product.';
+    fout.style.display = 'block';
+    return;
+  }
+  const opp = parseFloat((document.getElementById('r-opp').value||'').replace(',','.')) || 0;
+  const kg = parseFloat((document.getElementById('r-kg').value||'').replace(',','.')) || 0;
+  const eenheid = document.getElementById('r-eenheid').value || 'kg';
+  const rest = parseFloat((document.getElementById('r-rest').value||'').replace(',','.')) || 0;
+  const dikte = getRegDikteInMm();
+  const ondervloer = document.getElementById('r-vloer')?.value || '';
+  const productCode = prodObj ? (prodObj.code || prodObj.id || '') : '';
+
+  let theo = 0, verschilKg = 0, verschilPerc = 0, statusCheck = '';
+  if (prodObj && prodObj.verbruik && opp > 0 && kg > 0) {
+    const vDef = prodObj.verbruik;
+    const vGetal = parseFloat(String(vDef).replace(',','.')) || 0;
+    if (dikte && dikte > 0) {
+      theo = Math.round(opp * vGetal * (dikte / 1000) * 10) / 10;
+    } else {
+      theo = Math.round(opp * vGetal * 10) / 10;
+    }
+    verschilKg = Math.round((kg - theo) * 10) / 10;
+    verschilPerc = theo > 0 ? Math.round((kg / theo - 1) * 1000) / 10 : 0;
+    statusCheck = Math.abs(verschilPerc) <= 15 ? 'ok' : verschilPerc > 0 ? 'hoog' : 'laag';
+  }
+
+  document.getElementById('reg-prod-fout').style.display = 'none';
+  regProducten.push({ productCode, product: prodNaam, prodObj, prodManual, opp, kg, eenheid, resterend: rest, dikte, ondervloer, theoretisch: theo, verschilKg, verschilPerc, statusCheck });
+  updateRegProductenLijst();
+  clearRegProduct();
+}
+
+function updateRegProductenLijst() {
+  document.getElementById('reg-prod-count').textContent = regProducten.length;
+  const lijst = document.getElementById('reg-prod-lijst');
+  if (!lijst) return;
+  if (!regProducten.length) {
+    lijst.innerHTML = '<div style="color:#bbb;font-size:13px;padding:4px 0">Nog geen producten toegevoegd</div>';
+    return;
+  }
+  lijst.innerHTML = regProducten.map((p, i) => `
+    <div style="background:#f7f8fc;border:1px solid #e4e7f0;border-radius:10px;padding:10px 12px;margin-bottom:6px;position:relative">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1a1a2e">${escapeHtml(p.product)}</div>
+          <div style="font-size:12px;color:#666;margin-top:2px">
+            ${p.opp ? p.opp+' m² · ' : ''}${p.kg} ${p.eenheid}${p.resterend ? ' · rest: '+p.resterend+' '+p.eenheid : ''}
+            ${p.statusCheck === 'ok' ? ' ✅' : p.statusCheck === 'hoog' ? ' ⚠️ hoog verbruik' : p.statusCheck === 'laag' ? ' ⬇️ laag verbruik' : ''}
+          </div>
+        </div>
+        <button onclick="regProducten.splice(${i},1);updateRegProductenLijst()" style="background:none;border:none;color:#999;font-size:18px;cursor:pointer;padding:0 0 0 8px;line-height:1">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function regStap2Volgende() {
+  if (regProducten.length === 0) {
+    const fout = document.getElementById('reg-prod-fout');
+    fout.textContent = 'Voeg minstens één product toe voor je verdergaat.';
+    fout.style.display = 'block';
+    return;
+  }
+  regGoToStep(3);
 }
 
 // ── REGISTRATIE DIKTE EENHEID TOGGLE ─────────────────────
@@ -3265,17 +3348,12 @@ function toggleHandleiding(id) {
 }
 
 function toonSamenvatting() {
-  // ── Niets is verplicht — we tonen enkel een melding voor wat leeg is ──
   const selProj0 = document.getElementById('r-project-select');
   const manProj0 = document.getElementById('r-project-manual');
   const project0 = (manProj0 && manProj0.style.display !== 'none' ? manProj0.value : selProj0 ? selProj0.value : '').trim();
   const datum0   = document.getElementById('r-datum').value;
   const tl0      = document.getElementById('r-teamleader').value;
-  const opp0     = document.getElementById('r-opp').value;
   const vloer0   = document.getElementById('r-vloer').value;
-  const { naam: prodNaam0 } = getGekozenProduct();
-  const kg0      = document.getElementById('r-kg').value;
-  const rest0    = document.getElementById('r-rest').value;
   const temp0    = document.getElementById('r-temp').value;
   const rv0      = document.getElementById('r-rv').value;
   const ondergrond0 = document.getElementById('r-ondergrond').value;
@@ -3285,11 +3363,8 @@ function toonSamenvatting() {
   if (!project0)        ontbrekend.push('Projectnaam');
   if (!datum0)           ontbrekend.push('Datum');
   if (!tl0)               ontbrekend.push('Teamleader');
-  if (opp0 === '')        ontbrekend.push('Oppervlakte uitgevoerd');
   if (!vloer0)            ontbrekend.push('Type ondervloer');
-  if (!prodNaam0)         ontbrekend.push('Product gebruikt');
-  if (kg0 === '')          ontbrekend.push('Verbruikt (' + (document.getElementById('r-eenheid').value||'kg') + ')');
-  if (rest0 === '')        ontbrekend.push('Resterend stock');
+  if (!regProducten.length) ontbrekend.push('Minstens één product');
   if (temp0 === '')        ontbrekend.push('Temp. lucht');
   if (rv0 === '')          ontbrekend.push('RV');
   if (ondergrond0 === '')  ontbrekend.push('Temp. ondergrond');
@@ -3303,33 +3378,13 @@ function toonSamenvatting() {
         '<div style="font-size:12px;color:#8A6116;opacity:.85;margin-top:4px">Je kan toch versturen — dit is enkel een melding.</div></div>'
       : '';
   }
-  // Wis evt. eerdere foutmelding in het formulier zelf (oude validatie-stijl)
   const errEl = document.getElementById('r-form-error');
   if (errEl) errEl.innerHTML = '';
 
-  // Verzamel data van formulier
-  const opp = pf(document.getElementById('r-opp').value, 0);
-  const kg = pf(document.getElementById('r-kg').value, 0);
-  const samEenheid = document.getElementById('r-eenheid').value || 'kg';
-  const vloer = document.getElementById('r-vloer') ? document.getElementById('r-vloer').value : '';
-  const { prodObj } = getGekozenProduct();
-  const prodNaam = prodNaam0 || '–';
-  // Bereken effectieve kg voor theoretische vergelijking
-  const samVerpakking = prodObj ? pf(String(prodObj.verpakking), 0) : 0;
-  const kgEffectief = samEenheid === 'sets' && samVerpakking ? Math.round(kg * samVerpakking * 100) / 100 : kg;
-  const norm = prodObj
-    ? (vloer && prodObj.verbruikPerOndergrond && prodObj.verbruikPerOndergrond[vloer]
-        ? prodObj.verbruikPerOndergrond[vloer] : prodObj.verbruikNorm || 1)
-    : 1;
-  const theo = Math.round(opp * norm * 100) / 100;
-  const perc = theo > 0 ? Math.round(((kgEffectief - theo) / theo) * 100) : 0;
-  const percCls = perc > 15 ? 'color:#A32D2D;font-weight:700' : perc < -15 ? 'color:#3547C8;font-weight:700' : 'color:#3B6D11;font-weight:700';
-
+  const vloerLabels = {nieuwbeton:'Nieuw beton',oudbeton:'Oud beton',coating:'Bestaande coating',onbekend:'Onbekend'};
   const selProj = document.getElementById('r-project-select');
   const manProj = document.getElementById('r-project-manual');
   const project = (manProj && manProj.style.display !== 'none' ? manProj.value : selProj ? selProj.value : '') || '–';
-
-  const vloerLabels = {nieuwbeton:'Nieuw beton',oudbeton:'Oud beton',coating:'Bestaande coating',onbekend:'Onbekend'};
 
   const T = pf(document.getElementById('r-temp').value, NaN) || null;
   const RV = pf(document.getElementById('r-rv').value, NaN) || null;
@@ -3340,26 +3395,31 @@ function toonSamenvatting() {
       <span style="color:#666">${lbl}</span><span style="${style}">${val}</span>
     </div>`;
 
-  // Bereken dikte rij vooraf (vermijd IIFE in template)
-  const samType = prodObj ? (prodObj.type || '').toLowerCase() : '';
-  const samDikte = getRegDikteInMm();
-  const samDikteLabel = samDikte ? (regDikteEenheid === 'cm' ? (samDikte/10).toFixed(1) + ' cm' : samDikte + ' mm') : '–';
-  const dikteRij = (samType === 'mortel' || samType === 'egaline') ? row('Dikte laag', samDikteLabel) : '';
+  const productenHtml = regProducten.map((p, i) => {
+    const percCls = p.verschilPerc > 15 ? 'color:#A32D2D;font-weight:700' : p.verschilPerc < -15 ? 'color:#3547C8;font-weight:700' : 'color:#3B6D11;font-weight:700';
+    const samType = p.prodObj ? (p.prodObj.type || '').toLowerCase() : '';
+    const dikteRij = (samType === 'mortel' || samType === 'egaline') && p.dikte
+      ? row('Dikte laag', p.dikte + ' mm') : '';
+    return `<div style="background:#f7f8fc;border:1px solid #e4e7f0;border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:#3547C8;margin-bottom:6px">Product ${i+1}</div>
+      ${row('Product', escapeHtml(p.product))}
+      ${row('Opp.', p.opp ? p.opp + ' m²' : '–')}
+      ${dikteRij}
+      ${row('Verbruikt', p.kg + ' ' + p.eenheid)}
+      ${p.theoretisch ? row('Theoretisch', p.theoretisch + ' kg') : ''}
+      ${p.theoretisch && p.eenheid !== 'liter' ? row('Afwijking', (p.verschilPerc >= 0 ? '+' : '') + p.verschilPerc + '%', percCls) : ''}
+      ${row('Resterend stock', p.resterend ? p.resterend + ' ' + p.eenheid : '–')}
+    </div>`;
+  }).join('');
 
   document.getElementById('samenvatting-body').innerHTML = `
     <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Algemeen</div>
     ${row('Project', project)}
-    ${row('Datum', document.getElementById('r-datum').value || '–')}
-    ${row('Teamleader', document.getElementById('r-teamleader').value || '–')}
-    <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Uitvoering</div>
-    ${row('Oppervlakte', opp0 !== '' ? opp + ' m²' : '–')}
-    ${row('Type ondervloer', vloerLabels[vloer] || '–')}
-    ${dikteRij}
-    ${row('Product', prodNaam)}
-    ${row('Verbruikt', kg0 !== '' ? kg + ' ' + samEenheid + (samEenheid === 'sets' && samVerpakking ? ' (' + kgEffectief + ' kg)' : '') : '–')}
-    ${samEenheid !== 'liter' ? row('Theoretisch', theo + ' kg (' + norm + ' kg/m²)') : ''}
-    ${samEenheid !== 'liter' ? row('Afwijking', (perc >= 0 ? '+' : '') + perc + '%', percCls) : ''}
-    ${row('Resterend stock', rest0 !== '' ? pf(rest0,0) + ' ' + samEenheid : '–')}
+    ${row('Datum', datum0 || '–')}
+    ${row('Teamleader', tl0 || '–')}
+    ${row('Type ondervloer', vloerLabels[vloer0] || '–')}
+    <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Producten (${regProducten.length})</div>
+    ${productenHtml || '<div style="color:#bbb;font-size:13px">Geen producten toegevoegd</div>'}
     <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Omgevingscondities</div>
     ${row('Temp. lucht', T !== null ? T + '°C' : '–')}
     ${row('RV', RV !== null ? RV + '%' : '–')}
@@ -3434,100 +3494,87 @@ async function insertRegistratieInSupabase(reg) {
 }
 
 async function submitRegistratie() {
-  const opp = pf(document.getElementById('r-opp').value, 0);
-  const kg = pf(document.getElementById('r-kg').value, 0);
-  const vloer = document.getElementById('r-vloer') ? document.getElementById('r-vloer').value : '';
-
-  // Gebruik zelfde logica als berekenAlles en checkVerbruik
-  const { id: prodId, naam: prodNaam, prodObj: prodObj2, manual: prodManual } = getGekozenProduct();
-  const normBase = prodObj2
-    ? (vloer && prodObj2.verbruikPerOndergrond && prodObj2.verbruikPerOndergrond[vloer]
-        ? prodObj2.verbruikPerOndergrond[vloer]
-        : prodObj2.verbruikNorm || 2.0)
-    : 2.0;
-  const typeReg = prodObj2 ? (prodObj2.type || '').toLowerCase() : '';
-  const isDikteReg = typeReg === 'mortel' || typeReg === 'egaline';
-  const dikteReg = isDikteReg ? getRegDikteInMm() : 1;
-  const norm = isDikteReg ? normBase * dikteReg : normBase;
-  const theo = Math.round(opp * norm * 100) / 100;
-  // Effectieve kg voor sets: aantal sets × verpakkingsgewicht
-  const submitEenheid = document.getElementById('r-eenheid').value || 'kg';
-  const submitVerpakking = prodObj2 ? pf(String(prodObj2.verpakking), 0) : 0;
-  const kgEffectief = submitEenheid === 'sets' && submitVerpakking ? Math.round(kg * submitVerpakking * 100) / 100 : kg;
-  const perc = theo > 0 ? Math.round(((kgEffectief - theo) / theo) * 100) : 0;
   const T = pf(document.getElementById('r-temp').value, NaN) || null;
   const RV = pf(document.getElementById('r-rv').value, NaN) || null;
   const dp = (T && RV) ? Math.round((T - ((100 - RV) / 5)) * 10) / 10 : null;
+  const selProj = document.getElementById('r-project-select');
+  const manProj = document.getElementById('r-project-manual');
+  let project = (manProj && manProj.style.display !== 'none' ? manProj.value : selProj ? selProj.value : '') || 'Onbekend project';
+  const datum = document.getElementById('r-datum').value || new Date().toISOString().split('T')[0];
+  const teamleader = document.getElementById('r-teamleader').value;
+  const ondervloer = document.getElementById('r-vloer') ? document.getElementById('r-vloer').value : '';
+  const opmerking = document.getElementById('r-opmerking').value;
+  const fotoUrls = getFotoUrls();
+  const fotoPaths = getFotoPaths();
+  const aantalFotos = fotoUrls.length;
+  const timestamp = localTimestamp();
 
-  const reg = {
-    timestamp: localTimestamp(),
-    datum: document.getElementById('r-datum').value,
-    project: document.getElementById('r-project').value || '',
-    teamleader: document.getElementById('r-teamleader').value,
-    ondervloer: document.getElementById('r-vloer') ? document.getElementById('r-vloer').value : '',
-    dikte: getRegDikteInMm() || 0,
-    opp, productCode: prodManual ? 'MANUEEL' : (prodId !== null ? String(prodId) : ''),
-    product: prodNaam,
-    kg: kgEffectief, sets_ingegeven: submitEenheid === 'sets' ? kg : null, eenheid: submitEenheid, resterend: pf(document.getElementById('r-rest').value, 0),
-    theoretisch: theo, verschilKg: Math.round((kgEffectief - theo) * 10) / 10, verschilPerc: perc,
-    tempLucht: T || 0, rv: RV || 0, dauwpunt: dp || 0,
+  // Bouw één reg-object per product
+  const regsToSend = regProducten.map(p => ({
+    timestamp,
+    datum,
+    project,
+    teamleader,
+    ondervloer: p.ondervloer || ondervloer,
+    dikte: p.dikte || 0,
+    opp: p.opp,
+    productCode: p.prodManual ? 'MANUEEL' : (p.prodObj ? String(p.prodObj.id || '') : ''),
+    product: p.product,
+    kg: p.kg,
+    eenheid: p.eenheid,
+    resterend: p.resterend,
+    theoretisch: p.theoretisch,
+    verschilKg: p.verschilKg,
+    verschilPerc: p.verschilPerc,
+    tempLucht: T || 0,
+    rv: RV || 0,
+    dauwpunt: dp || 0,
     tempOndergrond: pf(document.getElementById('r-ondergrond').value, NaN) || 0,
     vochtOndergrond: pf(document.getElementById('r-vocht').value, NaN) || 0,
-    opmerking: document.getElementById('r-opmerking').value,
-    _fotoUrls: getFotoUrls(),
-    _fotoPaths: getFotoPaths(),
-    aantalFotos: getFotoUrls().length,
-    statusCheck: perc > 15 ? '⚠️ Oververbruik' : perc < -15 ? '⚠️ Onderverbruik' : '✅ OK'
-  };
-
-  // Valideer minimale verplichte velden
-  if (!reg.datum) { reg.datum = new Date().toISOString().split('T')[0]; }
-  if (!reg.project) {
-    const selProj = document.getElementById('r-project-select');
-    const manProj = document.getElementById('r-project-manual');
-    reg.project = (manProj && manProj.style.display !== 'none' ? manProj.value : selProj ? selProj.value : '') || 'Onbekend project';
-  }
+    opmerking,
+    aantalFotos,
+    _fotoUrls: fotoUrls,
+    _fotoPaths: fotoPaths,
+    statusCheck: p.statusCheck === 'ok' ? '✅ OK' : p.statusCheck === 'hoog' ? '⚠️ Oververbruik' : p.statusCheck === 'laag' ? '⚠️ Onderverbruik' : '✅ OK'
+  }));
 
   // Lokaal opslaan
-  appData.registraties.push(reg);
+  for (const reg of regsToSend) {
+    appData.registraties.push(reg);
+  }
   try {
     localStorage.setItem('registraties', JSON.stringify(appData.registraties));
-    console.log('[Reg] Opgeslagen, totaal:', appData.registraties.length);
   } catch(e) {
     console.error('[Reg] localStorage fout:', e);
   }
 
   // Naar Supabase sturen
-  if (supabaseConfigured() && initSupabase()) {
-    if (navigator.onLine) {
+  let allSynced = true;
+  if (supabaseConfigured() && initSupabase() && navigator.onLine) {
+    for (const reg of regsToSend) {
       try {
-        showDebug('Versturen naar Supabase...');
+        showDebug('Versturen naar Supabase: ' + reg.product + '...');
         await insertRegistratieInSupabase(reg);
         reg._synced = true;
-        showDebug('Opgeslagen in Supabase ✓');
+        showDebug('Opgeslagen: ' + reg.product + ' ✓');
       } catch(e) {
         console.warn('[Supabase] Versturen mislukt:', e.message);
         showDebug('Mislukt: ' + e.message);
         reg._synced = false;
+        allSynced = false;
       }
-    } else {
-      reg._synced = false;
     }
-    // Sla bijgewerkte registraties op (inclusief sync-status)
-    localStorage.setItem('registraties', JSON.stringify(appData.registraties));
   } else {
-    // Supabase niet geconfigureerd — registratie staat enkel lokaal, nog niet verstuurd
-    reg._synced = false;
-    localStorage.setItem('registraties', JSON.stringify(appData.registraties));
+    regsToSend.forEach(r => { r._synced = false; });
+    allSynced = false;
   }
+  localStorage.setItem('registraties', JSON.stringify(appData.registraties));
 
-  // Sluit modal en toon bevestiging
   const statusEl = document.getElementById('samenvatting-status');
   const btn = document.querySelector('#samenvatting-modal .btn-green');
 
   if (statusEl) {
-    const synced = reg._synced !== false;
-    statusEl.innerHTML = synced
+    statusEl.innerHTML = allSynced
       ? '<div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;color:#3B6D11;font-weight:600">✅ Verstuurd naar Supabase!</div>'
       : '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt verstuurd zodra er verbinding is.</div>';
   }
@@ -3536,25 +3583,20 @@ async function submitRegistratie() {
     btn.style.background = '#3B6D11';
   }
 
-  // Sluit modal na 2 seconden en ga terug naar home
   setTimeout(() => {
     closeSamenvatting();
     go('s-home');
-    // Reset formulier voor volgende registratie
-    document.getElementById('r-opp').value = '';
-    document.getElementById('r-kg').value = '';
-    document.getElementById('r-rest').value = '';
-    const di = document.getElementById('r-dikte'); if(di) di.value = '';
-    const dw = document.getElementById('r-dikte-wrap'); if(dw) dw.style.display='none';
     document.getElementById('r-temp').value = '';
     document.getElementById('r-rv').value = '';
     document.getElementById('r-ondergrond').value = '';
     document.getElementById('r-vocht').value = '';
     document.getElementById('r-opmerking').value = '';
-  resetFotos();
+    resetFotos();
     document.getElementById('verbruik-check').innerHTML = '';
     document.getElementById('dauwpunt-info').innerHTML = '';
     document.getElementById('vocht-warn').innerHTML = '';
+    regProducten = [];
+    updateRegProductenLijst();
     if (btn) { btn.disabled = false; btn.textContent = '✓ Bevestigen & Versturen naar Supabase'; btn.style.background = ''; }
   }, 2500);
 
