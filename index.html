@@ -96,8 +96,9 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .menu-btn .sub{font-size:12px;color:var(--text-muted)}
 
 /* ── Bottom nav ──────────────────────────────────────── */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:#fff;border-top:1px solid #e5e5e5;z-index:200;padding-bottom:env(safe-area-inset-bottom,0px)}
-.nav-item{flex:1;padding:10px 4px 10px;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;display:flex;background:#fff;border-top:1px solid #e5e5e5;z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.bottom-nav::-webkit-scrollbar{display:none}
+.nav-item{flex:0 0 auto;min-width:64px;padding:10px 4px 10px;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px}
 .nav-item .ni{font-size:24px;line-height:1}
 .nav-item .nl{font-size:10px;color:#888;font-weight:500}
 .nav-item.active .nl{color:#3547C8;font-weight:700}
@@ -310,6 +311,22 @@ textarea.form-input{min-height:80px;resize:vertical}
     overflow: hidden;
   }
 
+  /* Subtiele scrollbalk op desktop — overal waar gescrolled kan worden */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(53,71,200,0.25) transparent;
+  }
+  *::-webkit-scrollbar { width: 5px; height: 5px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: rgba(53,71,200,0.22); border-radius: 10px; min-height: 32px; }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(53,71,200,0.5); }
+
+  /* Uitzondering: bottom-nav en filter-chips blijven verborgen */
+  .bottom-nav, .filter-row { scrollbar-width: none; }
+  .bottom-nav::-webkit-scrollbar, .filter-row::-webkit-scrollbar { display: none; }
+
+  .scroll-area { padding-bottom: 24px; }
+
   /* Screens hebben geen bottom-nav nodig op desktop */
   .bottom-nav { display: none !important; }
 
@@ -354,16 +371,14 @@ textarea.form-input{min-height:80px;resize:vertical}
 <!-- ── DESKTOP SIDEBAR (verborgen op mobiel) ── -->
 <nav id="desktop-sidebar" style="display:none">
   <div class="sidebar-logo">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 58" height="36" style="display:block">
-      <polygon points="8,2 42,2 26,24 8,24" fill="#1A2460"/>
-      <polygon points="26,2 42,2 42,10" fill="#1A2460"/>
-      <polygon points="8,27 26,27 42,45 24,45" fill="#BCBCBC"/>
-      <polygon points="24,48 42,48 42,56 8,56" fill="#1A2460"/>
-      <polygon points="8,48 24,48 8,56" fill="#1A2460"/>
-      <text x="50" y="21" font-family="Arial,sans-serif" font-size="12" font-weight="600" fill="rgba(255,255,255,0.85)" letter-spacing="1.5">SUERICKX</text>
-      <text x="50" y="47" font-family="Arial,sans-serif" font-size="20" font-weight="800" fill="white">FLOORING</text>
-    </svg>
-    <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:8px;font-weight:500">VloerAssistent</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="icon-192x192.png" height="40" width="40" style="border-radius:10px;flex-shrink:0;display:block" alt="VloerAssistent">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1.4px;text-transform:uppercase">Suerickx</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:.3px;line-height:1.2">Flooring</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:1px">VloerAssistent</div>
+      </div>
+    </div>
   </div>
 
   <div class="sidebar-nav-item active" id="snav-home" onclick="goDesktop('s-home')">
@@ -386,6 +401,9 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
   <div class="sidebar-nav-item" id="snav-handleidingen" onclick="goDesktop('s-handleidingen')">
     <span class="s-icon">📖</span> Handleidingen
+  </div>
+  <div class="sidebar-nav-item" id="snav-documenten" onclick="goDesktop('s-documenten')">
+    <span class="s-icon">📎</span> Documenten
   </div>
 
   <div class="sidebar-footer">
@@ -434,6 +452,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="openPlanning()"><div class="ico">📅</div><div class="lbl">Planning</div><div class="sub">Wie staat waar</div></button>
       <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
       <button class="menu-btn" onclick="go('s-handleidingen')"><div class="ico">📖</div><div class="lbl">Handleidingen</div><div class="sub">Toestellen & info</div></button>
+      <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Documenten</div><div class="sub">TRA & offertes</div></button>
     </div>
     <div class="sync-badge" id="sync-status">🔄 Data laden...</div>
   </div>
@@ -442,6 +461,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -630,6 +653,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item active"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -645,6 +672,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -719,6 +750,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item active"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -752,6 +787,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item active" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -813,6 +852,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item active" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -1023,6 +1066,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item active"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -1442,6 +1489,54 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+  </div>
+</div>
+
+<!-- ══ DOCUMENTEN (TRA / offerte per werf) ══════════════════ -->
+<div class="screen" id="s-documenten">
+  <div class="topbar">
+    <button class="btn-back" onclick="docTerugNaarLijst()" id="doc-btn-back" aria-label="Terug">←</button>
+    <div class="topbar-title" id="doc-topbar-title">Documenten</div>
+    <span class="topbar-icon">📎</span>
+  </div>
+
+  <!-- Stap 1: werf zoeken/kiezen -->
+  <div id="doc-stap-lijst" style="display:flex;flex-direction:column;flex:1;min-height:0">
+    <div style="padding:14px 14px 0;flex-shrink:0">
+      <input type="text" class="search-input" id="doc-zoek" placeholder="🔍 Zoek werf..." oninput="renderDocProjecten()" autocomplete="off">
+    </div>
+    <div class="filter-row" id="doc-periode-chips" style="flex-shrink:0;padding:10px 14px 8px">
+      <button class="chip active" onclick="setDocPeriodeFilter('alle',this)">📅 Alle werven</button>
+      <button class="chip" onclick="setDocPeriodeFilter('actief',this)">🟢 Actief nu</button>
+      <button class="chip" onclick="setDocPeriodeFilter('binnenkort',this)">🔵 Binnenkort</button>
+    </div>
+    <div class="scroll-area">
+      <div id="doc-projecten-lijst" style="padding:6px 14px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stap 2: bijlagen van de gekozen werf -->
+  <div id="doc-stap-bijlagen" style="display:none;flex-direction:column;flex:1;min-height:0">
+    <div class="scroll-area">
+      <div id="doc-bijlagen-lijst" style="padding:14px;display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
+    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
+    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -1520,6 +1615,10 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
     <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
   </div>
 </div>
 
@@ -1603,6 +1702,148 @@ function initSupabase() {
 
 function supabaseConfigured() {
   return !!((localStorage.getItem('supabaseUrl') || DEFAULT_SUPABASE_URL) && (localStorage.getItem('supabaseKey') || DEFAULT_SUPABASE_KEY));
+}
+
+// ── Cockpit-koppeling (read-only) — voor het raadplegen van TRA/offertes ──
+// Los van de "sb"-client hierboven: Project Cockpit gebruikt een eigen,
+// apart Supabase-project waarin de actieve werven en hun bijlagen leven.
+const COCKPIT_SUPABASE_URL = 'https://ppasfyufaifwufcvffnq.supabase.co';
+const COCKPIT_SUPABASE_KEY = 'sb_publishable_9TkUYSv4y_290Vo9n-VEfQ_jLYhJHW3';
+let sbCockpit = null;
+function initSbCockpit() {
+  if (sbCockpit || !window.supabase) return sbCockpit;
+  try { sbCockpit = window.supabase.createClient(COCKPIT_SUPABASE_URL, COCKPIT_SUPABASE_KEY); }
+  catch (e) { console.warn('[Cockpit-koppeling] init mislukt:', e.message); }
+  return sbCockpit;
+}
+
+// ── Scherm "Documenten": TRA/offerte per werf, uit Project Cockpit ──
+const docState = { projecten: null, huidigProject: null, filter: 'alle' };
+
+function docVandaag() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function docMorgen() {
+  const d = new Date(); d.setDate(d.getDate()+1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function isDocActief(p) {
+  const start = p.startdatum || '0000-01-01';
+  const einde = p.einddatum  || '9999-12-31';
+  return start <= docMorgen() && einde >= docVandaag();
+}
+function fmtDocDatum(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function setDocPeriodeFilter(periode, btn) {
+  docState.filter = periode;
+  document.querySelectorAll('#doc-periode-chips .chip').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderDocProjecten();
+}
+
+async function initDocumenten() {
+  if (docState.projecten) { renderDocProjecten(); return; }
+  const lijst = document.getElementById('doc-projecten-lijst');
+  lijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
+  const client = initSbCockpit();
+  if (!client) {
+    lijst.innerHTML = '<div style="color:#c0392b;text-align:center;padding:20px 0">Kon geen verbinding maken met Project Cockpit.</div>';
+    return;
+  }
+  const { data, error } = await client.from('cockpit_projecten')
+    .select('id,projectnummer,werfnaam,startdatum,einddatum')
+    .eq('gearchiveerd', false)
+    .order('startdatum', { ascending: true });
+  if (error) {
+    lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+  docState.projecten = data || [];
+  renderDocProjecten();
+}
+
+function renderDocProjecten() {
+  const q = (document.getElementById('doc-zoek').value || '').toLowerCase();
+  const lijst = document.getElementById('doc-projecten-lijst');
+  let items = (docState.projecten || []).filter(p =>
+    !q || (p.werfnaam || '').toLowerCase().includes(q) || (p.projectnummer || '').toLowerCase().includes(q)
+  );
+  if (docState.filter === 'actief')     items = items.filter(p => isDocActief(p));
+  if (docState.filter === 'binnenkort') items = items.filter(p => !isDocActief(p));
+  if (!items.length) {
+    lijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Geen werven gevonden.</div>';
+    return;
+  }
+  lijst.innerHTML = items.map(p => {
+    const actief = isDocActief(p);
+    const badge = actief
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3B6D11;background:#EAF3DE;border-radius:6px;padding:2px 8px">🟢 Actief nu</span>`
+      : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3547C8;background:#EEF0FC;border-radius:6px;padding:2px 8px">🔵 Binnenkort</span>`;
+    const datums = (p.startdatum || p.einddatum)
+      ? `<span style="font-size:12px;color:#999">${fmtDocDatum(p.startdatum)} → ${fmtDocDatum(p.einddatum)}</span>`
+      : '';
+    return `<div class="prod-card" onclick="kiesDocProject(${p.id})">
+      <div class="prod-card-top">
+        <div class="prod-name" style="font-size:15px">🏗️ ${escapeHtml(p.werfnaam || 'Onbekende werf')}</div>
+        ${badge}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <span class="prod-sub" style="flex:1">${escapeHtml(p.projectnummer || '')}</span>
+        ${datums}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function kiesDocProject(projectId) {
+  docState.huidigProject = projectId;
+  const proj = (docState.projecten || []).find(p => p.id === projectId);
+  document.getElementById('doc-topbar-title').textContent = proj?.werfnaam || 'Documenten';
+  document.getElementById('doc-stap-lijst').style.display = 'none';
+  document.getElementById('doc-stap-bijlagen').style.display = '';
+
+  const bijlLijst = document.getElementById('doc-bijlagen-lijst');
+  bijlLijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
+
+  const client = initSbCockpit();
+  const { data, error } = await client.from('cockpit_bijlagen')
+    .select('*').eq('project_id', projectId).order('geupload_op', { ascending: false });
+  if (error) {
+    bijlLijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+  if (!data || !data.length) {
+    bijlLijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px 14px">Nog geen documenten geüpload voor deze werf.</div>';
+    return;
+  }
+  const TYPE_ICOON = { TRA: '⚠️', Offerte: '💰' };
+  const TYPE_BADGE = { TRA: 'badge-epoxy', Offerte: 'badge-pu' };
+  bijlLijst.innerHTML = data.map(b => {
+    const { data: pub } = client.storage.from('project-documenten').getPublicUrl(b.storage_path);
+    return `<a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" class="prod-card" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px;flex-shrink:0">${TYPE_ICOON[b.type] || '📄'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(b.bestandsnaam)}</div>
+        <div class="badge ${TYPE_BADGE[b.type] || ''}" style="display:inline-block;margin-top:4px">${escapeHtml(b.type)}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function docTerugNaarLijst() {
+  const inBijlagenStap = document.getElementById('doc-stap-bijlagen').style.display !== 'none';
+  if (inBijlagenStap) {
+    document.getElementById('doc-stap-bijlagen').style.display = 'none';
+    document.getElementById('doc-stap-lijst').style.display = '';
+    document.getElementById('doc-topbar-title').textContent = 'Documenten';
+  } else {
+    go('s-home');
+  }
 }
 
 // ── FOTO BEHEER (Supabase Storage, bucket "fotos") ────────
@@ -1773,7 +2014,8 @@ function goDesktop(id) {
                's-dagregistratie-keuze':'snav-registratie','s-uren':'snav-registratie','s-registratie':'snav-registratie',
                's-planning':'snav-planning',
                's-regiebon':'snav-regiebon',
-               's-handleidingen':'snav-handleidingen'};
+               's-handleidingen':'snav-handleidingen',
+               's-documenten':'snav-documenten'};
   const active = document.getElementById(map[id]);
   if (active) active.classList.add('active');
 }
@@ -1792,6 +2034,7 @@ function go(id) {
   // Herlaad dropdowns bij elke navigatie zodat Sheets-data altijd actueel is
   if (id === 's-berekening' || id === 's-registratie') updateProductDropdowns();
   if (id === 's-regiebon') initRegiebon();
+  if (id === 's-documenten') initDocumenten();
   if (id === 's-uren') updateUrenDropdowns();
   if (id === 's-registratie' || id === 's-uren' || id === 's-regiebon') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') resetRegStappen();
