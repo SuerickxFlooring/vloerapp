@@ -1604,10 +1604,6 @@ textarea.form-input{min-height:80px;resize:vertical}
       </div>
     </div>
     <div id="wn-popup-content" style="flex:1;overflow-y:auto;min-height:0;display:flex;align-items:stretch"></div>
-    <div style="padding:14px 20px;border-top:1px solid #eee;display:flex;gap:10px;flex-shrink:0">
-      <button onclick="sluitWnPopup()" style="flex:1;padding:13px;background:#f0f1f7;color:#3547C8;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">Later bekijken</button>
-      <button onclick="go('s-weeknieuws');sluitWnPopup()" style="flex:1;padding:13px;background:#3547C8;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">Alle briefingen →</button>
-    </div>
   </div>
 </div>
 
@@ -1967,6 +1963,9 @@ async function checkWeeknieuwsPopup() {
   const data = await laadWeeknieuws();
   if (!data || !data.length) return;
   const nieuwste = data[0];
+  const dagStr = new Date().toISOString().split('T')[0];
+  const sleutel = `wn_gezien_${nieuwste.id}_${dagStr}`;
+  if (localStorage.getItem(sleutel)) return;
 
   // Toon "Nieuw" badge
   const badge = document.getElementById('snav-weeknieuws-badge');
@@ -1983,6 +1982,8 @@ async function checkWeeknieuwsPopup() {
     ? `<img src="${pub.publicUrl}" style="width:100%;height:auto;display:block;object-fit:contain">`
     : `<iframe src="${pub.publicUrl}" style="width:100%;height:100%;min-height:60vh;border:none;display:block;flex:1"></iframe>`;
   document.getElementById('wn-popup-modal').style.display = 'flex';
+
+  localStorage.setItem(sleutel, '1');
 }
 
 function sluitWnPopup() {
