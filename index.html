@@ -624,7 +624,7 @@ textarea.form-input{min-height:80px;resize:vertical}
         <div style="font-weight:700;font-size:15px" id="planning-week-label">Week …</div>
         <div style="font-size:12px;color:#888" id="planning-week-range"></div>
       </div>
-      <button onclick="planningWeekOffset(+1)" style="background:#f0f2fa;border:none;border-radius:10px;padding:8px 16px;font-size:18px;cursor:pointer">›</button>
+      <button id="planning-volgende-btn" onclick="planningWeekOffset(+1)" style="background:#f0f2fa;border:none;border-radius:10px;padding:8px 16px;font-size:18px;cursor:pointer">›</button>
     </div>
 
     <!-- Filter: toon alle of één persoon -->
@@ -1604,7 +1604,7 @@ textarea.form-input{min-height:80px;resize:vertical}
         <button onclick="sluitWnPopup()" style="background:#f0f0f0;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;color:#555;flex-shrink:0">✕</button>
       </div>
     </div>
-    <div id="wn-popup-content" style="flex:1;overflow-y:auto;min-height:0;display:flex;align-items:stretch"></div>
+    <div id="wn-popup-content" style="flex:1;overflow-y:auto;min-height:0;display:flex;align-items:flex-start"></div>
   </div>
 </div>
 
@@ -1798,7 +1798,7 @@ function initSbCockpit() {
 }
 
 // ── Scherm "Documenten": TRA/offerte per werf, uit Project Cockpit ──
-const docState = { projecten: null, huidigProject: null, filter: 'alle' };
+const docState = { projecten: null, huidigProject: null, filter: 'alle', bijlagen: [] };
 
 function docVandaag() {
   const d = new Date();
@@ -1835,16 +1835,32 @@ async function initDocumenten() {
     lijst.innerHTML = '<div style="color:#c0392b;text-align:center;padding:20px 0">Kon geen verbinding maken met Project Cockpit.</div>';
     return;
   }
-  const { data, error } = await client.from('cockpit_projecten')
-    .select('id,projectnummer,werfnaam,startdatum,einddatum')
-    .eq('gearchiveerd', false)
-    .order('startdatum', { ascending: true });
-  if (error) {
-    lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(error.message)}</div>`;
+  const [projRes, bijlRes] = await Promise.all([
+    client.from('cockpit_projecten')
+      .select('id,projectnummer,werfnaam,startdatum,einddatum')
+      .eq('gearchiveerd', false)
+      .order('startdatum', { ascending: true }),
+    client.from('cockpit_bijlagen').select('project_id,type')
+  ]);
+  if (projRes.error) {
+    lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(projRes.error.message)}</div>`;
     return;
   }
-  docState.projecten = data || [];
+  docState.projecten = projRes.data || [];
+  docState.bijlagen  = bijlRes.data || [];
   renderDocProjecten();
+}
+
+// Compacte pillen (TRA/Offerte/Andere) zodat je in de werflijst al ziet welke
+// documenten er al zijn, zonder elk project apart te moeten openen.
+function bijlagenPillenVoorProject(projectId) {
+  const vanProj = (docState.bijlagen || []).filter(b => b.project_id === projectId);
+  return ['TRA', 'Offerte', 'Andere'].map(t => {
+    const aanwezig = vanProj.some(b => b.type === t);
+    return `<span style="font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:10px;${
+      aanwezig ? 'background:#EAF3DE;color:#3B6D11' : 'background:#f2f2f2;color:#aaa'
+    }">${t} ${aanwezig ? '✔' : '✘'}</span>`;
+  }).join('');
 }
 
 function renderDocProjecten() {
@@ -1876,6 +1892,7 @@ function renderDocProjecten() {
         <span class="prod-sub" style="flex:1">${escapeHtml(p.projectnummer || '')}</span>
         ${datums}
       </div>
+      <div style="display:flex;gap:5px;margin-top:8px">${bijlagenPillenVoorProject(p.id)}</div>
     </div>`;
   }).join('');
 }
@@ -4215,9 +4232,21 @@ async function laadPlanning(force) {
 }
 
 function planningWeekOffset(delta, reset) {
-  if (reset) planningWeekDelta = 0;
-  else planningWeekDelta += delta;
+  if (reset) {
+    planningWeekDelta = 0;
+  } else {
+    const nieuweDelta = planningWeekDelta + delta;
+    if (delta > 0 && !magPlanningVooruit(nieuweDelta)) return; // max 3 dagen vooruit
+    planningWeekDelta = nieuweDelta;
+  }
   laadPlanning();
+}
+
+function magPlanningVooruit(delta) {
+  const maandag = getMaandag(delta);
+  const vandaag = new Date(); vandaag.setHours(0,0,0,0);
+  const verschilDagen = Math.round((maandag - vandaag) / 86400000);
+  return verschilDagen <= 3;
 }
 
 function renderPlanning() {
@@ -4231,13 +4260,25 @@ function renderPlanning() {
     maandag.toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) + ' – ' +
     vrijdag.toLocaleDateString('nl-BE',{day:'numeric',month:'short',year:'numeric'});
 
+  const volgendeBtn = document.getElementById('planning-volgende-btn');
+  if (volgendeBtn) {
+    const magVooruit = magPlanningVooruit(planningWeekDelta + 1);
+    volgendeBtn.disabled = !magVooruit;
+    volgendeBtn.style.opacity = magVooruit ? '1' : '0.35';
+    volgendeBtn.style.cursor = magVooruit ? 'pointer' : 'default';
+  }
+
   const filterPersoon = document.getElementById('planning-persoon-filter')?.value || '';
   const STATUS_KLEUR  = { gepland:'#EAF3DE', verlof:'#FFF8EC', niet_beschikbaar:'#FDECEA', onbekend:'#f5f5f5' };
   const STATUS_LABEL  = { gepland:'', verlof:'🏖️ Verlof', niet_beschikbaar:'⛔ Niet beschikbaar', onbekend:'?' };
 
+  const vandaagMiddernacht = new Date(); vandaagMiddernacht.setHours(0,0,0,0);
+
   let html = '';
   for (let i = 0; i < 5; i++) {  // ma t/m vr
     const dag = new Date(maandag); dag.setDate(maandag.getDate() + i);
+    const verschilMetVandaag = Math.round((dag - vandaagMiddernacht) / 86400000);
+    if (verschilMetVandaag > 3) continue; // enkel vandaag t/m +3 dagen tonen
     const ds  = datumStr(dag);
     const dagData = planningData.filter(r =>
       r.datum === ds &&
