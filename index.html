@@ -126,6 +126,9 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .badge-overige{background:#E8EAF6;color:#3547C8}
 .badge-mortel{background:#fef3c7;color:#92400e}
 .badge-andere{background:#E8EAF6;color:#3547C8}
+.badge-pmma{background:#FDE8F3;color:#B0246D}
+.badge-primer{background:#E4F7EF;color:#1A7A52}
+.badge-coating{background:#FFF1E0;color:#B5590A}
 .prod-sub{font-size:13px;color:#666;margin-bottom:8px}
 .prod-meta{font-size:13px;color:#777;display:flex;flex-wrap:wrap;gap:6px 12px}
 
@@ -399,7 +402,7 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item" id="snav-berekening" onclick="goDesktop('s-berekening')">
     <span class="s-icon">🔢</span> Berekening
   </div>
-  <div class="sidebar-nav-item" id="snav-registratie" onclick="goDesktop('s-dagregistratie-keuze')">
+  <div class="sidebar-nav-item" id="snav-registratie" onclick="goDesktop('s-registratie')">
     <span class="s-icon">📋</span> Dagregistratie
   </div>
   <div class="sidebar-nav-item" id="snav-planning" onclick="openPlanning()">
@@ -461,7 +464,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <div class="menu-grid">
       <button class="menu-btn" onclick="go('s-producten')"><div class="ico">📦</div><div class="lbl">Producten</div><div class="sub">Info & instructies</div></button>
       <button class="menu-btn" onclick="go('s-berekening')"><div class="ico">🔢</div><div class="lbl">Berekening</div><div class="sub">Hoeveelheden</div></button>
-      <button class="menu-btn" onclick="go('s-dagregistratie-keuze')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Opvolging werf</div></button>
+      <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
       <button class="menu-btn" onclick="openPlanning()"><div class="ico">📅</div><div class="lbl">Planning</div><div class="sub">Wie staat waar</div></button>
       <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
       <button class="menu-btn" onclick="go('s-handleidingen')"><div class="ico">📖</div><div class="lbl">Handleidingen</div><div class="sub">Toestellen & info</div></button>
@@ -474,7 +477,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item active" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -659,6 +662,9 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div class="chip" onclick="setFilter(this,'ucrete')">Ucrete</div>
       <div class="chip" onclick="setFilter(this,'egaline')">Egaline</div>
       <div class="chip" onclick="setFilter(this,'mortel')">Mortel</div>
+      <div class="chip" onclick="setFilter(this,'pmma')">PMMA</div>
+      <div class="chip" onclick="setFilter(this,'primer')">Primer</div>
+      <div class="chip" onclick="setFilter(this,'coating')">Coating</div>
       <div class="chip" onclick="setFilter(this,'overige')">Overige</div>
     </div>
     <div class="prod-list" id="prod-list"></div>
@@ -667,7 +673,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item active"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -687,7 +693,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -725,6 +731,9 @@ textarea.form-input{min-height:80px;resize:vertical}
           <button class="chip" onclick="setBerekeningFilter(this,'ucrete')">Ucrete</button>
           <button class="chip" onclick="setBerekeningFilter(this,'egaline')">Egaline</button>
           <button class="chip" onclick="setBerekeningFilter(this,'mortel')">Mortel</button>
+          <button class="chip" onclick="setBerekeningFilter(this,'pmma')">PMMA</button>
+          <button class="chip" onclick="setBerekeningFilter(this,'primer')">Primer</button>
+          <button class="chip" onclick="setBerekeningFilter(this,'coating')">Coating</button>
           <button class="chip" onclick="setBerekeningFilter(this,'overige')">Overige</button>
         </div>
         <!-- Verborgen select voor logica compatibiliteit -->
@@ -766,111 +775,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item active"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
-    <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
-  </div>
-</div>
-
-<!-- ══ DAGREGISTRATIE — KEUZE ═══════════════════════════════ -->
-<div class="screen" id="s-dagregistratie-keuze">
-  <div class="topbar">
-    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
-    <div class="topbar-title">Dagregistratie</div>
-    <span class="topbar-icon">📋</span>
-  </div>
-  <div class="scroll-area">
-    <div class="form-pad" style="display:flex;flex-direction:column;gap:14px;padding-top:18px">
-      <button class="menu-btn" style="flex-direction:row;text-align:left;gap:14px;padding:20px 18px" onclick="go('s-uren')">
-        <div class="ico" style="margin-bottom:0;flex-shrink:0">⏱️</div>
-        <div>
-          <div class="lbl">Uren doorgeven</div>
-          <div class="sub">Elke werkdag — 15 seconden werk</div>
-        </div>
-      </button>
-      <button class="menu-btn" style="flex-direction:row;text-align:left;gap:14px;padding:20px 18px" onclick="go('s-registratie')">
-        <div class="ico" style="margin-bottom:0;flex-shrink:0">📦</div>
-        <div>
-          <div class="lbl">Productverbruik melden</div>
-          <div class="sub">Enkel op dagen dat je materiaal verwerkt hebt</div>
-        </div>
-      </button>
-    </div>
-  </div>
-  <div class="bottom-nav">
-    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
-    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
-    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item active" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
-    <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
-  </div>
-</div>
-
-<!-- ══ UREN DOORGEVEN ═══════════════════════════════════════ -->
-<div class="screen" id="s-uren">
-  <div class="topbar">
-    <button class="btn-back" onclick="go('s-dagregistratie-keuze')" aria-label="Terug">←</button>
-    <div class="topbar-title">Uren doorgeven</div>
-    <span class="topbar-icon">⏱️</span>
-  </div>
-  <div class="scroll-area">
-    <div class="form-pad">
-      <div id="u-copy-prev-wrap" style="display:none;margin-bottom:14px">
-        <button type="button" onclick="kopieerVorigeUren()" style="width:100%;padding:12px;border:1px dashed #3547C8;border-radius:10px;background:#EEF0FC;color:#3547C8;font-weight:600;font-size:14px;cursor:pointer">🔁 Vorige keer overnemen (project & team)</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Projectnaam</label>
-        <div style="display:flex;gap:8px;align-items:flex-start">
-          <select class="form-select" id="u-project-select" onchange="onProjectSelectUren()" style="flex:1">
-            <option value="">Kies werf...</option>
-          </select>
-          <button onclick="toggleManualProjectUren()" style="padding:11px 12px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px" id="btn-manual-project-uren">✏️ Vrij</button>
-        </div>
-        <input type="text" class="form-input" id="u-project-manual" placeholder="Typ werfnaam..." style="margin-top:8px;display:none">
-        <input type="hidden" id="u-project" value="">
-      </div>
-      <div class="input-row">
-        <div class="form-group">
-          <label class="form-label">Datum</label>
-          <input type="date" class="form-input" id="u-datum">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Teamleader</label>
-          <select class="form-select" id="u-teamleader">
-            <option>Jan V.</option><option>Peter D.</option><option>Luc M.</option>
-          </select>
-        </div>
-      </div>
-      <div class="input-row">
-        <div class="form-group">
-          <label class="form-label">Aantal uren (totaal ploeg)</label>
-          <input type="text" class="form-input" id="u-uren" placeholder="bv. 16" inputmode="decimal">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Aantal personen <span style="font-weight:400;color:#999">(optioneel)</span></label>
-          <input type="number" class="form-input" id="u-man" placeholder="bv. 2" inputmode="numeric">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Opmerking <span style="font-weight:400;color:#999">(optioneel)</span></label>
-        <textarea class="form-input" id="u-opmerking" rows="2" placeholder="bv. halve dag wegens regen..."></textarea>
-      </div>
-      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="submitUren()" id="u-submit-btn">✓ Uren doorgeven</button>
-      <div id="u-status" style="margin-top:12px"></div>
-    </div>
-  </div>
-  <div class="bottom-nav">
-    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
-    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
-    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item active" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -882,8 +787,8 @@ textarea.form-input{min-height:80px;resize:vertical}
 <!-- ══ DAGREGISTRATIE ══════════════════════════════════════ -->
 <div class="screen" id="s-registratie">
   <div class="topbar">
-    <button class="btn-back" onclick="go('s-dagregistratie-keuze')" aria-label="Terug">←</button>
-    <div class="topbar-title">Productverbruik</div>
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Dagregistratie</div>
     <span class="topbar-icon">📋</span>
   </div>
   <div class="scroll-area">
@@ -895,9 +800,9 @@ textarea.form-input{min-height:80px;resize:vertical}
         <div class="seg" data-seg="4"></div>
       </div>
 
-      <!-- ── STAP 1: Project & datum ── -->
+      <!-- ── STAP 1: Project, uren & datum ── -->
       <div class="reg-step" data-step="1">
-        <div class="reg-step-meta">Stap 1 van 4 — Project & datum</div>
+        <div class="reg-step-meta">Stap 1 van 4 — Project, uren & datum</div>
         <div id="r-copy-prev-wrap" style="display:none;margin-bottom:14px">
           <button type="button" onclick="kopieerVorigeRegistratie()" style="width:100%;padding:12px;border:1px dashed #3547C8;border-radius:10px;background:#EEF0FC;color:#3547C8;font-weight:600;font-size:14px;cursor:pointer">🔁 Vorige keer overnemen (project & context)</button>
         </div>
@@ -924,6 +829,20 @@ textarea.form-input{min-height:80px;resize:vertical}
             </select>
           </div>
         </div>
+        <div class="input-row">
+          <div class="form-group">
+            <label class="form-label">Aantal uren (totaal ploeg)</label>
+            <input type="text" class="form-input" id="r-uren" placeholder="bv. 16" inputmode="decimal">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Aantal personen <span style="font-weight:400;color:#999">(optioneel)</span></label>
+            <input type="number" class="form-input" id="r-man" placeholder="bv. 2" inputmode="numeric">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Omschrijving van de werken</label>
+          <textarea class="form-input" id="r-omschrijving" rows="2" placeholder="bv. slijpen en egaline aanbrengen in hal 2..."></textarea>
+        </div>
         <div class="form-group">
           <label class="form-label">Type ondervloer</label>
           <select class="form-select" id="r-vloer" onchange="checkVerbruik()">
@@ -939,9 +858,9 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
       </div>
 
-      <!-- ── STAP 2: Producten toevoegen ── -->
+      <!-- ── STAP 2: Producten toevoegen (optioneel) ── -->
       <div class="reg-step" data-step="2">
-        <div class="reg-step-meta">Stap 2 van 4 — Producten</div>
+        <div class="reg-step-meta">Stap 2 van 4 — Producten <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">(optioneel)</span></div>
 
         <!-- Product zoeken & selecteren -->
         <div class="form-group">
@@ -954,6 +873,9 @@ textarea.form-input{min-height:80px;resize:vertical}
             <button class="chip" onclick="setRegFilter(this,'ucrete')">Ucrete</button>
             <button class="chip" onclick="setRegFilter(this,'egaline')">Egaline</button>
             <button class="chip" onclick="setRegFilter(this,'mortel')">Mortel</button>
+            <button class="chip" onclick="setRegFilter(this,'pmma')">PMMA</button>
+            <button class="chip" onclick="setRegFilter(this,'primer')">Primer</button>
+            <button class="chip" onclick="setRegFilter(this,'coating')">Coating</button>
             <button class="chip" onclick="setRegFilter(this,'overige')">Overige</button>
           </div>
           <select class="form-select" id="r-prod" onchange="onProdChange()" style="display:none">
@@ -1509,7 +1431,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -1554,7 +1476,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -1582,7 +1504,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -1681,7 +1603,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-dagregistratie-keuze')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
@@ -2218,7 +2140,7 @@ function goDesktop(id) {
   // Update sidebar active state
   document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
   const map = {'s-home':'snav-home','s-producten':'snav-producten','s-berekening':'snav-berekening',
-               's-dagregistratie-keuze':'snav-registratie','s-uren':'snav-registratie','s-registratie':'snav-registratie',
+               's-registratie':'snav-registratie',
                's-planning':'snav-planning',
                's-regiebon':'snav-regiebon',
                's-handleidingen':'snav-handleidingen',
@@ -2233,7 +2155,7 @@ function go(id) {
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
   // Update nav active state
-  const navMap = {'s-home':0,'s-producten':1,'s-berekening':2,'s-dagregistratie-keuze':3,'s-uren':3,'s-registratie':3};
+  const navMap = {'s-home':0,'s-producten':1,'s-berekening':2,'s-registratie':3};
   document.querySelectorAll('.nav-item').forEach((el,i) => {
     el.classList.toggle('active', i === (navMap[id] ?? -1));
   });
@@ -2243,8 +2165,7 @@ function go(id) {
   if (id === 's-regiebon') initRegiebon();
   if (id === 's-documenten') initDocumenten();
   if (id === 's-weeknieuws') initWeeknieuws();
-  if (id === 's-uren') updateUrenDropdowns();
-  if (id === 's-registratie' || id === 's-uren' || id === 's-regiebon') { primeGpsSilently(); updateCopyPrevButtons(); }
+  if (id === 's-registratie' || id === 's-regiebon') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') resetRegStappen();
 }
 
@@ -2438,7 +2359,6 @@ async function loadRemoteData() {
     updateActiveProject();
     updateTeamleaderDropdown();
     updateProductDropdowns();
-    updateUrenDropdowns();
 
     if (appData.products.length === 0) {
       console.warn('[Supabase] Geen producten geladen — controleer of producten.csv geïmporteerd is');
@@ -2472,7 +2392,6 @@ function useFallback(msg) {
   updateActiveProject();
   updateTeamleaderDropdown();
   updateProductDropdowns();
-  updateUrenDropdowns();
 }
 
 function onProjectSelect() {
@@ -2658,60 +2577,6 @@ function updateTeamleaderDropdown() {
   sel.innerHTML = tls.map(t => `<option>${t.weergave||t.naam||t}</option>`).join('');
 }
 
-// ── UREN-FORMULIER (zelfde patronen als productverbruik-formulier) ──
-function onProjectSelectUren() {
-  const sel = document.getElementById('u-project-select');
-  const hidden = document.getElementById('u-project');
-  hidden.value = sel.value;
-}
-
-function toggleManualProjectUren() {
-  const manual = document.getElementById('u-project-manual');
-  const hidden = document.getElementById('u-project');
-  const btn = document.getElementById('btn-manual-project-uren');
-  const sel = document.getElementById('u-project-select');
-  if (manual.style.display === 'none') {
-    manual.style.display = 'block';
-    sel.style.opacity = '0.4';
-    sel.disabled = true;
-    btn.style.background = '#3547C8';
-    btn.style.color = '#fff';
-    btn.textContent = '✕ Lijst';
-    manual.focus();
-    manual.oninput = () => { hidden.value = manual.value; };
-  } else {
-    manual.style.display = 'none';
-    sel.style.opacity = '1';
-    sel.disabled = false;
-    btn.style.background = '#f7f7f7';
-    btn.style.color = '#1a1a1a';
-    btn.textContent = '✏️ Vrij';
-    hidden.value = sel.value;
-  }
-}
-
-function updateUrenDropdowns() {
-  const selProj = document.getElementById('u-project-select');
-  const hiddenProj = document.getElementById('u-project');
-  if (selProj) {
-    const alleProjs = appData.projects.length ? appData.projects : fallbackProjects;
-    const actiefProjs = alleProjs.filter(isWerfActief);
-    const overige = alleProjs.filter(p => !isWerfActief(p));
-    selProj.innerHTML = '<option value="">Kies werf...</option>' +
-      (actiefProjs.length ? '<optgroup label="Actief">' + actiefProjs.map(p => `<option value="${p.naam}">${p.naam}</option>`).join('') + '</optgroup>' : '') +
-      (overige.length ? '<optgroup label="Overige">' + overige.map(p => `<option value="${p.naam}">${p.naam}</option>`).join('') + '</optgroup>' : '');
-    if (actiefProjs.length === 1) {
-      selProj.value = actiefProjs[0].naam;
-      hiddenProj.value = actiefProjs[0].naam;
-    }
-  }
-  const selTl = document.getElementById('u-teamleader');
-  if (selTl) {
-    const tls = appData.teamleaders.length ? appData.teamleaders : fallbackTeamleaders;
-    selTl.innerHTML = tls.map(t => `<option>${t.weergave||t.naam||t}</option>`).join('');
-  }
-}
-
 // ── "Vorige keer overnemen" — vult project/team/product vooraf in
 // op basis van de laatste lokale registratie. Hoeveelheden (opp/kg/
 // uren) worden bewust NIET overgenomen — die verschillen elke dag
@@ -2719,8 +2584,6 @@ function updateUrenDropdowns() {
 function updateCopyPrevButtons() {
   const rWrap = document.getElementById('r-copy-prev-wrap');
   if (rWrap) rWrap.style.display = appData.registraties.length ? 'block' : 'none';
-  const uWrap = document.getElementById('u-copy-prev-wrap');
-  if (uWrap) uWrap.style.display = appData.uren.length ? 'block' : 'none';
 }
 
 // ── Stap-navigatie productverbruik-formulier ───────────────
@@ -2808,100 +2671,15 @@ function kopieerVorigeRegistratie() {
   const vloer = document.getElementById('r-vloer');
   if (vloer && last.ondervloer) vloer.value = last.ondervloer;
 
+  const lastUren = appData.uren[appData.uren.length - 1];
+  const man = document.getElementById('r-man');
+  if (man && lastUren && lastUren.aantalMan) man.value = lastUren.aantalMan;
+
   vulProdDropdown();
 
   const wrap = document.getElementById('r-copy-prev-wrap');
   if (wrap) wrap.style.display = 'none';
   // Blijf op stap 1 — de gebruiker voegt producten toe in stap 2
-}
-
-function kopieerVorigeUren() {
-  const last = appData.uren[appData.uren.length - 1];
-  if (!last) return;
-
-  const selProj = document.getElementById('u-project-select');
-  const manProj = document.getElementById('u-project-manual');
-  const hiddenProj = document.getElementById('u-project');
-  const optionExists = selProj && Array.from(selProj.options).some(o => o.value === last.project);
-  if (optionExists) {
-    if (manProj.style.display !== 'none') toggleManualProjectUren();
-    selProj.value = last.project;
-  } else if (last.project) {
-    if (manProj.style.display === 'none') toggleManualProjectUren();
-    manProj.value = last.project;
-  }
-  hiddenProj.value = last.project || '';
-
-  const tl = document.getElementById('u-teamleader');
-  if (tl && last.teamleader) tl.value = last.teamleader;
-
-  const man = document.getElementById('u-man');
-  if (man && last.aantalMan) man.value = last.aantalMan;
-
-  const wrap = document.getElementById('u-copy-prev-wrap');
-  if (wrap) wrap.style.display = 'none';
-  document.getElementById('u-uren').focus();
-}
-
-async function submitUren() {
-  const btn = document.getElementById('u-submit-btn');
-  const statusEl = document.getElementById('u-status');
-  const selProj = document.getElementById('u-project-select');
-  const manProj = document.getElementById('u-project-manual');
-  let project = document.getElementById('u-project').value;
-  if (!project) project = (manProj && manProj.style.display !== 'none' ? manProj.value : (selProj ? selProj.value : ''));
-  const aantalUren = document.getElementById('u-uren').value;
-
-  if (!project) { statusEl.innerHTML = '<div style="color:#A32D2D;font-weight:600">❌ Kies of typ een werf.</div>'; return; }
-  if (!aantalUren || pf(aantalUren, 0) <= 0) { statusEl.innerHTML = '<div style="color:#A32D2D;font-weight:600">❌ Vul het aantal uren in.</div>'; return; }
-
-  btn.disabled = true;
-  btn.textContent = '⏳ Bezig met versturen...';
-  statusEl.textContent = '';
-
-  const reg = {
-    timestamp: localTimestamp(),
-    datum: document.getElementById('u-datum').value || new Date().toISOString().split('T')[0],
-    project,
-    teamleader: document.getElementById('u-teamleader').value,
-    aantalUren: pf(aantalUren, 0),
-    aantalMan: document.getElementById('u-man').value ? pf(document.getElementById('u-man').value, 0) : null,
-    opmerking: document.getElementById('u-opmerking').value,
-  };
-
-  appData.uren.push(reg);
-  try { localStorage.setItem('uren', JSON.stringify(appData.uren)); } catch(e) { console.error('[Uren] localStorage fout:', e); }
-
-  if (supabaseConfigured() && initSupabase() && navigator.onLine) {
-    try {
-      await insertUrenInSupabase(reg);
-      reg._synced = true;
-    } catch(e) {
-      console.warn('[Uren] Versturen mislukt:', e.message);
-      reg._synced = false;
-    }
-  } else {
-    reg._synced = false;
-  }
-  localStorage.setItem('uren', JSON.stringify(appData.uren));
-
-  const synced = reg._synced !== false;
-  statusEl.innerHTML = synced
-    ? '<div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;color:#3B6D11;font-weight:600">✅ Uren doorgegeven!</div>'
-    : '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt verstuurd zodra er verbinding is.</div>';
-  btn.textContent = '✓ Verzonden';
-
-  setTimeout(() => {
-    go('s-home');
-    document.getElementById('u-uren').value = '';
-    document.getElementById('u-man').value = '';
-    document.getElementById('u-opmerking').value = '';
-    statusEl.innerHTML = '';
-    btn.disabled = false;
-    btn.textContent = '✓ Uren doorgeven';
-  }, 1800);
-
-  syncPendingUren();
 }
 
 async function insertUrenInSupabase(reg) {
@@ -2914,6 +2692,7 @@ async function insertUrenInSupabase(reg) {
     teamleader: reg.teamleader,
     aantal_uren: reg.aantalUren,
     aantal_man: reg.aantalMan,
+    omschrijving: reg.omschrijving,
     opmerking: reg.opmerking,
     gps_lat: gps.gps_lat,
     gps_lon: gps.gps_lon,
@@ -3191,12 +2970,6 @@ function updateRegProductenLijst() {
 }
 
 function regStap2Volgende() {
-  if (regProducten.length === 0) {
-    const fout = document.getElementById('reg-prod-fout');
-    fout.textContent = 'Voeg minstens één product toe voor je verdergaat.';
-    fout.style.display = 'block';
-    return;
-  }
   regGoToStep(3);
 }
 
@@ -3429,9 +3202,27 @@ async function buildWeatherAlerts(temp, rv, dp, rain, code,
   const weerMeldingen   = meldingen.filter(m => m.trigger_type !== 'altijd' && m.trigger_type !== 'alles_ok');
   const allesOkMelding  = meldingen.find(m => m.trigger_type === 'alles_ok');
 
-  const actiefWeer = weerBeschikbaar
+  let actiefWeer = weerBeschikbaar
     ? weerMeldingen.filter(m => meldingGetriggerd(m, w))
     : [];
+
+  // Regen die al bezig is maakt de algemene 'kans op neerslag'-melding overbodig
+  if (actiefWeer.some(m => m.trigger_type === 'regen_bezig')) {
+    actiefWeer = actiefWeer.filter(m => m.trigger_type !== 'neerslag');
+  }
+
+  // Bij meerdere drempels van hetzelfde type (bv. RV boven 70 én boven 80) enkel de strengste tonen
+  ['rv_boven', 'rv_onder', 'temp_boven', 'temp_onder'].forEach(type => {
+    const matches = actiefWeer.filter(m => m.trigger_type === type);
+    if (matches.length > 1) {
+      const isBoven = type.endsWith('_boven');
+      const strengste = matches.reduce((a, b) => {
+        const wa = parseFloat(a.trigger_waarde), wb = parseFloat(b.trigger_waarde);
+        return (isBoven ? wb > wa : wb < wa) ? b : a;
+      });
+      actiefWeer = actiefWeer.filter(m => m.trigger_type !== type || m === strengste);
+    }
+  });
 
   let html = '';
 
@@ -3809,13 +3600,16 @@ function toonSamenvatting() {
   const rv0      = document.getElementById('r-rv').value;
   const ondergrond0 = document.getElementById('r-ondergrond').value;
   const vocht0   = document.getElementById('r-vocht').value;
+  const uren0    = document.getElementById('r-uren').value;
+  const omschrijving0 = document.getElementById('r-omschrijving').value;
 
   const ontbrekend = [];
   if (!project0)        ontbrekend.push('Projectnaam');
   if (!datum0)           ontbrekend.push('Datum');
   if (!tl0)               ontbrekend.push('Teamleader');
+  if (!uren0)             ontbrekend.push('Aantal uren');
+  if (!omschrijving0)     ontbrekend.push('Omschrijving van de werken');
   if (!vloer0)            ontbrekend.push('Type ondervloer');
-  if (!regProducten.length) ontbrekend.push('Minstens één product');
   if (temp0 === '')        ontbrekend.push('Temp. lucht');
   if (rv0 === '')          ontbrekend.push('RV');
   if (ondergrond0 === '')  ontbrekend.push('Temp. ondergrond');
@@ -3868,7 +3662,10 @@ function toonSamenvatting() {
     ${row('Project', project)}
     ${row('Datum', datum0 || '–')}
     ${row('Teamleader', tl0 || '–')}
+    ${row('Aantal uren', uren0 ? uren0 + ' u' : '–')}
+    ${row('Aantal personen', document.getElementById('r-man').value || '–')}
     ${row('Type ondervloer', vloerLabels[vloer0] || '–')}
+    ${omschrijving0 ? `<div style="margin-top:6px;background:#f7f7f7;border-radius:8px;padding:10px;font-size:13px;color:#555">${escapeHtml(omschrijving0)}</div>` : ''}
     <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Producten (${regProducten.length})</div>
     ${productenHtml || '<div style="color:#bbb;font-size:13px">Geen producten toegevoegd</div>'}
     <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Omgevingscondities</div>
@@ -3960,6 +3757,35 @@ async function submitRegistratie() {
   const aantalFotos = fotoUrls.length;
   const timestamp = localTimestamp();
 
+  // Uren-gedeelte (altijd — elke dagregistratie bevat uren)
+  const urenReg = {
+    timestamp,
+    datum,
+    project,
+    teamleader,
+    aantalUren: pf(document.getElementById('r-uren').value, 0),
+    aantalMan: document.getElementById('r-man').value ? pf(document.getElementById('r-man').value, 0) : null,
+    omschrijving: document.getElementById('r-omschrijving').value,
+    opmerking,
+  };
+  appData.uren.push(urenReg);
+  try { localStorage.setItem('uren', JSON.stringify(appData.uren)); } catch(e) { console.error('[Uren] localStorage fout:', e); }
+
+  let urenSynced = false;
+  if (supabaseConfigured() && initSupabase() && navigator.onLine) {
+    try {
+      await insertUrenInSupabase(urenReg);
+      urenReg._synced = true;
+      urenSynced = true;
+    } catch(e) {
+      console.warn('[Uren] Versturen mislukt:', e.message);
+      urenReg._synced = false;
+    }
+  } else {
+    urenReg._synced = false;
+  }
+  localStorage.setItem('uren', JSON.stringify(appData.uren));
+
   // Bouw één reg-object per product
   const regsToSend = regProducten.map(p => ({
     timestamp,
@@ -4000,7 +3826,7 @@ async function submitRegistratie() {
   }
 
   // Naar Supabase sturen
-  let allSynced = true;
+  let allSynced = urenSynced;
   if (supabaseConfigured() && initSupabase() && navigator.onLine) {
     for (const reg of regsToSend) {
       try {
@@ -4042,6 +3868,9 @@ async function submitRegistratie() {
     document.getElementById('r-ondergrond').value = '';
     document.getElementById('r-vocht').value = '';
     document.getElementById('r-opmerking').value = '';
+    document.getElementById('r-uren').value = '';
+    document.getElementById('r-man').value = '';
+    document.getElementById('r-omschrijving').value = '';
     resetFotos();
     document.getElementById('verbruik-check').innerHTML = '';
     document.getElementById('dauwpunt-info').innerHTML = '';
@@ -4051,6 +3880,7 @@ async function submitRegistratie() {
     if (btn) { btn.disabled = false; btn.textContent = '✓ Bevestigen & Versturen naar Supabase'; btn.style.background = ''; }
   }, 2500);
 
+  syncPendingUren();
   syncPendingRegistraties();
 }
 
@@ -5533,7 +5363,6 @@ async function handleBeheerCsv(event) {
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('r-datum').value = new Date().toISOString().split('T')[0];
-  document.getElementById('u-datum').value = new Date().toISOString().split('T')[0];
   initSupabase();
   // Laad eerst fallback zodat app altijd bruikbaar is, dan remote data
   useFallback('');
