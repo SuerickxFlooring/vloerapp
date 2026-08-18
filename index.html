@@ -129,6 +129,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .badge-pmma{background:#FDE8F3;color:#B0246D}
 .badge-primer{background:#E4F7EF;color:#1A7A52}
 .badge-coating{background:#FFF1E0;color:#B5590A}
+.badge-preventie{background:#E9EAFB;color:#3547C8}
 .prod-sub{font-size:13px;color:#666;margin-bottom:8px}
 .prod-meta{font-size:13px;color:#777;display:flex;flex-wrap:wrap;gap:6px 12px}
 
@@ -1029,6 +1030,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="chip" onclick="filterHandleidingen('techniek')" id="hf-techniek">🎯 Techniek</button>
     <button class="chip" onclick="filterHandleidingen('app')" id="hf-app">📱 App</button>
     <button class="chip" onclick="filterHandleidingen('voertuig')" id="hf-voertuig">🚛 Voertuig</button>
+    <button class="chip" onclick="filterHandleidingen('preventie')" id="hf-preventie">🛡️ Preventie</button>
   </div>
   <div class="scroll-area">
     <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
@@ -1415,12 +1417,172 @@ textarea.form-input{min-height:80px;resize:vertical}
             <div style="margin-bottom:8px;font-size:13px"><strong style="color:#3547C8">Harde vloer polijsten (MOHS 5–7):</strong><br><span style="color:#666">Goud 30/40 → Goud 60/80 → Resin Pads</span></div>
             <div style="font-size:13px"><strong style="color:#3547C8">Glazuurharde vloer (MOHS 7–9):</strong><br><span style="color:#666">UH1 → UH2 → Goud 60/80 → Resin Pads</span></div>
           </div>
-          <div class="det-sec"><h3>🛡️ Veiligheid &amp; onderhoud</h3>
+          <div class="det-sec"><h3>🔄 Schuursegment wisselen (Scan-On)</h3>
+            <div class="step-item"><div class="step-num">1</div><div class="step-txt">Machine in veiligheidsstand — stroomloos vóór wisselen</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-txt">Steek het segment in het breedste deel van de sleuf van de Scan-On plaat</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-txt">Duw het segment naar buiten tot het vastklikt</div></div>
+            <div class="step-item"><div class="step-num">4</div><div class="step-txt">Gebruik een kunststof hamer om het segment lichtjes naar buiten te tikken voor een stevige bevestiging (omgekeerd = vastzittend segment losmaken)</div></div>
+          </div>
+          <div class="det-sec"><h3>🚚 Transport &amp; verplaatsen</h3>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Demonteer eerst de schuurtools (zie "Schuursegment wisselen")</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt"><strong>Manueel verplaatsen:</strong> duw de handgreep naar beneden zodat het tandwielblok ca. 10 cm van de grond komt, en duw de machine in de gewenste richting</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt"><strong>Optillen (kraan/hijsband):</strong> bevestig de hijsbanden aan de twee handgrepen op de aangeduide hijspunten</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt"><strong>In voertuig:</strong> zet de machine stevig vast volgens de lokale transportveiligheidsvoorschriften</div></div>
+          </div>
+          <div class="det-sec"><h3>🗓️ Onderhoudsschema</h3>
+            <div style="overflow-x:auto">
+              <table style="width:100%;font-size:12px;border-collapse:collapse">
+                <tr style="background:#3547C8;color:#fff"><th style="padding:6px">Interval</th><th style="padding:6px">Taak</th></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Dagelijks (vóór gebruik)</td><td style="padding:6px">Wielen, schuurkoppen en overige schade inspecteren</td></tr>
+                <tr><td style="padding:6px">Na 12 bedrijfsuren</td><td style="padding:6px">Alle schroeven en bouten natrekken</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Om de 300 bedrijfsuren</td><td style="padding:6px">Stofkap en machinehuis demonteren, tandwielvet op de tandwielring vervangen; V-ring controleren op slijtage en indien nodig vervangen</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="det-sec"><h3>🧼 Reinigen</h3>
+            <div class="step-item"><div class="step-num">1</div><div class="step-txt">Machine in veiligheidsstand — stroom loskoppelen</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-txt">Reinigen met water en zeep</div></div>
+            <div style="background:#FDECEA;border-left:4px solid #A32D2D;border-radius:8px;padding:10px;font-size:13px;color:#A32D2D;margin-top:6px">⚠️ NOOIT hogedrukreiniger gebruiken</div>
+          </div>
+          <div class="det-sec"><h3>🚨 Storingen &amp; foutcodes</h3>
+            <div style="overflow-x:auto;margin-bottom:8px">
+              <table style="width:100%;font-size:12px;border-collapse:collapse">
+                <tr style="background:#3547C8;color:#fff"><th style="padding:6px">Symptoom</th><th style="padding:6px">Mogelijke oorzaak</th></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Machine start niet</td><td style="padding:6px">Stroomuitval, noodstop ingedrukt, of interne fout</td></tr>
+                <tr><td style="padding:6px">Machine is zwak / valt stil</td><td style="padding:6px">Ontbrekende fase of spanningsval op de voeding</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Overmatige trilling</td><td style="padding:6px">Toerental te hoog of beschadigde schuurtools</td></tr>
+              </table>
+            </div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;font-size:12px;border-collapse:collapse">
+                <tr style="background:#3547C8;color:#fff"><th style="padding:6px">Code</th><th style="padding:6px">Betekenis</th><th style="padding:6px">Actie</th></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">A2001 / F0001</td><td style="padding:6px">Overstroom</td><td style="padding:6px">Zekeringen, kabels en spanning controleren</td></tr>
+                <tr><td style="padding:6px">A2002 / F0002</td><td style="padding:6px">Overspanning</td><td style="padding:6px">Voeding controleren (spanningspieken)</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">A2003</td><td style="padding:6px">Onderspanning</td><td style="padding:6px">Ontbrekende fase / spanningsval — zie A2001</td></tr>
+                <tr><td style="padding:6px">A2006</td><td style="padding:6px">Fout in snelheidsreferentie</td><td style="padding:6px">Potentiometer controleren, indien nodig vervangen</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">A2009</td><td style="padding:6px">Oververhitting (&gt;120°C)</td><td style="padding:6px">Ventilatoren en filters controleren</td></tr>
+                <tr><td style="padding:6px">F0003</td><td style="padding:6px">Oververhitting (&gt;135°C)</td><td style="padding:6px">Contacteer de fabrikant</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">F0004</td><td style="padding:6px">Kortsluiting motor</td><td style="padding:6px">Kabels/motor controleren, contacteer de fabrikant</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="det-sec"><h3>⚡ Werken met een generator</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px">De generator moet een aardleiding hebben en voldoen aan de geldende EN-VDE richtlijnen, anders zijn de veiligheidsfuncties en elektrische onderdelen niet gegarandeerd beschermd.</div>
+          </div>
+          <div class="det-sec"><h3>🛡️ Veiligheid</h3>
             <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Oog- en gehoorbescherming + veiligheidsschoenen verplicht</div></div>
             <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Geen losse kleding of sieraden</div></div>
             <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Controleer vloer op schroeven vóór gebruik</div></div>
-            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Dagelijks: wielen, schuurkoppen, schroeven controleren</div></div>
-            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Reinigen met water en zeep — NOOIT hogedrukreiniger</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Zet de machine altijd in veiligheidsstand (stroomloos) vóór onderhoud, wisselen van tools of reiniging</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Wacht tot alle onderdelen volledig stilstaan — segmenten en platen kunnen heet zijn na gebruik</div></div>
+          </div>
+          <div style="text-align:center;margin-top:4px">
+            <a href="https://scanmaskin.com/wp-content/uploads/2020/12/Scanmaskin_SC650_Manual_digital.pdf" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:#3547C8;text-decoration:underline">📄 Volledige fabrikantshandleiding (PDF, Scanmaskin)</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kaart 6: Psychosociale interventie (poster + procedure samengevoegd) -->
+      <div class="prod-card h-card" data-cat="preventie" onclick="toggleHandleiding('h6')">
+        <div class="prod-card-top">
+          <div class="prod-name">🛡️ Psychosociale interventie</div>
+          <div class="badge badge-preventie">PREVENTIE</div>
+        </div>
+        <div class="prod-sub">Hulp bij werkgerelateerde psychosociale problemen — informele &amp; formele procedure</div>
+      </div>
+      <div id="h6" style="display:none">
+        <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px">
+          <div class="det-sec"><h3>❓ Wat is het?</h3>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Hulp bij werkgerelateerde psychosociale problemen</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Vertrouwelijk, respectvol en oplossingsgericht</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Voor alle werknemers en derden</div></div>
+          </div>
+          <div class="det-sec"><h3>⚠️ Situaties waarvoor je dit kan gebruiken</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px">stress · burn-out · conflicten · werkdruk · geweld · pesterijen · grensoverschrijdend gedrag (collega's, leidinggevenden of derden) · ongewenst seksueel gedrag · bedreigingen · intimidatie · afpersing · problemen in de samenwerking</div>
+          </div>
+          <div class="det-sec"><h3>📞 Contact opnemen</h3>
+            <div style="background:#E8EAF6;border-radius:8px;padding:10px;font-size:13px">Vertrouwenspersoon (voorlopig enkel extern, Liantis)<br><strong>Tel:</strong> +32 (0)78 15 02 00 &nbsp;|&nbsp; <strong>E-mail:</strong> psy@liantis.be<br>Je kan je situatie ook altijd bespreekbaar maken bij je werkgever, een leidinggevende, of HSE.</div>
+          </div>
+          <div class="det-sec"><h3>🔢 Hoe verloopt de procedure?</h3>
+            <div class="step-item"><div class="step-num">1</div><div class="step-txt"><strong>Contact opnemen</strong> — mondeling, schriftelijk of via e-mail. Je verhaal wordt vertrouwelijk behandeld.</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-txt"><strong>Eerste gesprek</strong> — je wordt uitgenodigd, we luisteren naar je verhaal en bekijken samen wat er nodig is.</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-txt"><strong>Aanpak afspreken</strong> — samen de beste aanpak kiezen: oplossing op het werk of doorverwijzing naar externe hulp.</div></div>
+            <div class="step-item"><div class="step-num">4</div><div class="step-txt"><strong>Opvolging</strong> — afspraken worden opgevolgd en indien nodig aangepast. Jouw welzijn staat centraal.</div></div>
+            <div class="step-item"><div class="step-num">5</div><div class="step-txt"><strong>Afronding</strong> — samen evalueren; de procedure wordt afgerond wanneer jij je goed voelt. Alles blijft vertrouwelijk.</div></div>
+          </div>
+          <div class="det-sec"><h3>🗣️ Informele psychosociale interventie</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px">Een vrijblijvende, laagdrempelige en vertrouwelijke stap om problemen snel en zonder formele procedure bespreekbaar te maken en op te lossen. Wordt opgestart op vraag van de werknemer, via de vertrouwenspersoon of de preventieadviseur psychosociale aspecten.</div>
+            <div style="font-size:13px"><strong>Mogelijke vormen:</strong> vertrouwelijke gesprekken · verzoening tussen betrokken personen · interventie bij een derde (bv. leidinggevende)</div>
+            <div style="font-size:13px;color:#666;margin-top:6px">Geen formeel verzoek, geen vaste wettelijke termijnen, geen verplicht onderzoek, niet bindend — kan op elk moment stopgezet worden.</div>
+          </div>
+          <div class="det-sec"><h3>📝 Formele psychosociale interventie</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px">Een officiële, wettelijk vastgelegde procedure waarbij je schriftelijk een verzoek indient bij de preventieadviseur psychosociale aspecten (PAPS) — eventueel met hulp van de vertrouwenspersoon of HSE. Dit kan een volgende stap zijn na een informele interventie, maar hoeft niet — de informele stap is geen voorwaarde.</div>
+            <div style="font-size:13px"><strong>Vereist:</strong> persoonlijk onderhoud met de PAPS + schriftelijk verzoek met ontvangstbevestiging. Er gelden strikte wettelijke termijnen voor ontvangstbevestiging, analyse en advies.</div>
+            <div style="font-size:13px;color:#666;margin-top:6px">De werkgever wordt ingelicht en betrokken, ontvangt een advies/verslag en moet maatregelen overwegen en motiveren. Bindend in proces en opvolging, met meer formele bescherming bij individueel karakter.</div>
+          </div>
+          <div class="det-sec"><h3>⚖️ Informeel vs. formeel</h3>
+            <div style="overflow-x:auto">
+              <table style="width:100%;font-size:12px;border-collapse:collapse">
+                <tr style="background:#3547C8;color:#fff"><th style="padding:6px">Aspect</th><th style="padding:6px">Informeel</th><th style="padding:6px">Formeel</th></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Schriftelijk verzoek</td><td style="padding:6px">nee</td><td style="padding:6px">verplicht</td></tr>
+                <tr><td style="padding:6px">Wettelijke termijnen</td><td style="padding:6px">nee</td><td style="padding:6px">ja</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Vertrouwelijkheid</td><td style="padding:6px">zeer groot</td><td style="padding:6px">beperkt</td></tr>
+                <tr><td style="padding:6px">Werkgever betrokken</td><td style="padding:6px">meestal niet</td><td style="padding:6px">verplicht</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Bindend karakter</td><td style="padding:6px">nee</td><td style="padding:6px">procedureel</td></tr>
+                <tr><td style="padding:6px">Maatregelen afdwingbaar</td><td style="padding:6px">nee</td><td style="padding:6px">mogelijk</td></tr>
+                <tr style="background:#F7F8FF"><td style="padding:6px">Doel</td><td style="padding:6px">oplossing</td><td style="padding:6px">beoordeling &amp; actie</td></tr>
+              </table>
+            </div>
+            <div style="background:#EAF3DE;border-left:4px solid #3B6D11;border-radius:8px;padding:10px;font-size:13px;color:#3B6D11;margin-top:8px">💡 Informeel = praten en proberen oplossen. Formeel = officiële procedure met gevolgen. Jij kiest zelf, behoudt controle en kan stap voor stap beslissen.</div>
+          </div>
+          <div style="text-align:center;margin-top:4px">
+            <a href="docs/poster-psychosociale-interventie.pdf" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:#3547C8;text-decoration:underline">📄 Originele poster (PDF) bekijken</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kaart 7: Register feiten van derden (poster + uitleg samengevoegd) -->
+      <div class="prod-card h-card" data-cat="preventie" onclick="toggleHandleiding('h7')">
+        <div class="prod-card-top">
+          <div class="prod-name">🛡️ Register feiten van derden</div>
+          <div class="badge badge-preventie">PREVENTIE</div>
+        </div>
+        <div class="prod-sub">Melden van ongewenst gedrag door klanten, aannemers of andere derden</div>
+      </div>
+      <div id="h7" style="display:none">
+        <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px">
+          <div class="det-sec"><h3>❓ Wat zijn "feiten van derden"?</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px">Situaties waarbij een derde (klant, omwonende, aannemer, onderaannemer, leverancier, bezoeker, inspectiedienst, ...) zich ongepast gedraagt tegenover een werknemer. Dit gedrag is niet aanvaardbaar, ook al komt het van iemand van buiten het bedrijf.</div>
+          </div>
+          <div class="det-sec"><h3>⚠️ Wanneer gebruik je het register?</h3>
+            <div class="step-item"><div class="step-num">👊</div><div class="step-txt"><strong>Verbale agressie</strong> — schelden, beledigen, uitschelden, dreigen, roddelen, vernederen, ...</div></div>
+            <div class="step-item"><div class="step-num">⚠</div><div class="step-txt"><strong>Bedreigingen</strong> — mondeling of schriftelijk, dreigen met geweld of schade</div></div>
+            <div class="step-item"><div class="step-num">✊</div><div class="step-txt"><strong>Fysiek geweld</strong> — duwen, slaan, schoppen, vastgrijpen, spuwen, voorwerpen gooien, ...</div></div>
+            <div class="step-item"><div class="step-num">👁</div><div class="step-txt"><strong>Intimidatie of stalking</strong> — aanhoudend lastigvallen, opwachten, volgen, ongewenst contact</div></div>
+            <div class="step-item"><div class="step-num">⚖</div><div class="step-txt"><strong>Discriminatie</strong> — op basis van afkomst, geslacht, leeftijd, geloof, seksuele geaardheid, handicap, ...</div></div>
+            <div class="step-item"><div class="step-num">❗</div><div class="step-txt"><strong>Andere ongewenste gedragingen</strong> — elke vorm van gedrag dat je als bedreigend, vijandig of kwetsend ervaart</div></div>
+            <div style="background:#FDECEA;border-left:4px solid #A32D2D;border-radius:8px;padding:10px;font-size:13px;color:#A32D2D;margin-top:6px">Twijfel je? Meld het. Beter één keer te veel dan te weinig.</div>
+          </div>
+          <div class="det-sec"><h3>📋 Hoe meld je een feit?</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px">Vul 1 formulier in per incident (per feit). Beschrijf zo duidelijk mogelijk: wat, waar, wanneer, wie was erbij, gevolgen, ... Meerdere feiten = meerdere formulieren.</div>
+            <div style="font-size:13px"><strong>Formulieren te vinden:</strong> aan de deur van het magazijn, of onder de trap waar de kledij gelegd mag worden.</div>
+            <div style="font-size:13px;margin-top:4px"><strong>Ingevuld formulier inleveren:</strong> via de brievenbussen op dezelfde 2 plaatsen (deur magazijn / onder de trap).</div>
+          </div>
+          <div class="det-sec"><h3>📝 Wat wordt er genoteerd?</h3>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Een beschrijving van de feiten</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">De datum of data waarop dit gebeurde</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Je naam wordt <strong>niet</strong> vermeld, tenzij je zelf toestemming geeft (bv. bij vraag tot ondersteuning of psychosociale interventie)</div></div>
+          </div>
+          <div class="det-sec"><h3>🔒 Beheer &amp; toegang</h3>
+            <div style="font-size:13px"><strong>Beheerd door</strong> (vertrouwelijk): de vertrouwenspersoon, de preventieadviseurs psychosociale aspecten, of de preventieadviseur van de interne dienst.</div>
+            <div style="font-size:13px;margin-top:4px"><strong>Toegang beperkt tot:</strong> de personen die het beheren, de werkgever, en de inspectiediensten Toezicht op het Welzijn op het Werk (TWW).</div>
+            <div style="font-size:13px;margin-top:4px"><strong>Bewaartermijn:</strong> 5 jaar vanaf de datum van registratie.</div>
+          </div>
+          <div class="det-sec"><h3>🎯 Waarom is dit belangrijk?</h3>
+            <div style="background:#EAF3DE;border-left:4px solid #3B6D11;border-radius:8px;padding:10px;font-size:13px;color:#3B6D11">Ongewenst gedrag kan een grote impact hebben op je welzijn en stress veroorzaken. Door incidenten te melden kunnen we risico's in kaart brengen, maatregelen nemen en samen bouwen aan een veilige, respectvolle en gezonde werkomgeving voor iedereen.</div>
+          </div>
+          <div style="text-align:center;margin-top:4px">
+            <a href="docs/poster-register-feiten-derden.pdf" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:#3547C8;text-decoration:underline">📄 Originele poster (PDF) bekijken</a>
           </div>
         </div>
       </div>
@@ -5382,13 +5544,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function filterHandleidingen(cat) {
-  document.querySelectorAll('#hf-alle,#hf-machine,#hf-techniek,#hf-app,#hf-voertuig').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#hf-alle,#hf-machine,#hf-techniek,#hf-app,#hf-voertuig,#hf-preventie').forEach(b => b.classList.remove('active'));
   document.getElementById('hf-' + (cat === 'alle' ? 'alle' : cat)).classList.add('active');
   document.querySelectorAll('.h-card').forEach(card => {
     card.style.display = (cat === 'alle' || card.dataset.cat === cat) ? '' : 'none';
-    // Also hide/show the corresponding content div
-    const id = card.getAttribute('onclick').match(/'(h\d+)'/)[1];
-    const content = document.getElementById(id);
+    // Also hide/show the corresponding content div (kaarten met inline detail, niet PDF-links)
+    const match = card.getAttribute('onclick').match(/'(h\d+)'/);
+    if (!match) return;
+    const content = document.getElementById(match[1]);
     if (content && content.style.display !== 'none') {
       if (cat !== 'alle' && card.dataset.cat !== cat) content.style.display = 'none';
     }
