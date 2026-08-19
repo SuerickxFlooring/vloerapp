@@ -4163,8 +4163,15 @@ function getMaandag(delta) {
   return d;
 }
 
+// Belangrijk: toISOString() converteert naar UTC. Bij lokale middernacht
+// (00:00 CEST = 22:00 UTC de vorige dag) gaf dit voor élke dag een datum
+// die een dag te vroeg was — de planning toonde daardoor structureel de
+// gegevens van de dag ervoor. Lokale jaar/maand/dag gebruiken i.p.v. UTC.
 function datumStr(d) {
-  return d.toISOString().split('T')[0]; // YYYY-MM-DD
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
 
 function dagNaam(d) {
