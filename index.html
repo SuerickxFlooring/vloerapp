@@ -130,6 +130,9 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .badge-primer{background:#E4F7EF;color:#1A7A52}
 .badge-coating{background:#FFF1E0;color:#B5590A}
 .badge-preventie{background:#E9EAFB;color:#3547C8}
+.toggle-yn{display:flex;gap:8px}
+.toggle-yn .tgl-btn{flex:1;padding:10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:14px;cursor:pointer;color:#555}
+.toggle-yn .tgl-btn.active{background:#3547C8;border-color:#3547C8;color:#fff;font-weight:700}
 .prod-sub{font-size:13px;color:#666;margin-bottom:8px}
 .prod-meta{font-size:13px;color:#777;display:flex;flex-wrap:wrap;gap:6px 12px}
 
@@ -412,11 +415,14 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
     <span class="s-icon">🧾</span> Regiebon
   </div>
+  <div class="sidebar-nav-item" id="snav-aanrijding" onclick="goDesktop('s-aanrijding')">
+    <span class="s-icon">🚨</span> Aanrijding
+  </div>
   <div class="sidebar-nav-item" id="snav-handleidingen" onclick="goDesktop('s-handleidingen')">
     <span class="s-icon">📖</span> Handleidingen
   </div>
   <div class="sidebar-nav-item" id="snav-documenten" onclick="goDesktop('s-documenten')">
-    <span class="s-icon">📎</span> Documenten
+    <span class="s-icon">📎</span> Projectinfo
   </div>
   <div class="sidebar-nav-item" id="snav-weeknieuws" onclick="goDesktop('s-weeknieuws')">
     <span class="s-icon">📰</span> Weeknieuws
@@ -468,8 +474,9 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
       <button class="menu-btn" onclick="openPlanning()"><div class="ico">📅</div><div class="lbl">Planning</div><div class="sub">Wie staat waar</div></button>
       <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
+      <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
       <button class="menu-btn" onclick="go('s-handleidingen')"><div class="ico">📖</div><div class="lbl">Handleidingen</div><div class="sub">Toestellen & info</div></button>
-      <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Documenten</div><div class="sub">TRA & offertes</div></button>
+      <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Projectinformatie</div><div class="sub">TRA & offertes</div></button>
       <button class="menu-btn" onclick="go('s-weeknieuws')"><div class="ico">📰</div><div class="lbl">Weeknieuws</div><div class="sub">Briefingen kantoor</div></button>
     </div>
     <div class="sync-badge" id="sync-status">🔄 Data laden...</div>
@@ -481,8 +488,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -613,6 +621,169 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<!-- ══ AANRIJDING (Europees aanrijdingsformulier) ═══════════ -->
+<div class="screen" id="s-aanrijding">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">🚨 Aanrijding</div>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+
+    <!-- Progress bar -->
+    <div style="display:flex;gap:4px;padding:12px 16px 0">
+      <div id="aa-step-1" class="step-dot active" style="flex:1;height:4px;border-radius:2px;background:#3547C8"></div>
+      <div id="aa-step-2" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="aa-step-3" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="aa-step-4" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="aa-step-5" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="aa-step-label">Stap 1 van 5 — Basisgegevens</div>
+
+    <!-- STAP 1: Basisgegevens -->
+    <div id="aa-stap-1" style="padding:12px 16px">
+      <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:14px">ℹ️ Vul dit formulier samen met de andere bestuurder in, ter plaatse. Het vervangt het papieren Europees aanrijdingsformulier.</div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Datum aanrijding</label>
+          <input type="date" class="form-input" id="aa-datum">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tijd</label>
+          <input type="time" class="form-input" id="aa-tijd">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Land</label>
+          <input type="text" class="form-input" id="aa-land" value="België">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Plaats</label>
+          <input type="text" class="form-input" id="aa-plaats" placeholder="Gemeente...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Straat</label>
+        <input type="text" class="form-input" id="aa-straat" placeholder="Straat + huisnr...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Werf / project <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <input type="text" class="form-input" id="aa-project" placeholder="Bv. F26-00119.000 Nyrstar">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ingevuld door (onze chauffeur)</label>
+        <input type="text" class="form-input" id="aa-teamleader" placeholder="Naam...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gewonde(n), ook licht gewond</label>
+        <div class="toggle-yn" id="aa-gewonden">
+          <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('aa-gewonden',this)">Nee</button>
+          <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('aa-gewonden',this)">Ja</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Materiële schade aan andere voertuigen dan A/B</label>
+        <div class="toggle-yn" id="aa-schade-voertuigen">
+          <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('aa-schade-voertuigen',this)">Nee</button>
+          <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('aa-schade-voertuigen',this)">Ja</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Materiële schade aan andere objecten</label>
+        <div class="toggle-yn" id="aa-schade-objecten">
+          <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('aa-schade-objecten',this)">Nee</button>
+          <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('aa-schade-objecten',this)">Ja</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Getuigen: naam, adres, tel. <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <textarea class="form-input" id="aa-getuigen" rows="2" placeholder="Naam, adres, telefoonnummer..."></textarea>
+      </div>
+    </div>
+
+    <!-- STAP 2: Voertuig A (ons voertuig) -->
+    <div id="aa-stap-2" style="padding:12px 16px;display:none">
+      <div style="font-weight:700;font-size:15px;color:#3547C8;margin-bottom:10px">🚐 Voertuig A — ons voertuig</div>
+      <div id="aa-vehicle-a"></div>
+    </div>
+
+    <!-- STAP 3: Voertuig B (tegenpartij) -->
+    <div id="aa-stap-3" style="padding:12px 16px;display:none">
+      <div style="font-weight:700;font-size:15px;color:#B5590A;margin-bottom:10px">🚗 Voertuig B — tegenpartij</div>
+      <div id="aa-vehicle-b"></div>
+    </div>
+
+    <!-- STAP 4: Toedracht & schets -->
+    <div id="aa-stap-4" style="padding:12px 16px;display:none">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px">12. Toedracht</div>
+      <div style="font-size:12px;color:#888;margin-bottom:10px">Vink aan wat van toepassing is — kolom A voor ons voertuig, kolom B voor de tegenpartij.</div>
+      <div style="display:flex;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;padding:0 0 4px;border-bottom:2px solid #eee">
+        <div style="width:28px;text-align:center">A</div>
+        <div style="flex:1"></div>
+        <div style="width:28px;text-align:center">B</div>
+      </div>
+      <div id="aa-toedracht-lijst"></div>
+
+      <div class="form-group" style="margin-top:18px">
+        <label class="form-label">13. Situatieschets <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <div style="font-size:12px;color:#888;margin-bottom:6px">Wegsituatie, rijrichting, positie op moment van botsing, straatnamen...</div>
+        <div style="position:relative;border:2px solid #ddd;border-radius:12px;background:#fff;touch-action:none">
+          <canvas id="aa-canvas-schets" style="display:block;width:100%;height:280px;border-radius:10px;cursor:crosshair"></canvas>
+          <button onclick="aaWisCanvas('schets')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;color:#888">✕ Wissen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAP 5: Schade, opmerkingen, handtekeningen -->
+    <div id="aa-stap-5" style="padding:12px 16px;display:none">
+      <div id="aa-samenvatting"></div>
+
+      <div class="form-group">
+        <label class="form-label">11. Zichtbare schade aan voertuig A</label>
+        <textarea class="form-input" id="aa-a-schade" rows="2" placeholder="Omschrijving zichtbare schade..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">14. Opmerkingen — voertuig A</label>
+        <textarea class="form-input" id="aa-a-opmerkingen" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">11. Zichtbare schade aan voertuig B</label>
+        <textarea class="form-input" id="aa-b-schade" rows="2" placeholder="Omschrijving zichtbare schade..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">14. Opmerkingen — voertuig B</label>
+        <textarea class="form-input" id="aa-b-opmerkingen" rows="2"></textarea>
+      </div>
+
+      <div style="background:#FDECEA;border-left:4px solid #A32D2D;border-radius:8px;padding:10px;font-size:12px;color:#A32D2D;margin:14px 0">Houdt geen erkenning van aansprakelijkheid in — dient uitsluitend voor het vaststellen van identiteit en feitelijke gegevens. Te ondertekenen door BEIDE bestuurders.</div>
+
+      <div class="form-group">
+        <label class="form-label">15. ✍️ Handtekening bestuurder A</label>
+        <div style="position:relative;border:2px solid #3547C8;border-radius:12px;background:#fafafa;touch-action:none">
+          <canvas id="aa-canvas-siga" style="display:block;width:100%;height:140px;border-radius:10px;cursor:crosshair"></canvas>
+          <button onclick="aaWisCanvas('siga')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;color:#888">✕ Wissen</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">15. ✍️ Handtekening bestuurder B</label>
+        <div style="position:relative;border:2px solid #B5590A;border-radius:12px;background:#fafafa;touch-action:none">
+          <canvas id="aa-canvas-sigb" style="display:block;width:100%;height:140px;border-radius:10px;cursor:crosshair"></canvas>
+          <button onclick="aaWisCanvas('sigb')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;color:#888">✕ Wissen</button>
+        </div>
+      </div>
+
+      <div id="aa-submit-status" style="margin-top:10px"></div>
+    </div>
+
+    <!-- Navigatieknoppen -->
+    <div style="display:flex;gap:10px;padding:12px 16px 24px">
+      <button id="aa-vorige-btn" onclick="aaStap(-1)" class="btn-secondary" style="flex:1;display:none">← Vorige</button>
+      <button id="aa-volgende-btn" onclick="aaStap(1)" class="btn-primary" style="flex:1">Volgende →</button>
+      <button id="aa-submit-btn" onclick="submitAanrijding()" class="btn-primary btn-green" style="flex:1;display:none">✅ Versturen</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ PLANNING ══════════════════════════════════════════════ -->
 <div class="screen" id="s-planning">
   <div class="topbar">
@@ -677,8 +848,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -697,8 +869,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -779,8 +952,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -1011,8 +1185,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item active"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -1587,6 +1762,55 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
       </div>
 
+      <!-- Kaart 8: Procedure Lockbox (LOTO) -->
+      <div class="prod-card h-card" data-cat="preventie" onclick="toggleHandleiding('h8')">
+        <div class="prod-card-top">
+          <div class="prod-name">🔒 Procedure Lockbox (LOTO)</div>
+          <div class="badge badge-preventie">PREVENTIE</div>
+        </div>
+        <div class="prod-sub">Veilig gebruik van de draagbare lockbox bij Lock Out – Tag Out</div>
+      </div>
+      <div id="h8" style="display:none">
+        <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px">
+          <div class="det-sec"><h3>🎯 Doel &amp; toepassingsgebied</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px;margin-bottom:8px">Veilig en correct gebruik van een draagbare lockbox bij werken waarbij gevaarlijke energiebronnen moeten worden uitgeschakeld, vergrendeld en gecontroleerd — om onbedoelde herinschakeling te voorkomen.</div>
+            <div style="font-size:13px">Van toepassing bij: onderhouds-, reinigings-, herstellings- en inspectiewerkzaamheden · installaties met meerdere energiebronnen · situaties waarbij meerdere personen tegelijk aan dezelfde installatie werken.</div>
+          </div>
+          <div class="det-sec"><h3>📖 Definities</h3>
+            <div class="step-item"><div class="step-num">🔐</div><div class="step-txt"><strong>LOTO (Lock Out – Tag Out):</strong> procedure om energiebronnen veilig uit te schakelen en fysiek te vergrendelen</div></div>
+            <div class="step-item"><div class="step-num">📦</div><div class="step-txt"><strong>Draagbare lockbox:</strong> verplaatsbare afsluitbare box waarin sleutels van individuele LOTO-slotjes worden opgeborgen</div></div>
+            <div class="step-item"><div class="step-num">🔩</div><div class="step-txt"><strong>Installatieslot:</strong> slot dat op de installatie zelf wordt geplaatst om ze te vergrendelen</div></div>
+            <div class="step-item"><div class="step-num">🏢</div><div class="step-txt"><strong>Afdelingsslot (GS):</strong> slot van de afdeling, kan door meerdere afdelingsverantwoordelijken geplaatst of verwijderd worden</div></div>
+            <div class="step-item"><div class="step-num">🔑</div><div class="step-txt"><strong>Persoonlijk slot:</strong> slot dat uitsluitend door één persoon gebruikt wordt — die persoon bezit de enige sleutel</div></div>
+          </div>
+          <div class="det-sec"><h3>🔢 Procedurestappen</h3>
+            <div class="step-item"><div class="step-num">1</div><div class="step-txt"><strong>Voorbereiding</strong> (door de klant) — energiebronnen identificeren, betrokkenen informeren, installatie stilleggen volgens de normale stopprocedure</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-txt"><strong>Isoleren van energiebronnen</strong> (door de klant) — alle energiebronnen uitschakelen, installatieslotjes aanbrengen op hoofdschakelaars, afsluiters en energie-isolatiepunten</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-txt"><strong>Sleutels in de lockbox</strong> — alle sleutels van de installatiesloten verzamelen, in de draagbare lockbox plaatsen, afsluiten met het hoofdslot (afdelingsslot van de klant)</div></div>
+            <div class="step-item"><div class="step-num">4</div><div class="step-txt"><strong>Persoonlijke vergrendeling</strong> — de ploegleider hangt eerst het GS afdelingsslot; elke werknemer plaatst daarna zijn/haar eigen persoonlijk slot + tag op de lockbox. Zolang er 1 persoonlijk slot hangt, kan de lockbox niet open.</div></div>
+            <div class="step-item"><div class="step-num">5</div><div class="step-txt"><strong>Controle (nulenergiecheck)</strong> — actief controleren dat de installatie spanningsloos is, bedieningsorganen testen. Pas starten na bevestigde nulenergie.</div></div>
+            <div class="step-item"><div class="step-num">6</div><div class="step-txt"><strong>Uitvoering</strong> — werkzaamheden uitvoeren, lockbox blijft gesloten gedurende de volledige werkduur</div></div>
+            <div class="step-item"><div class="step-num">7</div><div class="step-txt"><strong>Beëindiging</strong> — elke werknemer verwijdert dagelijks enkel zijn/haar eigen slot. Werken niet klaar? GS afdelingsslot blijft hangen. Pas na verwijdering van het laatste slot kan de lockbox open en de sleutels vrijgegeven worden.</div></div>
+            <div class="step-item"><div class="step-num">8</div><div class="step-txt"><strong>Herinschakeling</strong> — controleren dat iedereen buiten de gevarenzone is en beveiligingen correct staan, LOTO-slotjes verwijderen, energie herstellen volgens de opstartprocedure</div></div>
+          </div>
+          <div class="det-sec"><h3>🥇 Gouden regels</h3>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Iedereen gebruikt een eigen persoonlijk slot</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">Je verwijdert enkel je eigen slot — nooit dat van iemand anders</div></div>
+            <div class="step-item"><div class="step-num">✓</div><div class="step-txt">De lockbox blijft gesloten tijdens de volledige werkduur</div></div>
+            <div style="background:#FDECEA;border-left:4px solid #A32D2D;border-radius:8px;padding:10px;font-size:13px;color:#A32D2D;margin-top:6px"><strong>NOOIT:</strong> een slot van iemand anders verwijderen · sleutels meenemen uit de lockbox · werken starten zonder nulenergiecheck · "even snel" herinschakelen</div>
+          </div>
+          <div class="det-sec"><h3>⚠️ Afwijkingen &amp; noodsituaties</h3>
+            <div style="font-size:13px">Het verwijderen van andermans slot is strikt verboden, tenzij via een formele noodprocedure, met goedkeuring van leidinggevende én preventieadviseur, en met schriftelijke registratie.</div>
+          </div>
+          <div class="det-sec"><h3>🧰 Benodigd materiaal</h3>
+            <div style="background:#F7F8FF;border-radius:8px;padding:10px;font-size:13px">Draagbare lockbox (mechanisch veilig, duidelijk gemarkeerd) · individuele LOTO-slotjes · lock-out tags (naam, datum, afdeling) · LOTO-formulier of werkvergunning</div>
+          </div>
+          <div style="text-align:center;margin-top:4px">
+            <a href="docs/procedure-lockbox.docx" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:#3547C8;text-decoration:underline">📄 Volledige procedure + checklist (Word) downloaden</a>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
   <div class="bottom-nav">
@@ -1596,17 +1820,18 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
 
-<!-- ══ DOCUMENTEN (TRA / offerte per werf) ══════════════════ -->
+<!-- ══ PROJECTINFORMATIE (TRA / offerte per werf) ══════════════════ -->
 <div class="screen" id="s-documenten">
   <div class="topbar">
     <button class="btn-back" onclick="docTerugNaarLijst()" id="doc-btn-back" aria-label="Terug">←</button>
-    <div class="topbar-title" id="doc-topbar-title">Documenten</div>
+    <div class="topbar-title" id="doc-topbar-title">Projectinformatie</div>
     <span class="topbar-icon">📎</span>
   </div>
 
@@ -1641,8 +1866,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -1669,8 +1895,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item active" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -1768,8 +1995,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Documenten</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
   </div>
 </div>
@@ -1984,7 +2212,7 @@ function renderDocProjecten() {
 async function kiesDocProject(projectId) {
   docState.huidigProject = projectId;
   const proj = (docState.projecten || []).find(p => p.id === projectId);
-  document.getElementById('doc-topbar-title').textContent = proj?.werfnaam || 'Documenten';
+  document.getElementById('doc-topbar-title').textContent = proj?.werfnaam || 'Projectinformatie';
   document.getElementById('doc-stap-lijst').style.display = 'none';
   document.getElementById('doc-stap-bijlagen').style.display = '';
 
@@ -2021,7 +2249,7 @@ function docTerugNaarLijst() {
   if (inBijlagenStap) {
     document.getElementById('doc-stap-bijlagen').style.display = 'none';
     document.getElementById('doc-stap-lijst').style.display = '';
-    document.getElementById('doc-topbar-title').textContent = 'Documenten';
+    document.getElementById('doc-topbar-title').textContent = 'Projectinformatie';
   } else {
     go('s-home');
   }
@@ -2305,6 +2533,7 @@ function goDesktop(id) {
                's-registratie':'snav-registratie',
                's-planning':'snav-planning',
                's-regiebon':'snav-regiebon',
+               's-aanrijding':'snav-aanrijding',
                's-handleidingen':'snav-handleidingen',
                's-documenten':'snav-documenten'};
   const active = document.getElementById(map[id]);
@@ -2325,9 +2554,10 @@ function go(id) {
   // Herlaad dropdowns bij elke navigatie zodat Sheets-data altijd actueel is
   if (id === 's-berekening' || id === 's-registratie') updateProductDropdowns();
   if (id === 's-regiebon') initRegiebon();
+  if (id === 's-aanrijding') initAanrijding();
   if (id === 's-documenten') initDocumenten();
   if (id === 's-weeknieuws') initWeeknieuws();
-  if (id === 's-registratie' || id === 's-regiebon') { primeGpsSilently(); updateCopyPrevButtons(); }
+  if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') resetRegStappen();
 }
 
@@ -4972,6 +5202,312 @@ async function submitRegiebon() {
   }
 }
 
+// ════════════════════════════════════════════════════════════
+// AANRIJDING — digitaal Europees aanrijdingsformulier
+// ════════════════════════════════════════════════════════════
+const AA_TOEDRACHT_ITEMS = [
+  'stond geparkeerd / stond stil',
+  'verliet een parkeerplaats / opende de deur',
+  'ging parkeren',
+  'reed weg van een parkeerplaats, een uitrit, een onverharde weg',
+  'was bezig een parkeerplaats, een inrit, een onverharde weg op te rijden',
+  'wilde een rotonde oprijden',
+  'reed op een rotonde',
+  'botste op achterzijde, in dezelfde richting en op dezelfde rijstrook rijdend',
+  'reed in dezelfde richting en op een andere rijstrook',
+  'veranderde van rijstrook',
+  'haalde in',
+  'ging rechtsaf',
+  'ging linksaf',
+  'reed achteruit',
+  'kwam op een rijbaan bestemd voor het tegemoetkomend verkeer',
+  'kwam van rechts (op een kruising)',
+  'lette niet op een voorrangsteken of een rood licht',
+];
+
+let aaStapNr = 1;
+const aaSigState = {}; // schets, siga, sigb
+
+function ynSet(id, btn) {
+  const wrap = document.getElementById(id);
+  wrap.querySelectorAll('.tgl-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  wrap.dataset.value = btn.dataset.val;
+}
+function ynGet(id) {
+  return document.getElementById(id)?.dataset.value === 'true';
+}
+function ynReset(id) {
+  const wrap = document.getElementById(id);
+  if (!wrap) return;
+  wrap.dataset.value = 'false';
+  wrap.querySelectorAll('.tgl-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'false'));
+}
+
+function aaVehicleFieldsHtml(side) {
+  const p = `aa-${side}-`;
+  return `
+    <div class="form-group">
+      <label class="form-label">Naam bestuurder (zie rijbewijs)</label>
+      <input type="text" class="form-input" id="${p}naam" placeholder="Naam...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Voornaam</label>
+      <input type="text" class="form-input" id="${p}voornaam" placeholder="Voornaam...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Adres (straat, postcode, plaats, land)</label>
+      <input type="text" class="form-input" id="${p}adres" placeholder="Straat 1, 2200 Herentals, België">
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Tel. of e-mail</label>
+        <input type="text" class="form-input" id="${p}tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Geboortedatum</label>
+        <input type="date" class="form-input" id="${p}geboortedatum">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Rijbewijsnr.</label>
+        <input type="text" class="form-input" id="${p}rijbewijsnr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categorie</label>
+        <input type="text" class="form-input" id="${p}categorie" placeholder="B">
+      </div>
+    </div>
+    <div style="font-weight:700;font-size:13px;color:#555;margin:16px 0 4px">🚐 Voertuig</div>
+    <div class="form-group">
+      <label class="form-label">Merk, type</label>
+      <input type="text" class="form-input" id="${p}merk" placeholder="Bv. Renault Master">
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Kenteken</label>
+        <input type="text" class="form-input" id="${p}kenteken">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Land van registratie</label>
+        <input type="text" class="form-input" id="${p}land" value="België">
+      </div>
+    </div>
+    <div style="font-weight:700;font-size:13px;color:#555;margin:16px 0 4px">🛡️ Verzekering</div>
+    <div class="form-group">
+      <label class="form-label">Verzekeringsmaatschappij</label>
+      <input type="text" class="form-input" id="${p}verz-naam">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Polisnr.</label>
+      <input type="text" class="form-input" id="${p}verz-polisnr">
+    </div>
+    <div class="form-group">
+      <label class="form-label">All risks verzekerd?</label>
+      <div class="toggle-yn" id="${p}allrisks">
+        <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('${p}allrisks',this)">Nee</button>
+        <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('${p}allrisks',this)">Ja</button>
+      </div>
+    </div>`;
+}
+
+function initAanrijding() {
+  document.getElementById('aa-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('aa-tijd').value = new Date().toTimeString().slice(0,5);
+  document.getElementById('aa-vehicle-a').innerHTML = aaVehicleFieldsHtml('a');
+  document.getElementById('aa-vehicle-b').innerHTML = aaVehicleFieldsHtml('b');
+  document.getElementById('aa-toedracht-lijst').innerHTML = AA_TOEDRACHT_ITEMS.map((txt, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f0f2f8">
+      <input type="checkbox" id="aa-td-a-${i}" style="width:20px;height:20px;flex-shrink:0">
+      <div style="flex:1;font-size:13px">${i+1}. ${escapeHtml(txt)}</div>
+      <input type="checkbox" id="aa-td-b-${i}" style="width:20px;height:20px;flex-shrink:0">
+    </div>`).join('');
+  ['gewonden','schade-voertuigen','schade-objecten'].forEach(id => ynReset('aa-' + id));
+  aaStapNr = 1;
+  aaSigState.schets = null; aaSigState.siga = null; aaSigState.sigb = null;
+  ['schets','siga','sigb'].forEach(key => {
+    const c = document.getElementById(`aa-canvas-${key}`);
+    if (c && c.width) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  });
+  updateAaNav();
+}
+
+function aaStap(delta) {
+  aaStapNr = Math.max(1, Math.min(5, aaStapNr + delta));
+  updateAaNav();
+  if (aaStapNr === 5) renderAaSamenvatting();
+}
+
+function updateAaNav() {
+  [1,2,3,4,5].forEach(n => {
+    document.getElementById(`aa-stap-${n}`).style.display = n === aaStapNr ? 'block' : 'none';
+    document.getElementById(`aa-step-${n}`).style.background = n <= aaStapNr ? '#3547C8' : '#ddd';
+  });
+  const labels = [
+    'Stap 1 van 5 — Basisgegevens',
+    'Stap 2 van 5 — Voertuig A (ons voertuig)',
+    'Stap 3 van 5 — Voertuig B (tegenpartij)',
+    'Stap 4 van 5 — Toedracht & schets',
+    'Stap 5 van 5 — Schade, opmerkingen & handtekeningen',
+  ];
+  document.getElementById('aa-step-label').textContent = labels[aaStapNr - 1];
+  document.getElementById('aa-vorige-btn').style.display   = aaStapNr > 1 ? 'block' : 'none';
+  document.getElementById('aa-volgende-btn').style.display = aaStapNr < 5 ? 'block' : 'none';
+  document.getElementById('aa-submit-btn').style.display   = aaStapNr === 5 ? 'block' : 'none';
+  document.getElementById('aa-submit-status').innerHTML    = '';
+  if (aaStapNr === 4) { setTimeout(() => aaSetupCanvas('schets'), 50); }
+  if (aaStapNr === 5) { setTimeout(() => { aaSetupCanvas('siga'); aaSetupCanvas('sigb'); }, 50); }
+}
+
+function aaSetupCanvas(key) {
+  const canvas = document.getElementById(`aa-canvas-${key}`);
+  if (!canvas || aaSigState[key]?.ready) return;
+  aaSigState[key] = { ready: true, drawing: false, lastX: 0, lastY: 0 };
+
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth || 320;
+  const h = canvas.offsetHeight || 160;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  };
+  const start = (e) => {
+    aaSigState[key].drawing = true;
+    const pos = getPos(e);
+    aaSigState[key].lastX = pos.x; aaSigState[key].lastY = pos.y;
+    ctx.beginPath(); ctx.arc(pos.x, pos.y, 1, 0, Math.PI * 2); ctx.fillStyle = '#1a1a2e'; ctx.fill();
+  };
+  const move = (e) => {
+    if (!aaSigState[key].drawing) return;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(aaSigState[key].lastX, aaSigState[key].lastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    aaSigState[key].lastX = pos.x; aaSigState[key].lastY = pos.y;
+  };
+  const end = () => { aaSigState[key].drawing = false; };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); }, { passive: false });
+  canvas.addEventListener('touchmove',  (e) => { e.preventDefault(); move(e); },  { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+
+function aaWisCanvas(key) {
+  const canvas = document.getElementById(`aa-canvas-${key}`);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+}
+
+function aaGetCanvasData(key) {
+  const canvas = document.getElementById(`aa-canvas-${key}`);
+  if (!canvas || !aaSigState[key]?.ready) return null;
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const hasContent = data.some((v, i) => i % 4 === 3 && v > 10);
+  if (!hasContent) return null;
+  return canvas.toDataURL('image/png');
+}
+
+function aaGetToedracht(side) {
+  return AA_TOEDRACHT_ITEMS.map((_, i) => document.getElementById(`aa-td-${side}-${i}`)?.checked || false);
+}
+
+function aaGetVehicleData(side) {
+  const v = (id) => document.getElementById(`aa-${side}-${id}`)?.value.trim() || '';
+  return {
+    naam: v('naam'), voornaam: v('voornaam'), adres: v('adres'), tel: v('tel'),
+    geboortedatum: v('geboortedatum'), rijbewijsnr: v('rijbewijsnr'), categorie: v('categorie'),
+    merk: v('merk'), kenteken: v('kenteken'), land: v('land'),
+    verz_naam: v('verz-naam'), verz_polisnr: v('verz-polisnr'),
+    allrisks: ynGet(`aa-${side}-allrisks`),
+    zichtbare_schade: document.getElementById(`aa-${side}-schade`)?.value.trim() || '',
+    opmerkingen: document.getElementById(`aa-${side}-opmerkingen`)?.value.trim() || '',
+  };
+}
+
+function renderAaSamenvatting() {
+  const a = aaGetVehicleData('a'), b = aaGetVehicleData('b');
+  const datum = document.getElementById('aa-datum').value;
+  const tijd = document.getElementById('aa-tijd').value;
+  const plaats = document.getElementById('aa-plaats').value.trim();
+  document.getElementById('aa-samenvatting').innerHTML = `
+    <div style="background:#f7f8fc;border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px">🚨 Overzicht aanrijding</div>
+      <div style="font-size:14px;color:#333;display:flex;flex-direction:column;gap:4px">
+        <div><strong>Datum/tijd:</strong> ${escapeHtml(datum)} ${escapeHtml(tijd)}</div>
+        ${plaats ? `<div><strong>Plaats:</strong> ${escapeHtml(plaats)}</div>` : ''}
+        <div><strong>Voertuig A:</strong> ${escapeHtml(a.merk || '—')} ${a.kenteken ? '(' + escapeHtml(a.kenteken) + ')' : ''}</div>
+        <div><strong>Voertuig B:</strong> ${escapeHtml(b.merk || '—')} ${b.kenteken ? '(' + escapeHtml(b.kenteken) + ')' : ''}</div>
+      </div>
+    </div>`;
+}
+
+async function submitAanrijding() {
+  const statusEl = document.getElementById('aa-submit-status');
+  if (!sb && !initSupabase()) {
+    statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen...</div>';
+
+  const gps = getGpsForSubmit();
+  const a = aaGetVehicleData('a'), b = aaGetVehicleData('b');
+  const payload = {
+    client_timestamp: new Date().toISOString(),
+    datum: document.getElementById('aa-datum').value,
+    tijd: document.getElementById('aa-tijd').value,
+    land: document.getElementById('aa-land').value.trim(),
+    plaats: document.getElementById('aa-plaats').value.trim(),
+    straat: document.getElementById('aa-straat').value.trim(),
+    gewonden: ynGet('aa-gewonden'),
+    schade_andere_voertuigen: ynGet('aa-schade-voertuigen'),
+    schade_andere_objecten: ynGet('aa-schade-objecten'),
+    getuigen: document.getElementById('aa-getuigen').value.trim(),
+    project: document.getElementById('aa-project').value.trim(),
+    teamleader: document.getElementById('aa-teamleader').value.trim(),
+    voertuig_a: { ...a, toedracht: aaGetToedracht('a') },
+    voertuig_b: { ...b, toedracht: aaGetToedracht('b') },
+    toedracht_a: aaGetToedracht('a'),
+    toedracht_b: aaGetToedracht('b'),
+    schets_data: aaGetCanvasData('schets') || '',
+    handtekening_a_data: aaGetCanvasData('siga') || '',
+    handtekening_b_data: aaGetCanvasData('sigb') || '',
+    gps_lat: gps.gps_lat != null ? String(gps.gps_lat) : '',
+    gps_lon: gps.gps_lon != null ? String(gps.gps_lon) : '',
+    gps_accuracy: gps.gps_accuracy != null ? String(gps.gps_accuracy) : '',
+  };
+
+  try {
+    const { data, error } = await sb.rpc('submit_aanrijding', { p: payload });
+    if (error) throw error;
+    statusEl.innerHTML = '<div class="ok-box">✅ Aanrijdingsformulier verstuurd! Het is nu beschikbaar in Cockpit voor het kantoor.</div>';
+    setTimeout(() => {
+      go('s-home');
+      initAanrijding();
+    }, 2500);
+  } catch(e) {
+    statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -4986,7 +5522,7 @@ function escapeHtml(s) {
 // zien — niet de volledige geschiedenis opnieuw.
 const CHANGELOG_VA = [
   { version:1, datum:'13 augustus 2026', items:[
-    {icon:'📎', titel:'Documenten per werf', tekst:'Onder "Documenten" vind je nu de TRA en offerte per werf terug, rechtstreeks vanuit Project Cockpit — zoek je werf op en open het document.'},
+    {icon:'📎', titel:'Projectinformatie per werf', tekst:'Onder "Projectinfo" vind je nu de TRA en offerte per werf terug, rechtstreeks vanuit Project Cockpit — zoek je werf op en open het document.'},
   ]},
 ];
 
