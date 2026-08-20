@@ -1017,7 +1017,16 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
         <div class="form-group">
           <label class="form-label">Namen andere teamleden <span style="font-weight:400;color:#999">(optioneel)</span></label>
-          <textarea class="form-input" id="r-teamleden" rows="2" placeholder="bv. Piet, Klaas, Mo..."></textarea>
+          <div style="display:flex;gap:8px">
+            <select class="form-select" id="r-teamleden-select" onchange="regTeamledenSelectChange()" style="flex:1">
+              <option value="">Kies teamlid...</option>
+              <option value="__vrij__">✏️ Naam niet in de lijst...</option>
+            </select>
+            <button type="button" onclick="regTeamlidToevoegen()" style="background:#3547C8;color:#fff;border:none;border-radius:10px;padding:0 18px;font-weight:700;cursor:pointer;flex-shrink:0">＋</button>
+          </div>
+          <input type="text" class="form-input" id="r-teamleden-vrij" placeholder="Typ naam..." style="display:none;margin-top:8px" onkeydown="if(event.key==='Enter'){event.preventDefault();regTeamlidToevoegen();}">
+          <div id="r-teamleden-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+          <input type="hidden" id="r-teamleden">
         </div>
         <div class="form-group">
           <label class="form-label">Omschrijving van de werken</label>
@@ -2553,6 +2562,7 @@ let appData = {
   products: [],
   projects: [],
   teamleaders: [],
+  teamleden: [],
   registraties: JSON.parse(localStorage.getItem('registraties') || '[]'),
   uren: JSON.parse(localStorage.getItem('uren') || '[]'),
 };
@@ -2720,15 +2730,17 @@ async function loadRemoteData() {
   try {
     document.getElementById('sync-status').textContent = '🔄 Data synchroniseren met Supabase...';
 
-    const [prodRes, projRes, tlRes] = await Promise.all([
+    const [prodRes, projRes, tlRes, tldRes] = await Promise.all([
       sb.from('producten').select('*').order('id'),
       sb.from('projecten').select('*').order('id'),
       sb.from('teamleaders').select('*').order('id'),
+      sb.from('teamleden').select('*').eq('actief', true).order('volgorde'),
     ]);
 
     if (prodRes.error) console.warn('[Supabase] producten fout:', prodRes.error.message);
     if (projRes.error) console.warn('[Supabase] projecten fout:', projRes.error.message);
     if (tlRes.error)   console.warn('[Supabase] teamleaders fout:', tlRes.error.message);
+    if (tldRes.error)  console.warn('[Supabase] teamleden fout:', tldRes.error.message);
 
     // Toon zichtbare fout als alle queries mislukken
     if (prodRes.error && projRes.error) {
@@ -2742,7 +2754,8 @@ async function loadRemoteData() {
     const prodRows = prodRes.data || [];
     const projRows = projRes.data || [];
     const tlRows   = tlRes.data   || [];
-    console.log('[Supabase] Rijen: producten='+prodRows.length+' projecten='+projRows.length+' teamleaders='+tlRows.length);
+    const tldRows  = tldRes.data  || [];
+    console.log('[Supabase] Rijen: producten='+prodRows.length+' projecten='+projRows.length+' teamleaders='+tlRows.length+' teamleden='+tldRows.length);
 
     // Producten (filter Actief != NEE en gevulde naam) — zelfde regels als voorheen
     appData.products = prodRows.filter(r =>
@@ -2809,6 +2822,13 @@ async function loadRemoteData() {
       actief:   (r.actief || 'JA').trim().toUpperCase(),
     }));
     console.log('[Supabase] Teamleaders geladen:', appData.teamleaders.map(t=>t.weergave));
+
+    // Teamleden (volledige ploeglijst uit Planning — ruimer dan enkel ploegbazen)
+    appData.teamleden = tldRows.filter(r => (r.naam || '').trim() !== '').map(r => ({
+      id:   r.id,
+      naam: (r.naam || '').trim(),
+    }));
+    console.log('[Supabase] Teamleden geladen:', appData.teamleden.map(t=>t.naam));
 
     const ts = new Date().toLocaleTimeString('nl-BE');
     const sidebarSync = document.getElementById('sidebar-sync-status');
@@ -3036,9 +3056,81 @@ function updateActiveProject() {
 
 function updateTeamleaderDropdown() {
   const sel = document.getElementById('r-teamleader');
+  if (sel) {
+    const tls = appData.teamleaders.length ? appData.teamleaders : fallbackTeamleaders;
+    sel.innerHTML = tls.map(t => `<option>${t.weergave||t.naam||t}</option>`).join('');
+  }
+  updateTeamledenSelect();
+}
+
+// ── "Namen andere teamleden" — dropdown gevuld met de volledige ploeglijst
+// uit Planning (tabel "teamleden", ruimer dan enkel ploegbazen), met de
+// mogelijkheid om zelf een naam toe te voegen die niet in de lijst staat.
+let regTeamledenGeselecteerd = [];
+
+function updateTeamledenSelect() {
+  const sel = document.getElementById('r-teamleden-select');
   if (!sel) return;
-  const tls = appData.teamleaders.length ? appData.teamleaders : fallbackTeamleaders;
-  sel.innerHTML = tls.map(t => `<option>${t.weergave||t.naam||t}</option>`).join('');
+  const namen = appData.teamleden.map(t => t.naam);
+  sel.innerHTML = '<option value="">Kies teamlid...</option>' +
+    namen.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') +
+    '<option value="__vrij__">✏️ Naam niet in de lijst...</option>';
+}
+
+function regTeamledenSelectChange() {
+  const sel = document.getElementById('r-teamleden-select');
+  const vrij = document.getElementById('r-teamleden-vrij');
+  if (sel.value === '__vrij__') {
+    vrij.style.display = 'block';
+    vrij.focus();
+  } else {
+    vrij.style.display = 'none';
+    vrij.value = '';
+  }
+}
+
+function regTeamlidToevoegen() {
+  const sel = document.getElementById('r-teamleden-select');
+  const vrij = document.getElementById('r-teamleden-vrij');
+  const naam = (sel.value === '__vrij__' ? vrij.value : sel.value).trim();
+  if (!naam) return;
+  if (!regTeamledenGeselecteerd.includes(naam)) regTeamledenGeselecteerd.push(naam);
+  sel.value = '';
+  vrij.value = '';
+  vrij.style.display = 'none';
+  syncTeamledenHidden();
+  renderTeamledenTags();
+}
+
+function verwijderTeamlid(naam) {
+  regTeamledenGeselecteerd = regTeamledenGeselecteerd.filter(n => n !== naam);
+  syncTeamledenHidden();
+  renderTeamledenTags();
+}
+
+function renderTeamledenTags() {
+  const wrap = document.getElementById('r-teamleden-tags');
+  if (!wrap) return;
+  wrap.innerHTML = regTeamledenGeselecteerd.map(n => `
+    <span style="display:inline-flex;align-items:center;gap:6px;background:#EEF0FC;color:#3547C8;border-radius:20px;padding:6px 8px 6px 14px;font-size:13px;font-weight:600">
+      ${escapeHtml(n)}
+      <button type="button" onclick='verwijderTeamlid(${JSON.stringify(n)})' style="background:none;border:none;color:#3547C8;font-size:16px;line-height:1;cursor:pointer;padding:0 2px">✕</button>
+    </span>`).join('');
+}
+
+function syncTeamledenHidden() {
+  const hid = document.getElementById('r-teamleden');
+  if (hid) hid.value = regTeamledenGeselecteerd.join(', ');
+}
+
+function resetTeamledenSelectie() {
+  regTeamledenGeselecteerd = [];
+  const sel = document.getElementById('r-teamleden-select');
+  const vrij = document.getElementById('r-teamleden-vrij');
+  if (sel) sel.value = '';
+  if (vrij) { vrij.value = ''; vrij.style.display = 'none'; }
+  syncTeamledenHidden();
+  renderTeamledenTags();
 }
 
 // ── "Vorige keer overnemen" — vult project/team/product vooraf in
@@ -3139,8 +3231,11 @@ function kopieerVorigeRegistratie() {
   const man = document.getElementById('r-man');
   if (man && lastUren && lastUren.aantalMan) man.value = lastUren.aantalMan;
 
-  const teamledenEl = document.getElementById('r-teamleden');
-  if (teamledenEl && lastUren && lastUren.teamleden) teamledenEl.value = lastUren.teamleden;
+  if (lastUren && lastUren.teamleden) {
+    regTeamledenGeselecteerd = lastUren.teamleden.split(',').map(n => n.trim()).filter(Boolean);
+    syncTeamledenHidden();
+    renderTeamledenTags();
+  }
 
   vulProdDropdown();
 
@@ -4341,7 +4436,7 @@ async function submitRegistratie() {
     document.getElementById('r-opmerking').value = '';
     document.getElementById('r-uren').value = '';
     document.getElementById('r-man').value = '';
-    document.getElementById('r-teamleden').value = '';
+    resetTeamledenSelectie();
     document.getElementById('r-omschrijving').value = '';
     resetFotos();
     document.getElementById('verbruik-check').innerHTML = '';
