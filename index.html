@@ -637,11 +637,17 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="aa-step-3" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
       <div id="aa-step-4" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
       <div id="aa-step-5" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="aa-step-6" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
     </div>
-    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="aa-step-label">Stap 1 van 5 — Basisgegevens</div>
+    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="aa-step-label">Stap 1 van 6 — Basisgegevens</div>
 
     <!-- STAP 1: Basisgegevens -->
     <div id="aa-stap-1" style="padding:12px 16px">
+      <div id="aa-hervat-wrap" style="display:none;margin-bottom:14px">
+        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:6px">📂 Eerder ingevulde aanrijdingen (dit toestel)</div>
+        <div id="aa-hervat-lijst"></div>
+      </div>
+      <div id="aa-editing-banner" style="display:none;background:#FFF8EC;border-radius:10px;padding:10px 12px;font-size:12px;color:#B5590A;margin-bottom:14px;font-weight:600">✏️ Je werkt een eerder verstuurde aanrijding verder af.</div>
       <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:14px">ℹ️ Vul dit formulier samen met de andere bestuurder in, ter plaatse. Het vervangt het papieren Europees aanrijdingsformulier.</div>
       <div class="input-row">
         <div class="form-group">
@@ -728,9 +734,9 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div class="form-group" style="margin-top:18px">
         <label class="form-label">13. Situatieschets <span style="font-weight:400;color:#999">(optioneel)</span></label>
         <div style="font-size:12px;color:#888;margin-bottom:6px">Wegsituatie, rijrichting, positie op moment van botsing, straatnamen...</div>
+        <div id="schets-toolbar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
         <div style="position:relative;border:2px solid #ddd;border-radius:12px;background:#fff;touch-action:none">
-          <canvas id="aa-canvas-schets" style="display:block;width:100%;height:280px;border-radius:10px;cursor:crosshair"></canvas>
-          <button onclick="aaWisCanvas('schets')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;color:#888">✕ Wissen</button>
+          <canvas id="aa-canvas-schets" style="display:block;width:100%;aspect-ratio:352.5/157.3;border-radius:10px;cursor:crosshair"></canvas>
         </div>
       </div>
     </div>
@@ -774,6 +780,93 @@ textarea.form-input{min-height:80px;resize:vertical}
       </div>
 
       <div id="aa-submit-status" style="margin-top:10px"></div>
+    </div>
+
+    <!-- STAP 6: Pagina 2 — voor de verzekeraar (optioneel) -->
+    <div id="aa-stap-6" style="padding:12px 16px;display:none">
+      <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:14px">ℹ️ Dit is pagina 2 van het officiële formulier — de gedetailleerde aangifte voor je verzekeraar. Volledig optioneel: je kan dit nu invullen, of het later via "Eerder ingevulde aanrijdingen" op dit toestel afwerken vóór je definitief verstuurt.</div>
+
+      <div style="font-weight:700;font-size:14px;margin-bottom:8px">Schadenummers <span style="font-weight:400;color:#999">(indien gekend)</span></div>
+      <div class="input-row">
+        <div class="form-group"><label class="form-label">Tussenpersoon schadenr.</label><input type="text" class="form-input" id="p2-tussenpersoon-schadenr"></div>
+        <div class="form-group"><label class="form-label">Maatschappij schadenr.</label><input type="text" class="form-input" id="p2-maatschappij-schadenr"></div>
+      </div>
+
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Bestuurder & voertuig A</div>
+      <div class="form-group">
+        <label class="form-label">Was de bestuurder gemachtigd te rijden?</label>
+        <div class="toggle-yn" id="p2-gemachtigd">
+          <button type="button" class="tgl-btn active" data-val="true" onclick="ynSet('p2-gemachtigd',this)">Ja</button>
+          <button type="button" class="tgl-btn" data-val="false" onclick="ynSet('p2-gemachtigd',this)">Nee</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Zo nee, waarom niet?</label>
+        <input type="text" class="form-input" id="p2-gemachtigd-waarom">
+      </div>
+      <div class="input-row">
+        <div class="form-group"><label class="form-label">Km stand</label><input type="text" class="form-input" id="p2-kmstand" inputmode="numeric"></div>
+        <div class="form-group"><label class="form-label">Chassisnr. <span style="font-weight:400;color:#999">(indien ongekentekend)</span></label><input type="text" class="form-input" id="p2-chassisnr"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gebruik tijdens voorval</label>
+        <div id="p2-gebruik-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Aanhanger/caravan/oplegger/zijspan gekoppeld?</label>
+        <div class="toggle-yn" id="p2-aanhanger">
+          <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('p2-aanhanger',this)">Nee</button>
+          <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('p2-aanhanger',this)">Ja</button>
+        </div>
+      </div>
+
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Schade aan uw motorrijtuig</div>
+      <div class="input-row">
+        <div class="form-group"><label class="form-label">Geschat bedrag (€)</label><input type="text" class="form-input" id="p2-schade-bedrag" inputmode="decimal"></div>
+        <div class="form-group"><label class="form-label">Geschat door</label><input type="text" class="form-input" id="p2-schade-geschat-door"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Naam en adres reparateur</label><input type="text" class="form-input" id="p2-reparateur-naam"></div>
+      <div class="input-row">
+        <div class="form-group"><label class="form-label">Tel. reparateur</label><input type="text" class="form-input" id="p2-reparateur-tel"></div>
+        <div class="form-group"><label class="form-label">Wanneer naar reparateur?</label><input type="text" class="form-input" id="p2-reparateur-wanneer"></div>
+      </div>
+
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Politie</div>
+      <div class="form-group">
+        <label class="form-label">Is er politie aanwezig geweest?</label>
+        <div class="toggle-yn" id="p2-politie-aanwezig">
+          <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('p2-politie-aanwezig',this)">Nee</button>
+          <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('p2-politie-aanwezig',this)">Ja</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Te (plaats)</label><input type="text" class="form-input" id="p2-politie-plaats"></div>
+      <div class="form-group">
+        <label class="form-label">Heeft de politie geholpen bij het invullen?</label>
+        <div class="toggle-yn" id="p2-politie-hielp">
+          <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('p2-politie-hielp',this)">Nee</button>
+          <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('p2-politie-hielp',this)">Ja</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Maakt de politie nog een apart rapport op?</label>
+        <div id="p2-politie-rapport-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Slachtoffers <span style="font-weight:400;color:#999">(optioneel)</span></div>
+      <div id="p2-slachtoffers-lijst"></div>
+      <button type="button" onclick="p2SlachtofferToevoegen()" style="margin-top:4px;padding:10px 12px;border:1px dashed #3547C8;border-radius:10px;background:#EEF0FC;color:#3547C8;font-size:13px;font-weight:700;cursor:pointer;width:100%">＋ Slachtoffer toevoegen</button>
+
+      <div style="font-weight:700;font-size:14px;margin:18px 0 4px">Omstandigheden tijdens voorval</div>
+      <div style="display:flex;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;padding:4px 0;border-bottom:2px solid #eee">
+        <div style="flex:1.3"></div><div style="flex:1">Verzekerde (A)</div><div style="flex:1">Tegenpartij (B)</div>
+      </div>
+      <div id="p2-omstandigheden"></div>
+
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Aansprakelijkheid</div>
+      <div class="form-group">
+        <label class="form-label">Wie is naar uw mening aansprakelijk? Waarom meent u dat?</label>
+        <textarea class="form-input" id="p2-aansprakelijkheid" rows="3"></textarea>
+      </div>
     </div>
 
     <!-- Navigatieknoppen -->
@@ -2565,6 +2658,7 @@ let appData = {
   teamleden: [],
   registraties: JSON.parse(localStorage.getItem('registraties') || '[]'),
   uren: JSON.parse(localStorage.getItem('uren') || '[]'),
+  aanrijdingen: JSON.parse(localStorage.getItem('aanrijdingen') || '[]'),
 };
 
 // Fallback productdata (offline / voor demo)
@@ -5401,7 +5495,8 @@ const AA_TOEDRACHT_ITEMS = [
 ];
 
 let aaStapNr = 1;
-const aaSigState = {}; // schets, siga, sigb
+let aaEditingId = null;
+const aaSigState = {}; // siga, sigb (schets heeft zijn eigen tekenmodule, zie schetsInit)
 
 function ynSet(id, btn) {
   const wrap = document.getElementById(id);
@@ -5417,6 +5512,12 @@ function ynReset(id) {
   if (!wrap) return;
   wrap.dataset.value = 'false';
   wrap.querySelectorAll('.tgl-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'false'));
+}
+function ynForceSet(id, val) {
+  const wrap = document.getElementById(id);
+  if (!wrap) return;
+  wrap.dataset.value = String(!!val);
+  wrap.querySelectorAll('.tgl-btn').forEach(b => b.classList.toggle('active', (b.dataset.val === 'true') === !!val));
 }
 
 function aaVehicleFieldsHtml(side) {
@@ -5454,6 +5555,10 @@ function aaVehicleFieldsHtml(side) {
         <input type="text" class="form-input" id="${p}categorie" placeholder="B">
       </div>
     </div>
+    <div class="form-group">
+      <label class="form-label">Rijbewijs geldig tot</label>
+      <input type="date" class="form-input" id="${p}rijbewijs-geldig">
+    </div>
     <div style="font-weight:700;font-size:13px;color:#555;margin:16px 0 4px">🚐 Voertuig</div>
     <div class="form-group">
       <label class="form-label">Merk, type</label>
@@ -5469,14 +5574,47 @@ function aaVehicleFieldsHtml(side) {
         <input type="text" class="form-input" id="${p}land" value="België">
       </div>
     </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Kenteken aanhangwagen <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <input type="text" class="form-input" id="${p}aanhang-kenteken">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Land aanhangwagen</label>
+        <input type="text" class="form-input" id="${p}aanhang-land">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">10. Waar werd het voertuig het eerst geraakt? <span style="font-weight:400;color:#999">(optioneel — teken een pijl)</span></label>
+      <div style="position:relative;border:2px solid #ddd;border-radius:12px;background:#fafafa;touch-action:none">
+        <canvas id="aa-canvas-impact-${side}" style="display:block;width:100%;height:110px;border-radius:10px;cursor:crosshair"></canvas>
+        <button onclick="aaWisCanvas('impact-${side}')" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:8px;padding:3px 9px;font-size:11px;cursor:pointer;color:#888">✕ Wissen</button>
+      </div>
+    </div>
     <div style="font-weight:700;font-size:13px;color:#555;margin:16px 0 4px">🛡️ Verzekering</div>
     <div class="form-group">
       <label class="form-label">Verzekeringsmaatschappij</label>
       <input type="text" class="form-input" id="${p}verz-naam">
     </div>
-    <div class="form-group">
-      <label class="form-label">Polisnr.</label>
-      <input type="text" class="form-input" id="${p}verz-polisnr">
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Polisnr.</label>
+        <input type="text" class="form-input" id="${p}verz-polisnr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Groene kaart nr.</label>
+        <input type="text" class="form-input" id="${p}verz-groenekaart">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Polis geldig vanaf</label>
+        <input type="date" class="form-input" id="${p}verz-vanaf">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Polis geldig tot</label>
+        <input type="date" class="form-input" id="${p}verz-tot">
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">All risks verzekerd?</label>
@@ -5484,6 +5622,24 @@ function aaVehicleFieldsHtml(side) {
         <button type="button" class="tgl-btn active" data-val="false" onclick="ynSet('${p}allrisks',this)">Nee</button>
         <button type="button" class="tgl-btn" data-val="true" onclick="ynSet('${p}allrisks',this)">Ja</button>
       </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Agentschap / tussenpersoon / makelaar <span style="font-weight:400;color:#999">(optioneel)</span></label>
+      <input type="text" class="form-input" id="${p}agent-naam" placeholder="Naam kantoor/agentschap...">
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Contactpersoon</label>
+        <input type="text" class="form-input" id="${p}agent-contact">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tel. agentschap</label>
+        <input type="text" class="form-input" id="${p}agent-tel">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Adres agentschap</label>
+      <input type="text" class="form-input" id="${p}agent-adres">
     </div>`;
 }
 
@@ -5500,38 +5656,46 @@ function initAanrijding() {
     </div>`).join('');
   ['gewonden','schade-voertuigen','schade-objecten'].forEach(id => ynReset('aa-' + id));
   aaStapNr = 1;
-  aaSigState.schets = null; aaSigState.siga = null; aaSigState.sigb = null;
-  ['schets','siga','sigb'].forEach(key => {
+  aaEditingId = null;
+  document.getElementById('aa-editing-banner').style.display = 'none';
+  ['siga','sigb','impact-a','impact-b'].forEach(key => {
+    aaSigState[key] = null;
     const c = document.getElementById(`aa-canvas-${key}`);
     if (c && c.width) c.getContext('2d').clearRect(0, 0, c.width, c.height);
   });
+  schetsReset();
+  resetPagina2();
+  renderAaHervatLijst();
   updateAaNav();
 }
 
 function aaStap(delta) {
-  aaStapNr = Math.max(1, Math.min(5, aaStapNr + delta));
+  aaStapNr = Math.max(1, Math.min(6, aaStapNr + delta));
   updateAaNav();
   if (aaStapNr === 5) renderAaSamenvatting();
 }
 
 function updateAaNav() {
-  [1,2,3,4,5].forEach(n => {
+  [1,2,3,4,5,6].forEach(n => {
     document.getElementById(`aa-stap-${n}`).style.display = n === aaStapNr ? 'block' : 'none';
     document.getElementById(`aa-step-${n}`).style.background = n <= aaStapNr ? '#3547C8' : '#ddd';
   });
   const labels = [
-    'Stap 1 van 5 — Basisgegevens',
-    'Stap 2 van 5 — Voertuig A (ons voertuig)',
-    'Stap 3 van 5 — Voertuig B (tegenpartij)',
-    'Stap 4 van 5 — Toedracht & schets',
-    'Stap 5 van 5 — Schade, opmerkingen & handtekeningen',
+    'Stap 1 van 6 — Basisgegevens',
+    'Stap 2 van 6 — Voertuig A (ons voertuig)',
+    'Stap 3 van 6 — Voertuig B (tegenpartij)',
+    'Stap 4 van 6 — Toedracht & schets',
+    'Stap 5 van 6 — Schade, opmerkingen & handtekeningen',
+    'Stap 6 van 6 — Pagina 2 (optioneel, voor verzekeraar)',
   ];
   document.getElementById('aa-step-label').textContent = labels[aaStapNr - 1];
   document.getElementById('aa-vorige-btn').style.display   = aaStapNr > 1 ? 'block' : 'none';
-  document.getElementById('aa-volgende-btn').style.display = aaStapNr < 5 ? 'block' : 'none';
-  document.getElementById('aa-submit-btn').style.display   = aaStapNr === 5 ? 'block' : 'none';
+  document.getElementById('aa-volgende-btn').style.display = aaStapNr < 6 ? 'block' : 'none';
+  document.getElementById('aa-submit-btn').style.display   = aaStapNr === 6 ? 'block' : 'none';
   document.getElementById('aa-submit-status').innerHTML    = '';
-  if (aaStapNr === 4) { setTimeout(() => aaSetupCanvas('schets'), 50); }
+  if (aaStapNr === 2) { setTimeout(() => aaSetupCanvas('impact-a'), 50); }
+  if (aaStapNr === 3) { setTimeout(() => aaSetupCanvas('impact-b'), 50); }
+  if (aaStapNr === 4) { setTimeout(() => schetsInit(), 50); }
   if (aaStapNr === 5) { setTimeout(() => { aaSetupCanvas('siga'); aaSetupCanvas('sigb'); }, 50); }
 }
 
@@ -5594,6 +5758,22 @@ function aaWisCanvas(key) {
   canvas.getContext('2d').clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 }
 
+function aaLoadAchtergrond(key, dataUrl) {
+  if (!dataUrl) return;
+  const draw = () => {
+    const canvas = document.getElementById(`aa-canvas-${key}`);
+    if (!canvas) return;
+    const img = new Image();
+    img.onload = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width / dpr, canvas.height / dpr);
+    };
+    img.src = dataUrl;
+  };
+  if (aaSigState[key]?.ready) draw();
+  else setTimeout(() => { aaSetupCanvas(key); draw(); }, 150);
+}
+
 function aaGetCanvasData(key) {
   const canvas = document.getElementById(`aa-canvas-${key}`);
   if (!canvas || !aaSigState[key]?.ready) return null;
@@ -5613,11 +5793,16 @@ function aaGetVehicleData(side) {
   return {
     naam: v('naam'), voornaam: v('voornaam'), adres: v('adres'), tel: v('tel'),
     geboortedatum: v('geboortedatum'), rijbewijsnr: v('rijbewijsnr'), categorie: v('categorie'),
+    rijbewijs_geldig: v('rijbewijs-geldig'),
     merk: v('merk'), kenteken: v('kenteken'), land: v('land'),
-    verz_naam: v('verz-naam'), verz_polisnr: v('verz-polisnr'),
+    aanhang_kenteken: v('aanhang-kenteken'), aanhang_land: v('aanhang-land'),
+    verz_naam: v('verz-naam'), verz_polisnr: v('verz-polisnr'), verz_groenekaart: v('verz-groenekaart'),
+    verz_vanaf: v('verz-vanaf'), verz_tot: v('verz-tot'),
     allrisks: ynGet(`aa-${side}-allrisks`),
+    agent_naam: v('agent-naam'), agent_contact: v('agent-contact'), agent_tel: v('agent-tel'), agent_adres: v('agent-adres'),
     zichtbare_schade: document.getElementById(`aa-${side}-schade`)?.value.trim() || '',
     opmerkingen: document.getElementById(`aa-${side}-opmerkingen`)?.value.trim() || '',
+    impact_data: aaGetCanvasData(`impact-${side}`) || '',
   };
 }
 
@@ -5665,25 +5850,501 @@ async function submitAanrijding() {
     voertuig_b: { ...b, toedracht: aaGetToedracht('b') },
     toedracht_a: aaGetToedracht('a'),
     toedracht_b: aaGetToedracht('b'),
-    schets_data: aaGetCanvasData('schets') || '',
+    schets_data: schetsExportPNG() || '',
     handtekening_a_data: aaGetCanvasData('siga') || '',
     handtekening_b_data: aaGetCanvasData('sigb') || '',
+    pagina2: getPagina2Payload(),
     gps_lat: gps.gps_lat != null ? String(gps.gps_lat) : '',
     gps_lon: gps.gps_lon != null ? String(gps.gps_lon) : '',
     gps_accuracy: gps.gps_accuracy != null ? String(gps.gps_accuracy) : '',
   };
 
   try {
-    const { data, error } = await sb.rpc('submit_aanrijding', { p: payload });
-    if (error) throw error;
-    statusEl.innerHTML = '<div class="ok-box">✅ Aanrijdingsformulier verstuurd! Het is nu beschikbaar in Cockpit voor het kantoor.</div>';
+    let id = aaEditingId;
+    if (aaEditingId) {
+      const { error } = await sb.rpc('update_aanrijding', { p_id: aaEditingId, p: payload });
+      if (error) throw error;
+    } else {
+      const { data, error } = await sb.rpc('submit_aanrijding', { p: payload });
+      if (error) throw error;
+      id = data;
+    }
+    aaBewaarLokaal(id, payload);
+    statusEl.innerHTML = '<div class="ok-box">✅ Aanrijdingsformulier verstuurd! Het is nu beschikbaar in Cockpit voor het kantoor. Je kan dit later nog aanvullen via "Eerder ingevulde aanrijdingen".</div>';
     setTimeout(() => {
       go('s-home');
       initAanrijding();
-    }, 2500);
+    }, 3000);
   } catch(e) {
     statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
   }
+}
+
+// ── Lokale cache: laat een ploegbaas een eerder verstuurde aanrijding
+// op ditzelfde toestel later terugvinden en verder afwerken (bv. pagina 2
+// thuis invullen) zonder dat daar een login/account voor nodig is.
+function aaBewaarLokaal(id, payload) {
+  if (!id) return;
+  const record = { ...payload, id };
+  const idx = appData.aanrijdingen.findIndex(r => r.id === id);
+  if (idx === -1) appData.aanrijdingen.unshift(record);
+  else appData.aanrijdingen[idx] = record;
+  appData.aanrijdingen = appData.aanrijdingen.slice(0, 20); // laatste 20 volstaat
+  localStorage.setItem('aanrijdingen', JSON.stringify(appData.aanrijdingen));
+}
+
+function renderAaHervatLijst() {
+  const wrap = document.getElementById('aa-hervat-wrap');
+  const lijst = document.getElementById('aa-hervat-lijst');
+  if (!wrap || !lijst) return;
+  if (!appData.aanrijdingen.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  lijst.innerHTML = appData.aanrijdingen.map(r => `
+    <div class="prod-card" onclick="aaHervatten(${r.id})" style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px;flex-shrink:0">🚨</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px">${escapeHtml(r.datum || '')} ${escapeHtml(r.tijd || '')} — ${escapeHtml(r.voertuig_a?.kenteken || r.voertuig_a?.merk || 'Voertuig A')}</div>
+        <div class="prod-sub">${escapeHtml(r.plaats || r.straat || 'Geen locatie')}</div>
+      </div>
+      <span style="color:#3547C8;font-weight:700;font-size:13px;flex-shrink:0">Verder ▸</span>
+    </div>`).join('');
+}
+
+function aaHervatten(id) {
+  const r = appData.aanrijdingen.find(x => x.id === id);
+  if (!r) return;
+
+  // Eerst een verse, lege wizard opbouwen (go() triggert initAanrijding()), dan pas
+  // de opgeslagen gegevens invullen — anders overschrijft initAanrijding() alles weer.
+  go('s-aanrijding');
+  aaEditingId = id;
+  document.getElementById('aa-editing-banner').style.display = 'block';
+
+  document.getElementById('aa-datum').value = r.datum || '';
+  document.getElementById('aa-tijd').value = r.tijd || '';
+  document.getElementById('aa-land').value = r.land || '';
+  document.getElementById('aa-plaats').value = r.plaats || '';
+  document.getElementById('aa-straat').value = r.straat || '';
+  document.getElementById('aa-project').value = r.project || '';
+  document.getElementById('aa-teamleader').value = r.teamleader || '';
+  document.getElementById('aa-getuigen').value = r.getuigen || '';
+  ynForceSet('aa-gewonden', !!r.gewonden);
+  ynForceSet('aa-schade-voertuigen', !!r.schade_andere_voertuigen);
+  ynForceSet('aa-schade-objecten', !!r.schade_andere_objecten);
+
+  ['a','b'].forEach(side => {
+    const v = r['voertuig_' + side] || {};
+    ['naam','voornaam','adres','tel','geboortedatum','rijbewijsnr','categorie','rijbewijs-geldig',
+     'merk','kenteken','land','aanhang-kenteken','aanhang-land',
+     'verz-naam','verz-polisnr','verz-groenekaart','verz-vanaf','verz-tot',
+     'agent-naam','agent-contact','agent-tel','agent-adres'].forEach(veld => {
+      const key = veld.replace(/-/g,'_');
+      const el = document.getElementById(`aa-${side}-${veld}`);
+      if (el) el.value = v[key] || '';
+    });
+    const schadeEl = document.getElementById(`aa-${side}-schade`);
+    if (schadeEl) schadeEl.value = v.zichtbare_schade || '';
+    const opmEl = document.getElementById(`aa-${side}-opmerkingen`);
+    if (opmEl) opmEl.value = v.opmerkingen || '';
+    ynForceSet(`aa-${side}-allrisks`, !!v.allrisks);
+    if (v.impact_data) aaLoadAchtergrond(`impact-${side}`, v.impact_data);
+    (r['toedracht_' + side] || []).forEach((on, i) => {
+      const cb = document.getElementById(`aa-td-${side}-${i}`);
+      if (cb) cb.checked = !!on;
+    });
+  });
+
+  schetsReset();
+  if (r.schets_data) schetsLoadAchtergrond(r.schets_data);
+  populatePagina2(r.pagina2 || {});
+
+  aaStapNr = 1;
+  updateAaNav();
+}
+
+// ════════════════════════════════════════════════════════════
+// SCHETS — vector-tekeneditor voor de situatieschets (stap 4).
+// Vormen (potlood/lijn/rechthoek/pijl/cirkel) blijven aparte objecten,
+// zodat ze achteraf met de gom verwijderd of met "Verplaatsen" versleept
+// kunnen worden — puur pixels tekenen zou dat onmogelijk maken.
+// ════════════════════════════════════════════════════════════
+const SCHETS_TOOLS = [
+  { id: 'pen',    icon: '✏️', label: 'Potlood' },
+  { id: 'line',   icon: '📏', label: 'Lijn' },
+  { id: 'rect',   icon: '▭',  label: 'Rechthoek' },
+  { id: 'arrow',  icon: '➡️', label: 'Pijl' },
+  { id: 'circle', icon: '⭕', label: 'Cirkel' },
+  { id: 'move',   icon: '✥',  label: 'Verplaatsen' },
+  { id: 'eraser', icon: '🧹', label: 'Gom' },
+];
+let schetsShapes = [];
+let schetsBgImg = null;
+let schetsTool = 'pen';
+let schetsDrawing = null;
+let schetsMoving = null;
+let schetsActive = false;
+let schetsCanvas = null, schetsCtx = null, schetsListenersReady = false;
+
+function schetsToolbarHtml() {
+  return SCHETS_TOOLS.map(t =>
+    `<button type="button" class="chip${t.id === schetsTool ? ' active' : ''}" onclick="schetsSetTool('${t.id}')">${t.icon} ${t.label}</button>`
+  ).join('') + `<button type="button" class="chip" onclick="schetsWisAlles()">🗑️ Alles wissen</button>`;
+}
+
+function schetsSetTool(tool) {
+  schetsTool = tool;
+  schetsMoving = null;
+  const bar = document.getElementById('schets-toolbar');
+  if (bar) bar.innerHTML = schetsToolbarHtml();
+}
+
+function schetsInit() {
+  const bar = document.getElementById('schets-toolbar');
+  if (bar) bar.innerHTML = schetsToolbarHtml();
+  const canvas = document.getElementById('aa-canvas-schets');
+  if (!canvas || !canvas.offsetWidth || !canvas.offsetHeight) { setTimeout(schetsInit, 100); return; }
+  schetsCanvas = canvas;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  schetsCtx = canvas.getContext('2d');
+  schetsCtx.scale(dpr, dpr);
+  schetsRender();
+  if (schetsListenersReady) return;
+  schetsListenersReady = true;
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? (e.touches[0] || e.changedTouches[0]) : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  };
+  const down = (e) => {
+    schetsActive = true;
+    const p = getPos(e);
+    if (schetsTool === 'eraser') { schetsErasenBij(p.x, p.y); return; }
+    if (schetsTool === 'move') {
+      const idx = schetsHitTestAll(p.x, p.y);
+      if (idx !== -1) schetsMoving = { idx, lastX: p.x, lastY: p.y };
+      return;
+    }
+    schetsDrawing = schetsTool === 'pen'
+      ? { type: 'pen', pts: [p] }
+      : { type: schetsTool, x1: p.x, y1: p.y, x2: p.x, y2: p.y };
+    schetsRender();
+  };
+  const move = (e) => {
+    if (!schetsActive) return;
+    const p = getPos(e);
+    if (schetsTool === 'eraser') { schetsErasenBij(p.x, p.y); return; }
+    if (schetsMoving) {
+      const dx = p.x - schetsMoving.lastX, dy = p.y - schetsMoving.lastY;
+      schetsTranslateShape(schetsShapes[schetsMoving.idx], dx, dy);
+      schetsMoving.lastX = p.x; schetsMoving.lastY = p.y;
+      schetsRender();
+      return;
+    }
+    if (!schetsDrawing) return;
+    if (schetsDrawing.type === 'pen') schetsDrawing.pts.push(p);
+    else { schetsDrawing.x2 = p.x; schetsDrawing.y2 = p.y; }
+    schetsRender();
+  };
+  const up = () => {
+    schetsActive = false;
+    if (schetsDrawing) { schetsShapes.push(schetsDrawing); schetsDrawing = null; schetsRender(); }
+    schetsMoving = null;
+  };
+
+  canvas.addEventListener('mousedown', down);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', up);
+  canvas.addEventListener('mouseleave', up);
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); down(e); }, { passive: false });
+  canvas.addEventListener('touchmove',  (e) => { e.preventDefault(); move(e); },  { passive: false });
+  canvas.addEventListener('touchend', up);
+}
+
+function schetsRender() {
+  if (!schetsCtx || !schetsCanvas) return;
+  const w = schetsCanvas.offsetWidth, h = schetsCanvas.offsetHeight;
+  schetsCtx.clearRect(0, 0, w, h);
+  if (schetsBgImg) schetsCtx.drawImage(schetsBgImg, 0, 0, w, h);
+  schetsShapes.forEach((s, i) => schetsDrawShape(s, schetsMoving && schetsMoving.idx === i));
+  if (schetsDrawing) schetsDrawShape(schetsDrawing, false);
+}
+
+function schetsDrawShape(s, selected) {
+  const ctx = schetsCtx;
+  ctx.save();
+  ctx.strokeStyle = selected ? '#3547C8' : '#1a1a2e';
+  ctx.fillStyle   = selected ? '#3547C8' : '#1a1a2e';
+  ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (s.type === 'pen') {
+    ctx.beginPath();
+    s.pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+  } else if (s.type === 'line') {
+    ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
+  } else if (s.type === 'rect') {
+    ctx.strokeRect(Math.min(s.x1,s.x2), Math.min(s.y1,s.y2), Math.abs(s.x2-s.x1), Math.abs(s.y2-s.y1));
+  } else if (s.type === 'circle') {
+    const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2, rx=Math.abs(s.x2-s.x1)/2, ry=Math.abs(s.y2-s.y1)/2;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2); ctx.stroke();
+  } else if (s.type === 'arrow') {
+    ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
+    const angle = Math.atan2(s.y2 - s.y1, s.x2 - s.x1), size = 10;
+    ctx.beginPath();
+    ctx.moveTo(s.x2, s.y2);
+    ctx.lineTo(s.x2 - size*Math.cos(angle-Math.PI/6), s.y2 - size*Math.sin(angle-Math.PI/6));
+    ctx.lineTo(s.x2 - size*Math.cos(angle+Math.PI/6), s.y2 - size*Math.sin(angle+Math.PI/6));
+    ctx.closePath(); ctx.fill();
+  }
+  if (selected) {
+    ctx.setLineDash([4,3]); ctx.lineWidth = 1; ctx.strokeStyle = '#3547C8';
+    const b = schetsBounds(s);
+    ctx.strokeRect(b.x0-6, b.y0-6, (b.x1-b.x0)+12, (b.y1-b.y0)+12);
+  }
+  ctx.restore();
+}
+
+function schetsBounds(s) {
+  if (s.type === 'pen') {
+    const xs = s.pts.map(p=>p.x), ys = s.pts.map(p=>p.y);
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+  }
+  return { x0: Math.min(s.x1,s.x2), x1: Math.max(s.x1,s.x2), y0: Math.min(s.y1,s.y2), y1: Math.max(s.y1,s.y2) };
+}
+
+function schetsDistPtSeg(px,py,x1,y1,x2,y2) {
+  const dx=x2-x1, dy=y2-y1, len2=dx*dx+dy*dy;
+  let t = len2 ? ((px-x1)*dx+(py-y1)*dy)/len2 : 0;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px-(x1+t*dx), py-(y1+t*dy));
+}
+
+function schetsHitTest(s, x, y) {
+  const TH = 12;
+  if (s.type === 'pen') {
+    for (let i=1;i<s.pts.length;i++) if (schetsDistPtSeg(x,y,s.pts[i-1].x,s.pts[i-1].y,s.pts[i].x,s.pts[i].y) < TH) return true;
+    return false;
+  }
+  if (s.type === 'line' || s.type === 'arrow') return schetsDistPtSeg(x,y,s.x1,s.y1,s.x2,s.y2) < TH;
+  if (s.type === 'rect') {
+    const b = schetsBounds(s);
+    const onBorder = x>=b.x0-TH && x<=b.x1+TH && y>=b.y0-TH && y<=b.y1+TH &&
+      (x<=b.x0+TH || x>=b.x1-TH || y<=b.y0+TH || y>=b.y1-TH);
+    return onBorder;
+  }
+  if (s.type === 'circle') {
+    const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2, rx=Math.abs(s.x2-s.x1)/2, ry=Math.abs(s.y2-s.y1)/2;
+    if (rx<1 || ry<1) return false;
+    const d = Math.hypot((x-cx)/rx, (y-cy)/ry);
+    return Math.abs(d-1) < 0.18;
+  }
+  return false;
+}
+
+function schetsHitTestAll(x, y) {
+  for (let i = schetsShapes.length-1; i>=0; i--) if (schetsHitTest(schetsShapes[i], x, y)) return i;
+  return -1;
+}
+
+function schetsTranslateShape(s, dx, dy) {
+  if (!s) return;
+  if (s.type === 'pen') s.pts.forEach(p => { p.x += dx; p.y += dy; });
+  else { s.x1 += dx; s.y1 += dy; s.x2 += dx; s.y2 += dy; }
+}
+
+function schetsErasenBij(x, y) {
+  const idx = schetsHitTestAll(x, y);
+  if (idx !== -1) { schetsShapes.splice(idx, 1); schetsRender(); }
+}
+
+function schetsWisAlles() {
+  schetsShapes = [];
+  schetsBgImg = null;
+  schetsRender();
+}
+
+function schetsReset() {
+  schetsShapes = [];
+  schetsBgImg = null;
+  schetsDrawing = null;
+  schetsMoving = null;
+  schetsTool = 'pen';
+  const bar = document.getElementById('schets-toolbar');
+  if (bar) bar.innerHTML = schetsToolbarHtml();
+  if (schetsCtx) schetsRender();
+}
+
+function schetsExportPNG() {
+  if (!schetsCanvas || (!schetsShapes.length && !schetsBgImg)) return null;
+  return schetsCanvas.toDataURL('image/png');
+}
+
+function schetsLoadAchtergrond(dataUrl) {
+  const img = new Image();
+  img.onload = () => { schetsBgImg = img; schetsRender(); };
+  img.src = dataUrl;
+}
+
+// ════════════════════════════════════════════════════════════
+// PAGINA 2 — gedetailleerde aangifte voor de verzekeraar (stap 6,
+// volledig optioneel — kan ook achteraf via "Eerder ingevulde
+// aanrijdingen" aangevuld worden vóór definitief versturen).
+// ════════════════════════════════════════════════════════════
+const P2_GEBRUIK_OPTIES = ['Bedrijf', 'Beroep', 'Vakantie', 'Overig particulier gebruik'];
+const P2_RAPPORT_OPTIES = ['Ja', 'Nee', 'Onbekend'];
+const P2_OMST_VELDEN = [
+  { key: 'snelheid',     label: 'Snelheid (km/u)' },
+  { key: 'max_snelheid', label: 'Max. snelheid ter plaatse (km/u)' },
+  { key: 'wegtype',      label: 'Voorrangs-, verharde, onverharde weg of fietspad?' },
+  { key: 'positie',      label: 'Rechts, links of midden op de weg?' },
+  { key: 'rijstroken',   label: 'Aantal rijstroken' },
+  { key: 'streep',       label: 'Ononderbroken streep?' },
+  { key: 'breedte',      label: 'Breedte van de weg' },
+  { key: 'richting',     label: 'Tijdig richtingverandering aangegeven?' },
+  { key: 'drank',        label: 'Sprake van drankgebruik?' },
+];
+let p2Gebruik = '';
+let p2Rapport = '';
+let p2Slachtoffers = [];
+let p2NextId = 0;
+
+function updateP2GebruikChips() {
+  const el = document.getElementById('p2-gebruik-chips');
+  if (!el) return;
+  el.innerHTML = P2_GEBRUIK_OPTIES.map(o =>
+    `<button type="button" class="chip${p2Gebruik===o?' active':''}" onclick='p2SetGebruik(${JSON.stringify(o)})'>${escapeHtml(o)}</button>`).join('');
+}
+function p2SetGebruik(o) { p2Gebruik = (p2Gebruik === o) ? '' : o; updateP2GebruikChips(); }
+
+function updateP2RapportChips() {
+  const el = document.getElementById('p2-politie-rapport-chips');
+  if (!el) return;
+  el.innerHTML = P2_RAPPORT_OPTIES.map(o =>
+    `<button type="button" class="chip${p2Rapport===o?' active':''}" onclick='p2SetRapport(${JSON.stringify(o)})'>${escapeHtml(o)}</button>`).join('');
+}
+function p2SetRapport(o) { p2Rapport = (p2Rapport === o) ? '' : o; updateP2RapportChips(); }
+
+function p2NieuwSlachtoffer() { return { id: p2NextId++, naam:'', postcode:'', geslacht:'m', geboortedatum:'', letsel:'', kant:'eigen' }; }
+
+function p2SlachtofferRowHtml(s) {
+  return `
+    <div style="background:#f7f8fc;border-radius:12px;padding:12px;margin-bottom:10px" id="p2-slacht-${s.id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <select class="form-select" style="width:auto;padding:6px 10px;font-size:12px" onchange="p2SlachtofferSet(${s.id},'kant',this.value)">
+          <option value="eigen" ${s.kant==='eigen'?'selected':''}>Eigen voertuig (A)</option>
+          <option value="tegenpartij" ${s.kant==='tegenpartij'?'selected':''}>Tegenpartij (B)</option>
+        </select>
+        <button type="button" onclick="p2SlachtofferVerwijderen(${s.id})" style="background:none;border:none;color:#ccc;font-size:18px;cursor:pointer">✕</button>
+      </div>
+      <div class="input-row">
+        <div class="form-group" style="margin-bottom:8px"><label class="form-label">Naam</label><input type="text" class="form-input" value="${escapeHtml(s.naam)}" oninput="p2SlachtofferSet(${s.id},'naam',this.value)"></div>
+        <div class="form-group" style="margin-bottom:8px"><label class="form-label">Postcode/huisnr.</label><input type="text" class="form-input" value="${escapeHtml(s.postcode)}" oninput="p2SlachtofferSet(${s.id},'postcode',this.value)"></div>
+      </div>
+      <div class="input-row">
+        <div class="form-group" style="margin-bottom:8px">
+          <label class="form-label">Geslacht</label>
+          <div class="toggle-yn">
+            <button type="button" class="tgl-btn${s.geslacht==='m'?' active':''}" onclick="p2SlachtofferSet(${s.id},'geslacht','m');p2RenderSlachtoffers()">M</button>
+            <button type="button" class="tgl-btn${s.geslacht==='v'?' active':''}" onclick="p2SlachtofferSet(${s.id},'geslacht','v');p2RenderSlachtoffers()">V</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:8px"><label class="form-label">Geboortedatum</label><input type="date" class="form-input" value="${escapeHtml(s.geboortedatum)}" oninput="p2SlachtofferSet(${s.id},'geboortedatum',this.value)"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Aard letsel</label><input type="text" class="form-input" value="${escapeHtml(s.letsel)}" oninput="p2SlachtofferSet(${s.id},'letsel',this.value)"></div>
+    </div>`;
+}
+function p2RenderSlachtoffers() {
+  const el = document.getElementById('p2-slachtoffers-lijst');
+  if (!el) return;
+  el.innerHTML = p2Slachtoffers.map(p2SlachtofferRowHtml).join('') ||
+    '<div style="color:#bbb;font-size:13px;padding:6px 0">Geen slachtoffers toegevoegd</div>';
+}
+function p2SlachtofferToevoegen() { p2Slachtoffers.push(p2NieuwSlachtoffer()); p2RenderSlachtoffers(); }
+function p2SlachtofferVerwijderen(id) { p2Slachtoffers = p2Slachtoffers.filter(s => s.id !== id); p2RenderSlachtoffers(); }
+function p2SlachtofferSet(id, veld, val) { const s = p2Slachtoffers.find(s => s.id === id); if (s) s[veld] = val; }
+
+function renderP2Omstandigheden() {
+  const el = document.getElementById('p2-omstandigheden');
+  if (!el) return;
+  el.innerHTML = P2_OMST_VELDEN.map(v => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5">
+      <div style="flex:1.3;font-size:12.5px;color:#555">${escapeHtml(v.label)}</div>
+      <input type="text" class="form-input" style="flex:1;padding:8px" id="p2-omst-a-${v.key}">
+      <input type="text" class="form-input" style="flex:1;padding:8px" id="p2-omst-b-${v.key}">
+    </div>`).join('');
+}
+
+function resetPagina2() {
+  ['tussenpersoon-schadenr','maatschappij-schadenr','gemachtigd-waarom','kmstand','chassisnr',
+   'schade-bedrag','schade-geschat-door','reparateur-naam','reparateur-tel','reparateur-wanneer',
+   'politie-plaats','aansprakelijkheid'].forEach(id => {
+    const el = document.getElementById('p2-' + id);
+    if (el) el.value = '';
+  });
+  ynForceSet('p2-gemachtigd', true);
+  ynReset('p2-aanhanger');
+  ynReset('p2-politie-aanwezig');
+  ynReset('p2-politie-hielp');
+  p2Gebruik = ''; updateP2GebruikChips();
+  p2Rapport = ''; updateP2RapportChips();
+  p2Slachtoffers = []; p2NextId = 0; p2RenderSlachtoffers();
+  renderP2Omstandigheden();
+}
+
+function getPagina2Payload() {
+  const v = (id) => document.getElementById(id)?.value.trim() || '';
+  const omst = (side) => Object.fromEntries(P2_OMST_VELDEN.map(f => [f.key, v(`p2-omst-${side}-${f.key}`)]));
+  return {
+    tussenpersoon_schadenr: v('p2-tussenpersoon-schadenr'),
+    maatschappij_schadenr: v('p2-maatschappij-schadenr'),
+    gemachtigd: ynGet('p2-gemachtigd'),
+    gemachtigd_waarom: v('p2-gemachtigd-waarom'),
+    kmstand: v('p2-kmstand'),
+    gebruik_voorval: p2Gebruik,
+    aanhanger_gekoppeld: ynGet('p2-aanhanger'),
+    chassisnr: v('p2-chassisnr'),
+    schade_bedrag: v('p2-schade-bedrag'),
+    schade_geschat_door: v('p2-schade-geschat-door'),
+    reparateur_naam: v('p2-reparateur-naam'),
+    reparateur_tel: v('p2-reparateur-tel'),
+    reparateur_wanneer: v('p2-reparateur-wanneer'),
+    politie_aanwezig: ynGet('p2-politie-aanwezig'),
+    politie_plaats: v('p2-politie-plaats'),
+    politie_hielp: ynGet('p2-politie-hielp'),
+    politie_rapport: p2Rapport,
+    slachtoffers: p2Slachtoffers.filter(s => s.naam.trim()),
+    omstandigheden: { a: omst('a'), b: omst('b') },
+    aansprakelijkheid: v('p2-aansprakelijkheid'),
+  };
+}
+
+function populatePagina2(p2) {
+  p2 = p2 || {};
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('p2-tussenpersoon-schadenr', p2.tussenpersoon_schadenr);
+  set('p2-maatschappij-schadenr', p2.maatschappij_schadenr);
+  ynForceSet('p2-gemachtigd', p2.gemachtigd !== false);
+  set('p2-gemachtigd-waarom', p2.gemachtigd_waarom);
+  set('p2-kmstand', p2.kmstand);
+  p2Gebruik = p2.gebruik_voorval || ''; updateP2GebruikChips();
+  ynForceSet('p2-aanhanger', !!p2.aanhanger_gekoppeld);
+  set('p2-chassisnr', p2.chassisnr);
+  set('p2-schade-bedrag', p2.schade_bedrag);
+  set('p2-schade-geschat-door', p2.schade_geschat_door);
+  set('p2-reparateur-naam', p2.reparateur_naam);
+  set('p2-reparateur-tel', p2.reparateur_tel);
+  set('p2-reparateur-wanneer', p2.reparateur_wanneer);
+  ynForceSet('p2-politie-aanwezig', !!p2.politie_aanwezig);
+  set('p2-politie-plaats', p2.politie_plaats);
+  ynForceSet('p2-politie-hielp', !!p2.politie_hielp);
+  p2Rapport = p2.politie_rapport || ''; updateP2RapportChips();
+  p2Slachtoffers = (p2.slachtoffers || []).map(s => ({ ...s, id: p2NextId++ }));
+  p2RenderSlachtoffers();
+  renderP2Omstandigheden();
+  Object.entries(p2.omstandigheden?.a || {}).forEach(([k,val]) => set(`p2-omst-a-${k}`, val));
+  Object.entries(p2.omstandigheden?.b || {}).forEach(([k,val]) => set(`p2-omst-b-${k}`, val));
 }
 
 // ════════════════════════════════════════════════════════════
