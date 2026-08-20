@@ -1007,13 +1007,17 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
         <div class="input-row">
           <div class="form-group">
-            <label class="form-label">Aantal uren (totaal ploeg)</label>
-            <input type="text" class="form-input" id="r-uren" placeholder="bv. 16" inputmode="decimal">
+            <label class="form-label">Aantal uren (per werker)</label>
+            <input type="text" class="form-input" id="r-uren" placeholder="bv. 8" inputmode="decimal">
           </div>
           <div class="form-group">
             <label class="form-label">Aantal personen <span style="font-weight:400;color:#999">(optioneel)</span></label>
             <input type="number" class="form-input" id="r-man" placeholder="bv. 2" inputmode="numeric">
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Namen andere teamleden <span style="font-weight:400;color:#999">(optioneel)</span></label>
+          <textarea class="form-input" id="r-teamleden" rows="2" placeholder="bv. Piet, Klaas, Mo..."></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Omschrijving van de werken</label>
@@ -3135,6 +3139,9 @@ function kopieerVorigeRegistratie() {
   const man = document.getElementById('r-man');
   if (man && lastUren && lastUren.aantalMan) man.value = lastUren.aantalMan;
 
+  const teamledenEl = document.getElementById('r-teamleden');
+  if (teamledenEl && lastUren && lastUren.teamleden) teamledenEl.value = lastUren.teamleden;
+
   vulProdDropdown();
 
   const wrap = document.getElementById('r-copy-prev-wrap');
@@ -3152,6 +3159,7 @@ async function insertUrenInSupabase(reg) {
     teamleader: reg.teamleader,
     aantal_uren: reg.aantalUren,
     aantal_man: reg.aantalMan,
+    teamleden: reg.teamleden,
     omschrijving: reg.omschrijving,
     opmerking: reg.opmerking,
     gps_lat: gps.gps_lat,
@@ -4061,6 +4069,7 @@ function toonSamenvatting() {
   const ondergrond0 = document.getElementById('r-ondergrond').value;
   const vocht0   = document.getElementById('r-vocht').value;
   const uren0    = document.getElementById('r-uren').value;
+  const teamleden0 = document.getElementById('r-teamleden').value;
   const omschrijving0 = document.getElementById('r-omschrijving').value;
 
   const ontbrekend = [];
@@ -4122,9 +4131,10 @@ function toonSamenvatting() {
     ${row('Project', project)}
     ${row('Datum', datum0 || '–')}
     ${row('Teamleader', tl0 || '–')}
-    ${row('Aantal uren', uren0 ? uren0 + ' u' : '–')}
+    ${row('Aantal uren (per werker)', uren0 ? uren0 + ' u' : '–')}
     ${row('Aantal personen', document.getElementById('r-man').value || '–')}
     ${row('Type ondervloer', vloerLabels[vloer0] || '–')}
+    ${teamleden0.trim() ? `<div style="margin-top:6px;font-size:13px;color:#555"><strong>Andere teamleden:</strong> ${escapeHtml(teamleden0.trim())}</div>` : ''}
     ${omschrijving0 ? `<div style="margin-top:6px;background:#f7f7f7;border-radius:8px;padding:10px;font-size:13px;color:#555">${escapeHtml(omschrijving0)}</div>` : ''}
     <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Producten (${regProducten.length})</div>
     ${productenHtml || '<div style="color:#bbb;font-size:13px">Geen producten toegevoegd</div>'}
@@ -4225,6 +4235,7 @@ async function submitRegistratie() {
     teamleader,
     aantalUren: pf(document.getElementById('r-uren').value, 0),
     aantalMan: document.getElementById('r-man').value ? pf(document.getElementById('r-man').value, 0) : null,
+    teamleden: document.getElementById('r-teamleden').value.trim(),
     omschrijving: document.getElementById('r-omschrijving').value,
     opmerking,
   };
@@ -4330,6 +4341,7 @@ async function submitRegistratie() {
     document.getElementById('r-opmerking').value = '';
     document.getElementById('r-uren').value = '';
     document.getElementById('r-man').value = '';
+    document.getElementById('r-teamleden').value = '';
     document.getElementById('r-omschrijving').value = '';
     resetFotos();
     document.getElementById('verbruik-check').innerHTML = '';
