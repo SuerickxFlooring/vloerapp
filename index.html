@@ -401,33 +401,36 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item active" id="snav-home" onclick="goDesktop('s-home')">
     <span class="s-icon">🏠</span> Home
   </div>
+  <div class="sidebar-nav-item" id="snav-lmra" onclick="goDesktop('s-lmra')">
+    <span class="s-icon">🦺</span> LMRA
+  </div>
+  <div class="sidebar-nav-item" id="snav-registratie" onclick="goDesktop('s-registratie')">
+    <span class="s-icon">📋</span> Dagregistratie
+  </div>
+  <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
+    <span class="s-icon">🧾</span> Regiebon
+  </div>
+  <div class="sidebar-nav-item" id="snav-documenten" onclick="goDesktop('s-documenten')">
+    <span class="s-icon">📎</span> Projectinfo
+  </div>
+  <div class="sidebar-nav-item" id="snav-planning" onclick="openPlanning()">
+    <span class="s-icon">📅</span> Planning
+  </div>
   <div class="sidebar-nav-item" id="snav-producten" onclick="goDesktop('s-producten')">
     <span class="s-icon">📦</span> Producten
   </div>
   <div class="sidebar-nav-item" id="snav-berekening" onclick="goDesktop('s-berekening')">
     <span class="s-icon">🔢</span> Berekening
   </div>
-  <div class="sidebar-nav-item" id="snav-registratie" onclick="goDesktop('s-registratie')">
-    <span class="s-icon">📋</span> Dagregistratie
-  </div>
-  <div class="sidebar-nav-item" id="snav-planning" onclick="openPlanning()">
-    <span class="s-icon">📅</span> Planning
-  </div>
-  <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
-    <span class="s-icon">🧾</span> Regiebon
-  </div>
-  <div class="sidebar-nav-item" id="snav-aanrijding" onclick="goDesktop('s-aanrijding')">
-    <span class="s-icon">🚨</span> Aanrijding
-  </div>
   <div class="sidebar-nav-item" id="snav-handleidingen" onclick="goDesktop('s-handleidingen')">
     <span class="s-icon">📖</span> Handleidingen
-  </div>
-  <div class="sidebar-nav-item" id="snav-documenten" onclick="goDesktop('s-documenten')">
-    <span class="s-icon">📎</span> Projectinfo
   </div>
   <div class="sidebar-nav-item" id="snav-weeknieuws" onclick="goDesktop('s-weeknieuws')">
     <span class="s-icon">📰</span> Weeknieuws
     <span id="snav-weeknieuws-badge" style="display:none;margin-left:auto;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px">Nieuw</span>
+  </div>
+  <div class="sidebar-nav-item" id="snav-aanrijding" onclick="goDesktop('s-aanrijding')">
+    <span class="s-icon">🚨</span> Aanrijding
   </div>
 
   <div class="sidebar-footer">
@@ -470,29 +473,31 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="weather-desc" style="font-size:12px;color:#888;margin-top:8px;text-align:center"></div>
     </div>
     <div class="menu-grid">
+      <button class="menu-btn" onclick="go('s-lmra')"><div class="ico">🦺</div><div class="lbl">LMRA</div><div class="sub">Dagelijkse risicoanalyse</div></button>
+      <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
+      <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
+      <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Projectinformatie</div><div class="sub">TRA & offertes</div></button>
+      <button class="menu-btn" onclick="openPlanning()"><div class="ico">📅</div><div class="lbl">Planning</div><div class="sub">Wie staat waar</div></button>
       <button class="menu-btn" onclick="go('s-producten')"><div class="ico">📦</div><div class="lbl">Producten</div><div class="sub">Info & instructies</div></button>
       <button class="menu-btn" onclick="go('s-berekening')"><div class="ico">🔢</div><div class="lbl">Berekening</div><div class="sub">Hoeveelheden</div></button>
-      <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
-      <button class="menu-btn" onclick="openPlanning()"><div class="ico">📅</div><div class="lbl">Planning</div><div class="sub">Wie staat waar</div></button>
-      <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
-      <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
       <button class="menu-btn" onclick="go('s-handleidingen')"><div class="ico">📖</div><div class="lbl">Handleidingen</div><div class="sub">Toestellen & info</div></button>
-      <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Projectinformatie</div><div class="sub">TRA & offertes</div></button>
       <button class="menu-btn" onclick="go('s-weeknieuws')"><div class="ico">📰</div><div class="lbl">Weeknieuws</div><div class="sub">Briefingen kantoor</div></button>
+      <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
     </div>
     <div class="sync-badge" id="sync-status">🔄 Data laden...</div>
   </div>
   <div class="bottom-nav">
     <button class="nav-item active" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -937,15 +942,16 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
   <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item active"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -958,15 +964,16 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="scroll-area"><div class="detail-pad" id="detail-body"></div></div>
   <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -1041,15 +1048,16 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item active"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -1287,15 +1295,16 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
   <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item active"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item active"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -1922,15 +1931,16 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
   <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -1968,15 +1978,16 @@ textarea.form-input{min-height:80px;resize:vertical}
 
   <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -2043,6 +2054,104 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<!-- ══ LMRA — Laatste Minuut RisicoAnalyse (elke ochtend, per project) ══ -->
+<div class="screen" id="s-lmra">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">🦺 LMRA</div>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+
+    <!-- Progress bar -->
+    <div style="display:flex;gap:4px;padding:12px 16px 0">
+      <div id="lmra-step-1" class="step-dot active" style="flex:1;height:4px;border-radius:2px;background:#3547C8"></div>
+      <div id="lmra-step-2" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="lmra-step-3" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="lmra-step-label">Stap 1 van 3 — Project & bezetting</div>
+
+    <!-- STAP 1: Project, datum, bezetting -->
+    <div id="lmra-stap-1" style="padding:12px 16px">
+      <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:14px">ℹ️ Vul dit elke ochtend in vóór de start van de werken — de Laatste Minuut RisicoAnalyse.</div>
+      <div class="form-group">
+        <label class="form-label">Project</label>
+        <select class="form-select" id="lmra-project">
+          <option value="">Kies werf...</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">Datum</label>
+          <input type="date" class="form-input" id="lmra-datum">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tijdstip</label>
+          <input type="time" class="form-input" id="lmra-tijdstip">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Uitvoerder controle</label>
+        <select class="form-select" id="lmra-uitvoerder">
+          <option value="">Kies teamleader...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bezetting <span style="font-weight:400;color:#999">(wie is er vandaag op de werf?)</span></label>
+        <div style="display:flex;gap:8px">
+          <select class="form-select" id="lmra-bezetting-select" onchange="lmraBezettingSelectChange()" style="flex:1">
+            <option value="">Kies teamlid...</option>
+            <option value="__vrij__">✏️ Naam niet in de lijst...</option>
+          </select>
+          <button type="button" onclick="lmraBezettingToevoegen()" style="background:#3547C8;color:#fff;border:none;border-radius:10px;padding:0 18px;font-weight:700;cursor:pointer;flex-shrink:0">＋</button>
+        </div>
+        <input type="text" class="form-input" id="lmra-bezetting-vrij" placeholder="Typ naam..." style="display:none;margin-top:8px" onkeydown="if(event.key==='Enter'){event.preventDefault();lmraBezettingToevoegen();}">
+        <div id="lmra-bezetting-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+      </div>
+    </div>
+
+    <!-- STAP 2: De 17 controlevragen (stoplicht) -->
+    <div id="lmra-stap-2" style="padding:12px 16px;display:none">
+      <div style="font-size:12px;color:#888;margin-bottom:4px">Tik het antwoord aan: <b style="color:#888">N.v.t.</b> · <b style="color:#3B6D11">OK</b> · <b style="color:#B5590A">OK, mits extra aandacht</b> · <b style="color:#A32D2D">Niet OK, niet starten</b></div>
+      <div id="lmra-vragen-lijst"></div>
+    </div>
+
+    <!-- STAP 3: Opmerkingen, noodinfo, handtekening -->
+    <div id="lmra-stap-3" style="padding:12px 16px;display:none">
+      <div class="form-group">
+        <label class="form-label">Opmerkingen / positieve feedback</label>
+        <textarea class="form-input" id="lmra-opmerkingen" rows="3"></textarea>
+      </div>
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">🚑 Noodinformatie <span style="font-weight:400;color:#999;font-size:12px">(optioneel)</span></div>
+      <div class="input-row">
+        <div class="form-group"><label class="form-label">Noodnummer eerste hulp</label><input type="text" class="form-input" id="lmra-nood-eerstehulp"></div>
+        <div class="form-group"><label class="form-label">Nooddouche locatie</label><input type="text" class="form-input" id="lmra-nooddouche"></div>
+      </div>
+      <div class="input-row">
+        <div class="form-group"><label class="form-label">Noodnummer brand</label><input type="text" class="form-input" id="lmra-nood-brand"></div>
+        <div class="form-group"><label class="form-label">Evacuatiepunt</label><input type="text" class="form-input" id="lmra-evacuatiepunt"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Contactpersoon (werf)</label><input type="text" class="form-input" id="lmra-contactpersoon"></div>
+
+      <div class="form-group">
+        <label class="form-label">✍️ Handtekening uitvoerder controle</label>
+        <div style="position:relative;border:2px solid #3547C8;border-radius:12px;background:#fafafa;touch-action:none">
+          <canvas id="aa-canvas-lmra-sig" style="display:block;width:100%;height:140px;border-radius:10px;cursor:crosshair"></canvas>
+          <button onclick="aaWisCanvas('lmra-sig')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;color:#888">✕ Wissen</button>
+        </div>
+      </div>
+
+      <div id="lmra-submit-status" style="margin-top:10px"></div>
+    </div>
+
+    <!-- Navigatieknoppen -->
+    <div style="display:flex;gap:10px;padding:12px 16px 24px">
+      <button id="lmra-vorige-btn" onclick="lmraStap(-1)" class="btn-secondary" style="flex:1;display:none">← Vorige</button>
+      <button id="lmra-volgende-btn" onclick="lmraStap(1)" class="btn-primary" style="flex:1">Volgende →</button>
+      <button id="lmra-submit-btn" onclick="submitLmra()" class="btn-primary btn-green" style="flex:1;display:none">✅ Versturen</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ WEEKNIEUWS SCHERM ════════════════════════════════════ -->
 <div class="screen" id="s-weeknieuws">
   <div class="topbar">
@@ -2059,15 +2168,16 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
   <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item active" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -2159,15 +2269,16 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
   <div class="bottom-nav">
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
-    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
-    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
-    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
   </div>
 </div>
 
@@ -2402,17 +2513,28 @@ async function kiesDocProject(projectId) {
   }
   const TYPE_ICOON = { TRA: '⚠️', Offerte: '💰', Startwerkbespreking: '🦺' };
   const TYPE_BADGE = { TRA: 'badge-epoxy', Offerte: 'badge-pu', Startwerkbespreking: 'badge-preventie' };
+  // Offertes bevatten prijzen die ploegbazen nooit te zien mogen krijgen.
+  // Toon daarom NOOIT de originele storage_path voor type Offerte — enkel de
+  // automatisch prijs-geredigeerde storage_path_veilig. Ontbreekt die (bv.
+  // redactie mislukt of ouder bestand van vóór deze functie), dan tonen we
+  // het bestand niet i.p.v. per ongeluk de onveilige versie te lekken.
   bijlLijst.innerHTML = data.map(b => {
-    const { data: pub } = client.storage.from('project-documenten').getPublicUrl(b.storage_path);
+    const isOfferte = b.type === 'Offerte';
+    const veiligOntbreekt = isOfferte && !b.storage_path_veilig;
+    const linkPath = isOfferte ? b.storage_path_veilig : b.storage_path;
+    const { data: pub } = linkPath ? client.storage.from('project-documenten').getPublicUrl(linkPath) : { data: null };
     const isSwb = b.type === 'Startwerkbespreking';
-    return `<div class="prod-card" style="display:flex;align-items:center;gap:10px">
-      <a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+    const inhoud = `
         <span style="font-size:22px;flex-shrink:0">${TYPE_ICOON[b.type] || '📄'}</span>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(b.bestandsnaam)}</div>
           <div class="badge ${TYPE_BADGE[b.type] || ''}" style="display:inline-block;margin-top:4px">${escapeHtml(b.type)}</div>
-        </div>
-      </a>
+          ${veiligOntbreekt ? `<div style="font-size:11.5px;color:#c0392b;margin-top:4px">Nog niet beschikbaar — wordt binnenkort verwerkt</div>` : ''}
+        </div>`;
+    return `<div class="prod-card" style="display:flex;align-items:center;gap:10px">
+      ${veiligOntbreekt
+        ? `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;opacity:.55">${inhoud}</div>`
+        : `<a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;flex:1;min-width:0">${inhoud}</a>`}
       ${isSwb ? `<button onclick="event.stopPropagation();openSwbInvullen(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
     </div>`;
   }).join('');
@@ -2707,6 +2829,7 @@ function goDesktop(id) {
   document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
   const map = {'s-home':'snav-home','s-producten':'snav-producten','s-berekening':'snav-berekening',
                's-registratie':'snav-registratie',
+               's-lmra':'snav-lmra',
                's-planning':'snav-planning',
                's-regiebon':'snav-regiebon',
                's-aanrijding':'snav-aanrijding',
@@ -2722,7 +2845,7 @@ function go(id) {
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
   // Update nav active state
-  const navMap = {'s-home':0,'s-producten':1,'s-berekening':2,'s-registratie':3};
+  const navMap = {'s-home':0,'s-lmra':1,'s-registratie':2,'s-regiebon':3};
   document.querySelectorAll('.nav-item').forEach((el,i) => {
     el.classList.toggle('active', i === (navMap[id] ?? -1));
   });
@@ -2731,9 +2854,10 @@ function go(id) {
   if (id === 's-berekening' || id === 's-registratie') updateProductDropdowns();
   if (id === 's-regiebon') initRegiebon();
   if (id === 's-aanrijding') initAanrijding();
+  if (id === 's-lmra') initLmra();
   if (id === 's-documenten') initDocumenten();
   if (id === 's-weeknieuws') initWeeknieuws();
-  if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen') { primeGpsSilently(); updateCopyPrevButtons(); }
+  if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') resetRegStappen();
 }
 
@@ -6572,6 +6696,217 @@ async function submitSwb() {
     if (error) throw error;
     statusEl.innerHTML = '<div class="ok-box">✅ Startwerkbespreking verstuurd! Beschikbaar in Cockpit.</div>';
     setTimeout(() => { terugVanSwbInvullen(); }, 2200);
+  } catch(e) {
+    statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// LMRA — Laatste Minuut RisicoAnalyse, elke ochtend per project
+// ════════════════════════════════════════════════════════════
+const LMRA_VRAGEN = [
+  "Is er een start-werk meeting geweest?",
+  "Heb ik voldoende info over het uit te voeren werk?",
+  "Is de werk- en/of vuurvergunning gelezen, begrepen en ondertekend?",
+  "Is aan alle voorwaarden van de vergunning voldaan?",
+  "Geeft de werf een algemeen goede indruk?",
+  "Zijn gereedschappen en werktuigen aanwezig en in goede staat?",
+  "Gebruikt iedereen de nodige PBM's, en zijn de CBM's aanwezig en klaar voor gebruik?",
+  "Laat het weer toe het geplande werk uit te voeren? (wind/regen/te warm)",
+  "Is de stelling correct geplaatst en is deze gekeurd?",
+  "Kan de kraan of de hoogwerker correct geplaatst en gebruikt worden?",
+  "Zijn de keuringen van hijs- en hefmateriaal in orde?",
+  "Is het huurmateriaal ter plaatse en klaar voor gebruik?",
+  "Is er voorziening voor correcte opslag/verzameling van afval?",
+  "Zijn er brandblussers en EHBO-materiaal aanwezig?",
+  "Kent iedereen de procedure in geval van ongeval, brand en/of evacuatie?",
+  "Is iedereen op de werf op de hoogte van wat hij moet doen en hoe de werken juist uit te voeren?",
+  "Hebben we nog extra informatie nodig om de werken aan te vatten en correct uit te voeren?",
+];
+const LMRA_ANTWOORDEN = [
+  { val: 'nvt',    label: 'N.v.t.',   fg: '#999',  bg: '#999' },
+  { val: 'groen',  label: 'OK',       fg: '#3B6D11', bg: '#3B6D11' },
+  { val: 'oranje', label: 'Aandacht', fg: '#B5590A', bg: '#B5590A' },
+  { val: 'rood',   label: 'Niet OK',  fg: '#A32D2D', bg: '#A32D2D' },
+];
+let lmraStapNr = 1;
+let lmraBezetting = [];
+let lmraAntwoorden = {};
+
+async function initLmra() {
+  document.getElementById('lmra-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('lmra-tijdstip').value = new Date().toTimeString().slice(0,5);
+  document.getElementById('lmra-opmerkingen').value = '';
+  ['nood-eerstehulp','nooddouche','nood-brand','evacuatiepunt','contactpersoon'].forEach(id => {
+    const el = document.getElementById('lmra-' + id);
+    if (el) el.value = '';
+  });
+  lmraStapNr = 1;
+  lmraBezetting = [];
+  document.getElementById('lmra-bezetting-select').value = '';
+  document.getElementById('lmra-bezetting-vrij').value = '';
+  document.getElementById('lmra-bezetting-vrij').style.display = 'none';
+  renderLmraBezettingTags();
+  lmraAntwoorden = {};
+  renderLmraVragen();
+  aaSigState['lmra-sig'] = null;
+  const c = document.getElementById('aa-canvas-lmra-sig');
+  if (c && c.width) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  updateLmraNav();
+  lmraUpdateUitvoerderDropdown();
+  lmraUpdateBezettingSelect();
+  await lmraLaadProjecten();
+}
+
+async function lmraLaadProjecten() {
+  const sel = document.getElementById('lmra-project');
+  if (!sel) return;
+  if (!docState.projecten) {
+    const client = initSbCockpit();
+    if (client) {
+      try {
+        const { data } = await client.from('cockpit_projecten')
+          .select('id,projectnummer,werfnaam,startdatum,einddatum')
+          .eq('gearchiveerd', false)
+          .order('startdatum', { ascending: true });
+        docState.projecten = data || [];
+      } catch(e) { console.warn('[LMRA] projecten laden mislukt:', e.message); }
+    }
+  }
+  const projs = docState.projecten || [];
+  sel.innerHTML = '<option value="">Kies werf...</option>' +
+    projs.map(p => `<option value="${p.id}">${escapeHtml(p.werfnaam || '')} (${escapeHtml(p.projectnummer || '')})</option>`).join('');
+}
+
+function lmraUpdateUitvoerderDropdown() {
+  const sel = document.getElementById('lmra-uitvoerder');
+  if (!sel) return;
+  const tls = appData.teamleaders.length ? appData.teamleaders : fallbackTeamleaders;
+  sel.innerHTML = '<option value="">Kies teamleader...</option>' + tls.map(t => `<option>${escapeHtml(t.weergave||t.naam||t)}</option>`).join('');
+}
+
+function lmraUpdateBezettingSelect() {
+  const sel = document.getElementById('lmra-bezetting-select');
+  if (!sel) return;
+  const namen = (appData.teamleden || []).map(t => t.naam);
+  sel.innerHTML = '<option value="">Kies teamlid...</option>' +
+    namen.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') +
+    '<option value="__vrij__">✏️ Naam niet in de lijst...</option>';
+}
+function lmraBezettingSelectChange() {
+  const sel = document.getElementById('lmra-bezetting-select');
+  const vrij = document.getElementById('lmra-bezetting-vrij');
+  if (sel.value === '__vrij__') { vrij.style.display = 'block'; vrij.focus(); }
+  else if (sel.value) { vrij.style.display = 'none'; vrij.value = ''; lmraBezettingToevoegen(); }
+  else { vrij.style.display = 'none'; vrij.value = ''; }
+}
+function lmraBezettingToevoegen() {
+  const sel = document.getElementById('lmra-bezetting-select');
+  const vrij = document.getElementById('lmra-bezetting-vrij');
+  const naam = (sel.value === '__vrij__' ? vrij.value : sel.value).trim();
+  if (!naam) return;
+  if (!lmraBezetting.includes(naam)) lmraBezetting.push(naam);
+  sel.value = ''; vrij.value = ''; vrij.style.display = 'none';
+  renderLmraBezettingTags();
+}
+function lmraBezettingVerwijderen(naam) {
+  lmraBezetting = lmraBezetting.filter(n => n !== naam);
+  renderLmraBezettingTags();
+}
+function renderLmraBezettingTags() {
+  const wrap = document.getElementById('lmra-bezetting-tags');
+  if (!wrap) return;
+  wrap.innerHTML = lmraBezetting.map(n => `
+    <span style="display:inline-flex;align-items:center;gap:6px;background:#EEF0FC;color:#3547C8;border-radius:20px;padding:6px 8px 6px 14px;font-size:13px;font-weight:600">
+      ${escapeHtml(n)}
+      <button type="button" onclick='lmraBezettingVerwijderen(${JSON.stringify(n)})' style="background:none;border:none;color:#3547C8;font-size:16px;line-height:1;cursor:pointer;padding:0 2px">✕</button>
+    </span>`).join('');
+}
+
+function renderLmraVragen() {
+  const wrap = document.getElementById('lmra-vragen-lijst');
+  if (!wrap) return;
+  wrap.innerHTML = LMRA_VRAGEN.map((vraag, i) => `
+    <div style="padding:10px 0;border-bottom:1px solid #f0f2f8">
+      <div style="font-size:13px;margin-bottom:8px">${i+1}. ${escapeHtml(vraag)}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${LMRA_ANTWOORDEN.map(a => `
+          <button type="button" onclick="lmraSetAntwoord(${i},'${a.val}')"
+            style="flex:1;min-width:70px;padding:8px 4px;border-radius:8px;border:2px solid ${a.bg};background:${lmraAntwoorden[i]===a.val ? a.bg : '#fff'};color:${lmraAntwoorden[i]===a.val ? '#fff' : a.fg};font-size:11.5px;font-weight:700;cursor:pointer">${a.label}</button>
+        `).join('')}
+      </div>
+    </div>`).join('');
+}
+function lmraSetAntwoord(i, val) {
+  lmraAntwoorden[i] = val;
+  renderLmraVragen();
+}
+
+function lmraStap(delta) {
+  if (delta > 0 && lmraStapNr === 1 && !document.getElementById('lmra-project').value) {
+    alert('Kies eerst een project.'); return;
+  }
+  lmraStapNr = Math.max(1, Math.min(3, lmraStapNr + delta));
+  updateLmraNav();
+}
+function updateLmraNav() {
+  [1,2,3].forEach(n => {
+    document.getElementById(`lmra-stap-${n}`).style.display = n === lmraStapNr ? 'block' : 'none';
+    document.getElementById(`lmra-step-${n}`).style.background = n <= lmraStapNr ? '#3547C8' : '#ddd';
+  });
+  const labels = ['Stap 1 van 3 — Project & bezetting', 'Stap 2 van 3 — Controlevragen', 'Stap 3 van 3 — Opmerkingen & handtekening'];
+  document.getElementById('lmra-step-label').textContent = labels[lmraStapNr - 1];
+  document.getElementById('lmra-vorige-btn').style.display   = lmraStapNr > 1 ? 'block' : 'none';
+  document.getElementById('lmra-volgende-btn').style.display = lmraStapNr < 3 ? 'block' : 'none';
+  document.getElementById('lmra-submit-btn').style.display   = lmraStapNr === 3 ? 'block' : 'none';
+  document.getElementById('lmra-submit-status').innerHTML = '';
+  if (lmraStapNr === 3) setTimeout(() => aaSetupCanvas('lmra-sig'), 50);
+}
+
+async function submitLmra() {
+  const statusEl = document.getElementById('lmra-submit-status');
+  if (!sb && !initSupabase()) {
+    statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen...</div>';
+
+  const gps = getGpsForSubmit();
+  const projSel = document.getElementById('lmra-project');
+  const projLabel = projSel.selectedOptions[0]?.textContent || '';
+  const vragenPayload = LMRA_VRAGEN.map((vraag, i) => ({ vraag, antwoord: lmraAntwoorden[i] || 'nvt' }));
+  const heeftRood = vragenPayload.some(v => v.antwoord === 'rood');
+  const uitvoerder = document.getElementById('lmra-uitvoerder').value;
+
+  const payload = {
+    client_timestamp: new Date().toISOString(),
+    cockpit_project_id: projSel.value || '',
+    project: projLabel,
+    datum: document.getElementById('lmra-datum').value,
+    tijdstip: document.getElementById('lmra-tijdstip').value,
+    bezetting: lmraBezetting,
+    vragen: vragenPayload,
+    opmerkingen: document.getElementById('lmra-opmerkingen').value.trim(),
+    uitvoerder_controle: uitvoerder,
+    handtekening_data: aaGetCanvasData('lmra-sig') || '',
+    noodnummer_eerstehulp: document.getElementById('lmra-nood-eerstehulp').value.trim(),
+    nooddouche: document.getElementById('lmra-nooddouche').value.trim(),
+    contactpersoon: document.getElementById('lmra-contactpersoon').value.trim(),
+    noodnummer_brand: document.getElementById('lmra-nood-brand').value.trim(),
+    evacuatiepunt: document.getElementById('lmra-evacuatiepunt').value.trim(),
+    teamleader: uitvoerder,
+    gps_lat: gps.gps_lat != null ? String(gps.gps_lat) : '',
+    gps_lon: gps.gps_lon != null ? String(gps.gps_lon) : '',
+    gps_accuracy: gps.gps_accuracy != null ? String(gps.gps_accuracy) : '',
+  };
+
+  try {
+    const { data, error } = await sb.rpc('submit_lmra', { p: payload });
+    if (error) throw error;
+    statusEl.innerHTML = heeftRood
+      ? '<div class="err-box">⚠️ LMRA verstuurd — let op: er staat minstens 1 vraag op ROOD (niet starten)!</div>'
+      : '<div class="ok-box">✅ LMRA verstuurd! Beschikbaar in Cockpit onder Veiligheid.</div>';
+    setTimeout(() => { go('s-home'); initLmra(); }, 2600);
   } catch(e) {
     statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
   }
