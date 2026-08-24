@@ -15,6 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>VloerAssistent</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="pdf-lib.min.js"></script>
 <style>
 .env-banner{background:#fff;border-bottom:1px solid #eef0f7;padding:6px 14px;flex-shrink:0;display:none !important}
 /* ── Design tokens ───────────────────────────────────── */
@@ -783,8 +784,6 @@ textarea.form-input{min-height:80px;resize:vertical}
           <button onclick="aaWisCanvas('sigb')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;color:#888">✕ Wissen</button>
         </div>
       </div>
-
-      <div id="aa-submit-status" style="margin-top:10px"></div>
     </div>
 
     <!-- STAP 6: Pagina 2 — voor de verzekeraar (optioneel) -->
@@ -872,6 +871,15 @@ textarea.form-input{min-height:80px;resize:vertical}
         <label class="form-label">Wie is naar uw mening aansprakelijk? Waarom meent u dat?</label>
         <textarea class="form-input" id="p2-aansprakelijkheid" rows="3"></textarea>
       </div>
+
+      <div style="background:#FDECEA;border:1px solid #A32D2D;border-radius:10px;padding:12px;margin-top:18px">
+        <div style="font-weight:700;font-size:13px;color:#A32D2D;margin-bottom:4px">📄 Verplicht ook op papier indienen</div>
+        <div style="font-size:12.5px;color:#A32D2D">Dit formulier moet ook fysiek ondertekend en op papier ingediend worden bij de verzekeraar — een digitale versturing alleen volstaat niet. Download hieronder het volledig ingevulde formulier, print het uit en laat het (opnieuw) ondertekenen door beide bestuurders vóór het wordt ingediend.</div>
+        <button type="button" onclick="downloadAanrijdingPDFLokaal()" id="aa-download-btn" class="btn-primary" style="width:100%;margin-top:10px;background:#A32D2D">📄 Formulier downloaden / printen</button>
+        <div id="aa-download-status" style="margin-top:8px;font-size:12.5px"></div>
+      </div>
+
+      <div id="aa-submit-status" style="margin-top:10px"></div>
     </div>
 
     <!-- Navigatieknoppen -->
@@ -5947,17 +5955,13 @@ function renderAaSamenvatting() {
     </div>`;
 }
 
-async function submitAanrijding() {
-  const statusEl = document.getElementById('aa-submit-status');
-  if (!sb && !initSupabase()) {
-    statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
-    return;
-  }
-  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen...</div>';
-
+// Bouwt exact dezelfde payload-structuur uit de huidige formuliervelden,
+// zowel voor het versturen naar Supabase als voor het lokaal genereren van
+// de ingevulde PDF (zie downloadAanrijdingPDFLokaal) — zo blijven beide altijd in sync.
+function aaBuildPayload() {
   const gps = getGpsForSubmit();
   const a = aaGetVehicleData('a'), b = aaGetVehicleData('b');
-  const payload = {
+  return {
     client_timestamp: new Date().toISOString(),
     datum: document.getElementById('aa-datum').value,
     tijd: document.getElementById('aa-tijd').value,
@@ -5982,6 +5986,170 @@ async function submitAanrijding() {
     gps_lon: gps.gps_lon != null ? String(gps.gps_lon) : '',
     gps_accuracy: gps.gps_accuracy != null ? String(gps.gps_accuracy) : '',
   };
+}
+
+function aaFmtD(s) { return s ? String(s).split('-').reverse().join('/') : ''; }
+
+// Vult het officiële aanrijdingsformulier lokaal in (op basis van de huidige
+// formuliervelden, nog vóór/los van het versturen) en biedt het aan als
+// download — zodat het geprint en fysiek ondertekend/ingediend kan worden.
+// Zelfde veld-mapping als de PDF-export in Cockpit (docs/aanrijdingsformulier-template.pdf).
+async function downloadAanrijdingPDFLokaal() {
+  const statusEl = document.getElementById('aa-download-status');
+  const btn = document.getElementById('aa-download-btn');
+  const origLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ PDF maken...'; }
+  if (statusEl) statusEl.innerHTML = '';
+  try {
+    if (typeof PDFLib === 'undefined') throw new Error('PDF-bibliotheek kon niet geladen worden — controleer je internetverbinding.');
+    const r = aaBuildPayload();
+    const a = r.voertuig_a || {}, b = r.voertuig_b || {};
+    const toedrachtA = r.toedracht_a || [];
+    const toedrachtB = r.toedracht_b || [];
+
+    const bytes = await fetch('docs/aanrijdingsformulier-template.pdf').then(res => {
+      if (!res.ok) throw new Error('Kon het lege formulier-template niet laden');
+      return res.arrayBuffer();
+    });
+    const pdfDoc = await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true });
+    const form = pdfDoc.getForm();
+
+    const setText = (num, val) => { try { const f = form.getTextField(String(num)); if (f && val) f.setText(String(val)); } catch(e) {} };
+    const setCheck = (num, on) => { try { const f = form.getCheckBox(String(num)); if (f) { if (on) f.check(); else f.uncheck(); } } catch(e) {} };
+    const setLines = (nums, text) => {
+      const lines = String(text||'').split('\n').filter(Boolean);
+      nums.forEach((num,i) => setText(num, lines[i] || ''));
+    };
+
+    // Basisgegevens
+    setText(1, aaFmtD(r.datum)); setText(2, r.tijd); setText(3, r.land); setText(4, r.plaats); setText(5, r.straat);
+    setCheck(6, !r.gewonden); setCheck(7, !!r.gewonden);
+    setCheck(8, !r.schade_andere_voertuigen); setCheck(9, !!r.schade_andere_voertuigen);
+    setCheck(10, !r.schade_andere_objecten); setCheck(11, !!r.schade_andere_objecten);
+    setLines([12,13], r.getuigen);
+
+    // Voertuig A
+    setText(14, a.naam); setText(15, a.voornaam); setText(16, a.adres); setText(20, a.tel);
+    setText(21, a.merk); setText(22, a.kenteken); setText(23, a.land);
+    setText(24, a.aanhang_kenteken); setText(25, a.aanhang_land);
+    setText(26, a.verz_naam); setText(27, a.verz_polisnr); setText(28, a.verz_groenekaart);
+    setText(29, a.verz_vanaf ? aaFmtD(a.verz_vanaf) : ''); setText(30, a.verz_tot ? aaFmtD(a.verz_tot) : '');
+    setText(31, a.agent_naam); setText(32, a.agent_contact); setText(33, a.agent_adres); setText(37, a.agent_tel);
+    setCheck(38, !a.allrisks); setCheck(39, !!a.allrisks);
+    setText(40, [a.naam,a.voornaam].filter(Boolean).join(' ')); setText(41, a.voornaam);
+    setText(42, a.geboortedatum ? aaFmtD(a.geboortedatum) : ''); setText(43, a.adres); setText(47, a.tel);
+    setText(48, a.rijbewijsnr); setText(49, a.categorie); setText(50, a.rijbewijs_geldig ? aaFmtD(a.rijbewijs_geldig) : '');
+    toedrachtA.forEach((on,i) => setCheck(67+i, !!on));
+    setText(84, String(toedrachtA.filter(Boolean).length || ''));
+    setLines([61,62,63], a.zichtbare_schade);
+    setLines([64,65,66], a.opmerkingen);
+
+    // Voertuig B
+    setText(85, b.naam); setText(86, b.voornaam); setText(87, b.adres); setText(91, b.tel);
+    setText(92, b.merk); setText(93, b.kenteken); setText(94, b.land);
+    setText(95, b.aanhang_kenteken); setText(96, b.aanhang_land);
+    setText(97, b.verz_naam); setText(98, b.verz_polisnr); setText(99, b.verz_groenekaart);
+    setText(100, b.verz_vanaf ? aaFmtD(b.verz_vanaf) : ''); setText(101, b.verz_tot ? aaFmtD(b.verz_tot) : '');
+    setText(102, b.agent_naam); setText(103, b.agent_contact); setText(104, b.agent_adres); setText(108, b.agent_tel);
+    setCheck(109, !b.allrisks); setCheck(110, !!b.allrisks);
+    setText(111, [b.naam,b.voornaam].filter(Boolean).join(' ')); setText(112, b.voornaam);
+    setText(113, b.geboortedatum ? aaFmtD(b.geboortedatum) : ''); setText(114, b.adres); setText(118, b.tel);
+    setText(119, b.rijbewijsnr); setText(120, b.categorie); setText(121, b.rijbewijs_geldig ? aaFmtD(b.rijbewijs_geldig) : '');
+    toedrachtB.forEach((on,i) => setCheck(138+i, !!on));
+    setText(155, String(toedrachtB.filter(Boolean).length || ''));
+    setLines([132,133,134], b.zichtbare_schade);
+    setLines([135,136,137], b.opmerkingen);
+
+    // Pagina 2 — gedetailleerde aangifte voor de verzekeraar
+    const p2 = r.pagina2 || {};
+    setText(158, [a.naam,a.voornaam].filter(Boolean).join(' '));
+    setText(167, a.geboortedatum ? aaFmtD(a.geboortedatum) : '');
+    setCheck(170, p2.gemachtigd !== false); setCheck(171, p2.gemachtigd === false);
+    setText(172, p2.gemachtigd_waarom);
+    setText(173, p2.kmstand);
+    const gebruikMap = { 'Bedrijf':174, 'Beroep':175, 'Vakantie':176, 'Overig particulier gebruik':177 };
+    [174,175,176,177].forEach(n => setCheck(n, gebruikMap[p2.gebruik_voorval] === n));
+    setCheck(182, !!p2.aanhanger_gekoppeld); setCheck(183, !p2.aanhanger_gekoppeld);
+    setText(184, p2.chassisnr);
+    setText(185, p2.schade_bedrag); setText(186, p2.schade_geschat_door);
+    setText(187, p2.reparateur_naam); setText(188, p2.reparateur_tel); setText(189, p2.reparateur_wanneer);
+    setCheck(201, !!p2.politie_aanwezig); setCheck(202, !p2.politie_aanwezig);
+    setText(203, p2.politie_plaats);
+    setCheck(204, !!p2.politie_hielp); setCheck(205, !p2.politie_hielp);
+    const rapportMap = { 'Ja':206, 'Nee':207, 'Onbekend':208 };
+    [206,207,208].forEach(n => setCheck(n, rapportMap[p2.politie_rapport] === n));
+
+    const slachtoffers = p2.slachtoffers || [];
+    const eigenSlacht = slachtoffers.filter(s => s.kant !== 'tegenpartij');
+    const tegenSlacht = slachtoffers.filter(s => s.kant === 'tegenpartij');
+    const setSlacht = (s, naamN, pcN, mN, vN, gebN, letselN) => {
+      if (!s) return;
+      setText(naamN, s.naam); setText(pcN, s.postcode);
+      setCheck(mN, s.geslacht !== 'v'); setCheck(vN, s.geslacht === 'v');
+      setText(gebN, s.geboortedatum ? aaFmtD(s.geboortedatum) : ''); setText(letselN, s.letsel);
+    };
+    setSlacht(eigenSlacht[0], 209,210,211,212,213,214);
+    setSlacht(eigenSlacht[1], 215,216,217,218,219,220);
+    setSlacht(tegenSlacht[0], 221,222,223,224,225,226);
+    setSlacht(tegenSlacht[1], 227,228,229,230,231,232);
+
+    const omstA = p2.omstandigheden?.a || {}, omstB = p2.omstandigheden?.b || {};
+    setText(233, omstA.snelheid); setText(236, omstA.max_snelheid); setText(237, omstA.wegtype);
+    setText(238, omstA.positie); setText(239, omstA.rijstroken); setText(240, omstA.streep);
+    setText(241, omstA.breedte); setText(242, omstA.richting); setText(243, omstA.drank);
+    setText(261, omstB.snelheid); setText(262, omstB.max_snelheid); setText(263, omstB.wegtype);
+    setText(264, omstB.positie); setText(265, omstB.rijstroken); setText(266, omstB.streep);
+    setText(267, omstB.breedte); setText(268, omstB.richting); setText(269, omstB.drank);
+
+    setLines([282,283,284,285], p2.aansprakelijkheid);
+    setText(286, aaFmtD(r.datum));
+
+    form.updateFieldAppearances();
+
+    // Situatieschets + handtekeningen + impactpunten op de exacte plaats op pagina 1
+    const page = pdfDoc.getPages()[0];
+    const pageH = page.getHeight();
+    const drawPng = async (dataUrl, boxTopDown) => {
+      if (!dataUrl) return;
+      const png = await pdfDoc.embedPng(dataUrl);
+      const [x0,yTop,x1,yBottom] = boxTopDown;
+      const w = x1 - x0, h = yBottom - yTop;
+      const dims = png.scaleToFit(w, h);
+      page.drawImage(png, { x: x0 + (w-dims.width)/2, y: pageH - yBottom + (h-dims.height)/2, width: dims.width, height: dims.height });
+    };
+    await drawPng(r.schets_data, [123.0, 625.6, 475.5, 782.9]);
+    await drawPng(r.handtekening_a_data, [216, 805, 300, 823]);
+    await drawPng(r.handtekening_b_data, [309, 805, 398, 823]);
+    await drawPng(a.impact_data, [15, 618, 213, 729]);
+    await drawPng(b.impact_data, [381, 618, 581, 729]);
+
+    const outBytes = await pdfDoc.save();
+    const blob = new Blob([outBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `aanrijdingsformulier-${r.datum || 'nieuw'}.pdf`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    if (statusEl) statusEl.innerHTML = '<span style="color:#3B6D11;font-weight:600">✅ PDF gedownload — print het uit en laat het ondertekenen.</span>';
+  } catch(e) {
+    if (statusEl) statusEl.innerHTML = `<span style="color:#A32D2D;font-weight:600">❌ Fout: ${escapeHtml(e.message || String(e))}</span>`;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origLabel; }
+  }
+}
+
+async function submitAanrijding() {
+  const statusEl = document.getElementById('aa-submit-status');
+  if (!sb && !initSupabase()) {
+    statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen...</div>';
+
+  const payload = aaBuildPayload();
 
   try {
     let id = aaEditingId;
