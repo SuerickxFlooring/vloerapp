@@ -2176,6 +2176,19 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button id="lmra-submit-btn" onclick="submitLmra()" class="btn-primary btn-green" style="flex:1;display:none">✅ Versturen</button>
     </div>
   </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item active"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
+    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
+  </div>
 </div>
 
 <!-- ══ WEEKNIEUWS SCHERM ════════════════════════════════════ -->
@@ -7205,6 +7218,9 @@ async function lmraLaadProjecten() {
   const projs = docState.projecten || [];
   sel.innerHTML = '<option value="">Kies werf...</option>' +
     projs.map(p => `<option value="${p.id}">${escapeHtml(p.werfnaam || '')} (${escapeHtml(p.projectnummer || '')})</option>`).join('');
+  // Automatisch selecteren als er maar 1 actief project is (zelfde gedrag als Dagregistratie)
+  const actiefProjs = projs.filter(isDocActief);
+  if (actiefProjs.length === 1) sel.value = actiefProjs[0].id;
 }
 
 function lmraUpdateUitvoerderDropdown() {
