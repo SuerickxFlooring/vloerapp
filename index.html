@@ -1085,6 +1085,17 @@ textarea.form-input{min-height:80px;resize:vertical}
         <div class="seg" data-seg="4"></div>
       </div>
 
+      <div id="reg-concept-banner" style="display:none;background:#EEF0FC;border:1px solid #3547C8;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <span id="reg-concept-banner-txt" style="font-size:12.5px;color:#3547C8;font-weight:600">↩️ Concept hervat</span>
+          <button type="button" onclick="regStartNieuw()" style="background:none;border:none;color:#3547C8;font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;white-space:nowrap;flex-shrink:0">🆕 Nieuwe registratie</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button type="button" onclick="regBewaarEnSluit()" style="flex:1;padding:10px;border:1px dashed #3547C8;border-radius:10px;background:#fff;color:#3547C8;font-weight:600;font-size:12.5px;cursor:pointer">💾 Tijdelijk opslaan</button>
+        <button type="button" onclick="openRegConceptenLijst()" style="flex:1;padding:10px;border:1px dashed #999;border-radius:10px;background:#fff;color:#666;font-weight:600;font-size:12.5px;cursor:pointer">📂 Opgeslagen (<span id="reg-concepten-count">0</span>)</button>
+      </div>
+
       <!-- ── STAP 1: Project, uren & datum ── -->
       <div class="reg-step" data-step="1">
         <div class="reg-step-meta">Stap 1 van 4 — Project, uren & datum</div>
@@ -1156,9 +1167,9 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
       </div>
 
-      <!-- ── STAP 2: Producten toevoegen (optioneel) ── -->
-      <div class="reg-step" data-step="2">
-        <div class="reg-step-meta">Stap 2 van 4 — Producten <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">(optioneel)</span></div>
+      <!-- ── STAP 3: Producten toevoegen (optioneel) ── -->
+      <div class="reg-step" data-step="3">
+        <div class="reg-step-meta">Stap 3 van 4 — Producten <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">(optioneel)</span></div>
 
         <!-- Product zoeken & selecteren -->
         <div class="form-group">
@@ -1239,39 +1250,46 @@ textarea.form-input{min-height:80px;resize:vertical}
 
         <div style="height:8px"></div>
         <div class="step-nav-row">
-          <button class="btn-secondary" onclick="regGoToStep(1)">← Vorige</button>
-          <button class="btn-primary" onclick="regStap2Volgende()">Volgende →</button>
+          <button class="btn-secondary" onclick="regGoToStep(2)">← Vorige</button>
+          <button class="btn-primary" onclick="regGoToStep(4)">Volgende →</button>
         </div>
       </div>
 
-      <!-- ── STAP 3: Omgevingscondities ── -->
-      <div class="reg-step" data-step="3">
-        <div class="reg-step-meta">Stap 3 van 4 — Omgevingscondities <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">(optioneel)</span></div>
+      <!-- ── STAP 2: Omgevingscondities ── -->
+      <div class="reg-step" data-step="2">
+        <div class="reg-step-meta">Stap 2 van 4 — Omgevingscondities <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">(optioneel)</span></div>
         <div class="input-row">
-          <div class="form-group">
-            <label class="form-label">Temp. lucht (°C)</label>
-            <input type="text" class="form-input" id="r-temp" placeholder="°C" inputmode="decimal" oninput="calcDauwpunt()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">RV (%)</label>
-            <input type="text" class="form-input" id="r-rv" placeholder="%" inputmode="decimal" oninput="calcDauwpunt()">
-          </div>
-        </div>
-        <div class="input-row">
-          <div class="form-group">
-            <label class="form-label">Temp. ondergrond (°C)</label>
-            <input type="text" class="form-input" id="r-ondergrond" placeholder="°C" inputmode="decimal" oninput="calcDauwpunt()">
-          </div>
           <div class="form-group">
             <label class="form-label">Vocht ondergrond (%)</label>
             <input type="text" class="form-input" id="r-vocht" placeholder="%" inputmode="decimal" oninput="checkVocht()">
           </div>
+          <div class="form-group">
+            <label class="form-label">Temp. lucht (°C)</label>
+            <input type="text" class="form-input" id="r-temp" placeholder="°C" inputmode="decimal" oninput="calcDauwpunt()">
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="form-group">
+            <label class="form-label">RH (%)</label>
+            <input type="text" class="form-input" id="r-rv" placeholder="%" inputmode="decimal" oninput="calcDauwpunt()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">DP (°C)</label>
+            <input type="text" class="form-input" id="r-dp" placeholder="°C" readonly style="background:#f2f2f5;color:#888">
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="form-group">
+            <label class="form-label" style="color:#999">Temp. ondergrond (°C)</label>
+            <input type="text" class="form-input" id="r-ondergrond" placeholder="°C" inputmode="decimal" oninput="calcDauwpunt()" style="background:#f2f2f5;color:#888;border-color:#ddd">
+          </div>
+          <div class="form-group"></div>
         </div>
         <div id="dauwpunt-info"></div>
         <div id="vocht-warn"></div>
         <div class="step-nav-row">
-          <button class="btn-secondary" onclick="regGoToStep(2)">← Vorige</button>
-          <button class="btn-primary" onclick="regGoToStep(4)">Volgende →</button>
+          <button class="btn-secondary" onclick="regGoToStep(1)">← Vorige</button>
+          <button class="btn-primary" onclick="regGoToStep(3)">Volgende →</button>
         </div>
       </div>
 
@@ -2318,6 +2336,18 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<div class="modal-overlay" id="reg-concepten-modal">
+  <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="modal-title" style="margin:0">📂 Opgeslagen dagregistraties</div>
+      <button class="modal-close" onclick="closeRegConceptenLijst()">✕</button>
+    </div>
+    <div style="font-size:13px;color:#888;margin-bottom:12px">Tik op een concept om verder te werken waar je gebleven was.</div>
+    <div id="reg-concepten-lijst"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="settings-modal" onclick="closeSettingsOutside(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -2709,7 +2739,7 @@ function verwerkFotos(input) {
             '<button type="button" onclick="verwijderFoto(' + i + ')" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">X</button>';
           list.appendChild(w);
         }
-        uploadFoto(b64, i);
+        uploadFoto(b64, i).then(regAutosave);
       });
     };
     reader.readAsDataURL(file);
@@ -2768,6 +2798,7 @@ function verwijderFoto(i) {
   fotoData[i] = null;
   fotoUrls[i] = null;
   fotoPaths[i] = null;
+  regAutosave();
 }
 
 function getFotoUrls() { return fotoUrls.filter(Boolean); }
@@ -2789,6 +2820,7 @@ let appData = {
   registraties: JSON.parse(localStorage.getItem('registraties') || '[]'),
   uren: JSON.parse(localStorage.getItem('uren') || '[]'),
   aanrijdingen: JSON.parse(localStorage.getItem('aanrijdingen') || '[]'),
+  regConcepten: JSON.parse(localStorage.getItem('regConcepten') || '[]'),
 };
 
 // Fallback productdata (offline / voor demo)
@@ -2866,7 +2898,7 @@ function go(id) {
   if (id === 's-documenten') initDocumenten();
   if (id === 's-weeknieuws') initWeeknieuws();
   if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra') { primeGpsSilently(); updateCopyPrevButtons(); }
-  if (id === 's-registratie') resetRegStappen();
+  if (id === 's-registratie') regEnterScherm();
 }
 
 // SDS/TDS worden nu gelezen uit Google Sheets (kolommen T-Y)
@@ -3326,12 +3358,14 @@ function regTeamlidToevoegen() {
   vrij.style.display = 'none';
   syncTeamledenHidden();
   renderTeamledenTags();
+  regAutosave();
 }
 
 function verwijderTeamlid(naam) {
   regTeamledenGeselecteerd = regTeamledenGeselecteerd.filter(n => n !== naam);
   syncTeamledenHidden();
   renderTeamledenTags();
+  regAutosave();
 }
 
 function renderTeamledenTags() {
@@ -3428,6 +3462,227 @@ function resetRegStappen() {
   regProducten = [];
   updateRegProductenLijst();
   regGoToStep(1);
+}
+
+// ── DAGREGISTRATIE — TIJDELIJK OPSLAAN & HERVATTEN ───────────
+// Beschermt tegen dataverlies wanneer een ploegbaas de app even verlaat
+// (bv. om een foto te bekijken) en voorkomt dat een halfingevulde
+// dagregistratie verloren gaat. Werkt volledig los van de service worker
+// / update-mechanisme: enkel localStorage, geen invloed op app-updates.
+let regConceptId = null;
+let regBootHandled = false;
+let regAutosaveTimer = null;
+
+function regHeeftInhoud(s) {
+  return !!(s.project || s.projectManual || s.datum || s.uren || s.omschrijving ||
+    s.teamleden.length || s.producten.length || s.temp || s.rv || s.ondergrond || s.vocht || s.opmerking);
+}
+
+function regSerializeState() {
+  const manProj = document.getElementById('r-project-manual');
+  return {
+    id: regConceptId,
+    savedAt: new Date().toISOString(),
+    step: regCurrentStep,
+    projectSelect: document.getElementById('r-project-select')?.value || '',
+    projectManual: manProj?.value || '',
+    projectManualActief: !!(manProj && manProj.style.display !== 'none'),
+    project: document.getElementById('r-project')?.value || '',
+    datum: document.getElementById('r-datum')?.value || '',
+    teamleader: document.getElementById('r-teamleader')?.value || '',
+    uren: document.getElementById('r-uren')?.value || '',
+    man: document.getElementById('r-man')?.value || '',
+    teamleden: regTeamledenGeselecteerd.slice(),
+    omschrijving: document.getElementById('r-omschrijving')?.value || '',
+    vloer: document.getElementById('r-vloer')?.value || '',
+    producten: JSON.parse(JSON.stringify(regProducten)),
+    temp: document.getElementById('r-temp')?.value || '',
+    rv: document.getElementById('r-rv')?.value || '',
+    ondergrond: document.getElementById('r-ondergrond')?.value || '',
+    vocht: document.getElementById('r-vocht')?.value || '',
+    opmerking: document.getElementById('r-opmerking')?.value || '',
+    fotoUrls: fotoUrls.slice(),
+    fotoPaths: fotoPaths.slice(),
+  };
+}
+
+function regAutosave() {
+  clearTimeout(regAutosaveTimer);
+  regAutosaveTimer = setTimeout(() => {
+    const s = regSerializeState();
+    if (!regHeeftInhoud(s)) return;
+    if (!regConceptId) regConceptId = 'c' + Date.now();
+    s.id = regConceptId;
+    const idx = appData.regConcepten.findIndex(c => c.id === regConceptId);
+    if (idx === -1) appData.regConcepten.unshift(s); else appData.regConcepten[idx] = s;
+    appData.regConcepten = appData.regConcepten.slice(0, 15);
+    try { localStorage.setItem('regConcepten', JSON.stringify(appData.regConcepten)); } catch(e) { console.error('[RegConcept] localStorage fout:', e); }
+    updateRegConceptenTeller();
+  }, 600);
+}
+
+function regApplyState(s) {
+  regConceptId = s.id;
+  const selProj = document.getElementById('r-project-select');
+  const manProj = document.getElementById('r-project-manual');
+  const btnManual = document.getElementById('btn-manual-project');
+  if (s.projectManualActief) {
+    if (manProj) { manProj.style.display = 'block'; manProj.value = s.projectManual; manProj.oninput = () => { document.getElementById('r-project').value = manProj.value; }; }
+    if (selProj) { selProj.style.opacity = '0.4'; selProj.disabled = true; }
+    if (btnManual) { btnManual.style.background = '#3547C8'; btnManual.style.color = '#fff'; btnManual.textContent = '✕ Lijst'; }
+  } else if (selProj) {
+    selProj.value = s.projectSelect;
+  }
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  setVal('r-project', s.project);
+  if (s.datum) setVal('r-datum', s.datum);
+  setVal('r-teamleader', s.teamleader);
+  setVal('r-uren', s.uren);
+  setVal('r-man', s.man);
+  setVal('r-omschrijving', s.omschrijving);
+  setVal('r-vloer', s.vloer);
+  setVal('r-temp', s.temp);
+  setVal('r-rv', s.rv);
+  setVal('r-ondergrond', s.ondergrond);
+  setVal('r-vocht', s.vocht);
+  setVal('r-opmerking', s.opmerking);
+
+  regTeamledenGeselecteerd = (s.teamleden || []).slice();
+  syncTeamledenHidden();
+  renderTeamledenTags();
+
+  regProducten = JSON.parse(JSON.stringify(s.producten || []));
+  updateRegProductenLijst();
+
+  fotoUrls = (s.fotoUrls || []).slice();
+  fotoPaths = (s.fotoPaths || []).slice();
+  const list = document.getElementById('foto-preview-list');
+  if (list) {
+    list.innerHTML = fotoUrls.map((url, i) => url ? `
+      <div style="position:relative;width:80px;height:80px;flex-shrink:0" id="foto-prev-${i}">
+        <img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #D0D5F0">
+        <button type="button" onclick="verwijderFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">X</button>
+      </div>` : '').join('');
+  }
+
+  calcDauwpunt();
+  checkVocht();
+  regGoToStep(s.step && s.step >= 1 && s.step <= 4 ? s.step : 1);
+}
+
+function regEnterScherm() {
+  updateRegConceptenTeller();
+  if (regBootHandled) return; // binnen dezelfde sessie: niet opnieuw resetten/herladen bij elke navigatie
+  regBootHandled = true;
+  const meestRecent = appData.regConcepten[0];
+  if (meestRecent) {
+    regApplyState(meestRecent);
+    const banner = document.getElementById('reg-concept-banner');
+    const txt = document.getElementById('reg-concept-banner-txt');
+    if (banner && txt) {
+      const d = new Date(meestRecent.savedAt);
+      txt.textContent = '↩️ Concept hervat — laatst opgeslagen om ' + d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
+      banner.style.display = 'block';
+    }
+  } else {
+    resetRegStappen();
+  }
+}
+
+function regStartNieuw() {
+  if (!confirm('Huidig concept wissen en een nieuwe dagregistratie starten?')) return;
+  if (regConceptId) regVerwijderConcept(regConceptId, true);
+  regConceptId = null;
+  const banner = document.getElementById('reg-concept-banner');
+  if (banner) banner.style.display = 'none';
+  document.getElementById('r-project-select').value = '';
+  document.getElementById('r-project-select').disabled = false;
+  document.getElementById('r-project-select').style.opacity = '1';
+  document.getElementById('r-project-manual').value = '';
+  document.getElementById('r-project-manual').style.display = 'none';
+  const btnManual0 = document.getElementById('btn-manual-project');
+  if (btnManual0) { btnManual0.style.background = '#f7f7f7'; btnManual0.style.color = '#1a1a1a'; btnManual0.textContent = '✏️ Vrij'; }
+  document.getElementById('r-project').value = '';
+  document.getElementById('r-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('r-uren').value = '';
+  document.getElementById('r-man').value = '';
+  document.getElementById('r-omschrijving').value = '';
+  document.getElementById('r-vloer').value = '';
+  document.getElementById('r-temp').value = '';
+  document.getElementById('r-rv').value = '';
+  document.getElementById('r-dp').value = '';
+  document.getElementById('r-ondergrond').value = '';
+  document.getElementById('r-vocht').value = '';
+  document.getElementById('r-opmerking').value = '';
+  document.getElementById('dauwpunt-info').innerHTML = '';
+  document.getElementById('vocht-warn').innerHTML = '';
+  resetTeamledenSelectie();
+  resetFotos();
+  resetRegStappen();
+}
+
+function regBewaarEnSluit() {
+  const s = regSerializeState();
+  if (!regHeeftInhoud(s)) { go('s-home'); return; }
+  if (!regConceptId) regConceptId = 'c' + Date.now();
+  s.id = regConceptId;
+  const idx = appData.regConcepten.findIndex(c => c.id === regConceptId);
+  if (idx === -1) appData.regConcepten.unshift(s); else appData.regConcepten[idx] = s;
+  appData.regConcepten = appData.regConcepten.slice(0, 15);
+  try { localStorage.setItem('regConcepten', JSON.stringify(appData.regConcepten)); } catch(e) { console.error('[RegConcept] localStorage fout:', e); }
+  updateRegConceptenTeller();
+  go('s-home');
+}
+
+function updateRegConceptenTeller() {
+  const el = document.getElementById('reg-concepten-count');
+  if (el) el.textContent = appData.regConcepten.length;
+}
+
+function openRegConceptenLijst() {
+  const wrap = document.getElementById('reg-concepten-lijst');
+  if (!appData.regConcepten.length) {
+    wrap.innerHTML = '<div style="color:#bbb;text-align:center;padding:20px 0">Nog geen opgeslagen dagregistraties.</div>';
+  } else {
+    wrap.innerHTML = appData.regConcepten.map(c => {
+      const d = new Date(c.savedAt);
+      const naam = c.projectManualActief ? c.projectManual : c.projectSelect;
+      return `<div style="display:flex;align-items:center;gap:10px;background:#f7f8fc;border:1px solid #e4e7f0;border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="flex:1;cursor:pointer" onclick="regConceptHervatten('${c.id}')">
+          <div style="font-weight:700;font-size:14px">${escapeHtml(naam || 'Zonder projectnaam')}</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">${c.datum ? escapeHtml(c.datum) + ' · ' : ''}opgeslagen ${d.toLocaleDateString('nl-BE')} om ${d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <button type="button" onclick="regVerwijderConcept('${c.id}')" style="background:none;border:none;color:#A32D2D;font-size:18px;cursor:pointer;flex-shrink:0">🗑️</button>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('reg-concepten-modal').classList.add('open');
+}
+
+function closeRegConceptenLijst() {
+  document.getElementById('reg-concepten-modal').classList.remove('open');
+}
+
+function regConceptHervatten(id) {
+  const c = appData.regConcepten.find(x => x.id === id);
+  if (!c) return;
+  closeRegConceptenLijst();
+  regApplyState(c);
+  const banner = document.getElementById('reg-concept-banner');
+  const txt = document.getElementById('reg-concept-banner-txt');
+  if (banner && txt) {
+    const d = new Date(c.savedAt);
+    txt.textContent = '↩️ Concept hervat — laatst opgeslagen om ' + d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
+    banner.style.display = 'block';
+  }
+}
+
+function regVerwijderConcept(id, stil) {
+  if (!stil && !confirm('Deze opgeslagen dagregistratie verwijderen?')) return;
+  appData.regConcepten = appData.regConcepten.filter(c => c.id !== id);
+  try { localStorage.setItem('regConcepten', JSON.stringify(appData.regConcepten)); } catch(e) {}
+  updateRegConceptenTeller();
+  if (!stil) openRegConceptenLijst();
 }
 
 function kopieerVorigeRegistratie() {
@@ -3733,6 +3988,7 @@ function addRegProduct() {
   regProducten.push({ productCode, product: prodNaam, prodObj, prodManual, opp, kg, eenheid, resterend: rest, dikte, ondervloer, theoretisch: theo, verschilKg, verschilPerc, statusCheck });
   updateRegProductenLijst();
   clearRegProduct();
+  regAutosave();
 }
 
 function updateRegProductenLijst() {
@@ -3753,13 +4009,9 @@ function updateRegProductenLijst() {
             ${p.statusCheck === 'ok' ? ' ✅' : p.statusCheck === 'hoog' ? ' ⚠️ hoog verbruik' : p.statusCheck === 'laag' ? ' ⬇️ laag verbruik' : ''}
           </div>
         </div>
-        <button onclick="regProducten.splice(${i},1);updateRegProductenLijst()" style="background:none;border:none;color:#999;font-size:18px;cursor:pointer;padding:0 0 0 8px;line-height:1">✕</button>
+        <button onclick="regProducten.splice(${i},1);updateRegProductenLijst();regAutosave()" style="background:none;border:none;color:#999;font-size:18px;cursor:pointer;padding:0 0 0 8px;line-height:1">✕</button>
       </div>
     </div>`).join('');
-}
-
-function regStap2Volgende() {
-  regGoToStep(3);
 }
 
 // ── REGISTRATIE DIKTE EENHEID TOGGLE ─────────────────────
@@ -4263,8 +4515,10 @@ function calcDauwpunt() {
   const el = document.getElementById('dauwpunt-info');
   if (isNaN(T) || isNaN(RV)) { el.innerHTML = ''; return; }
   const dp = Math.round((T - ((100 - RV) / 5)) * 10) / 10;
+  const dpEl = document.getElementById('r-dp');
+  if (dpEl) dpEl.value = isNaN(dp) ? '' : dp;
   const diff = isNaN(Tg) ? 99 : Tg - dp;
-    // Producttype ophalen voor type-specifieke RV-waarschuwingen
+    // Producttype ophalen voor type-specifieke RH-waarschuwingen
   const prodIdDp = parseInt(document.getElementById('r-prod').value);
   const prodsDp = appData.products.length ? appData.products : fallbackProducts;
   const prodDp = prodsDp.find(x => x.id === prodIdDp);
@@ -4275,14 +4529,14 @@ function calcDauwpunt() {
 
   if (RV >= maxRvDp) {
     if (typeDp === 'epoxy' || typeDp === 'pu') {
-      cls='s-err'; lbl='Hoge RV'; msg='RV ' + RV + '% overschrijdt max. ' + maxRvDp + '% voor ' + typeDp + '. Risico op blushing! Wacht of ventileer.';
+      cls='s-err'; lbl='Hoge RH'; msg='RH ' + RV + '% overschrijdt max. ' + maxRvDp + '% voor ' + typeDp + '. Risico op blushing! Wacht of ventileer.';
     } else if (typeDp === 'ucrete') {
-      cls='s-warn'; lbl='Hoge RV'; msg='RV ' + RV + '% overschrijdt max. ' + maxRvDp + '% voor Ucrete. Controleer verwerkbaarheid.';
+      cls='s-warn'; lbl='Hoge RH'; msg='RH ' + RV + '% overschrijdt max. ' + maxRvDp + '% voor Ucrete. Controleer verwerkbaarheid.';
     } else {
-      cls='s-warn'; lbl='Hoge RV'; msg='RV ' + RV + '% overschrijdt max. ' + maxRvDp + '% voor dit systeem. Controleer voor aanbrengen.';
+      cls='s-warn'; lbl='Hoge RH'; msg='RH ' + RV + '% overschrijdt max. ' + maxRvDp + '% voor dit systeem. Controleer voor aanbrengen.';
     }
   } else if (RV > maxRvDp - 5) {
-    cls='s-warn'; lbl='Let op RV'; msg='RV ' + RV + '% nadert max. ' + maxRvDp + '% voor dit systeem. Blijf monitoren.';
+    cls='s-warn'; lbl='Let op RH'; msg='RH ' + RV + '% nadert max. ' + maxRvDp + '% voor dit systeem. Blijf monitoren.';
   }
   if (!isNaN(Tg) && diff < 3 && diff >= 0) { cls='s-warn'; lbl='Let op!'; msg='Slechts ' + diff.toFixed(1) + '°C marge tot dauwpunt. Condensatierisico!'; }
   if (!isNaN(Tg) && diff < 0) { cls='s-err'; lbl='⛔ STOP'; msg='Dauwpunt ligt BOVEN de ondergrondtemperatuur! Absoluut NIET aanbrengen!'; }
@@ -4401,7 +4655,7 @@ function toonSamenvatting() {
   if (!omschrijving0)     ontbrekend.push('Omschrijving van de werken');
   if (!vloer0)            ontbrekend.push('Type ondervloer');
   if (temp0 === '')        ontbrekend.push('Temp. lucht');
-  if (rv0 === '')          ontbrekend.push('RV');
+  if (rv0 === '')          ontbrekend.push('RH');
   if (ondergrond0 === '')  ontbrekend.push('Temp. ondergrond');
   if (vocht0 === '')       ontbrekend.push('Vocht ondergrond');
 
@@ -4460,11 +4714,11 @@ function toonSamenvatting() {
     <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Producten (${regProducten.length})</div>
     ${productenHtml || '<div style="color:#bbb;font-size:13px">Geen producten toegevoegd</div>'}
     <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Omgevingscondities</div>
-    ${row('Temp. lucht', T !== null ? T + '°C' : '–')}
-    ${row('RV', RV !== null ? RV + '%' : '–')}
-    ${row('Dauwpunt', dp !== null ? dp + '°C' : '–')}
-    ${row('Temp. ondergrond', pf(document.getElementById('r-ondergrond').value, NaN) ? pf(document.getElementById('r-ondergrond').value, NaN) + '°C' : '–')}
     ${row('Vocht ondergrond', pf(document.getElementById('r-vocht').value, NaN) ? pf(document.getElementById('r-vocht').value, NaN) + '%' : '–')}
+    ${row('Temp. lucht', T !== null ? T + '°C' : '–')}
+    ${row('RH', RV !== null ? RV + '%' : '–')}
+    ${row('DP', dp !== null ? dp + '°C' : '–')}
+    ${row('Temp. ondergrond', pf(document.getElementById('r-ondergrond').value, NaN) ? pf(document.getElementById('r-ondergrond').value, NaN) + '°C' : '–', 'color:#999')}
     ${document.getElementById('r-opmerking').value ? `<div style="margin-top:10px;background:#f7f7f7;border-radius:8px;padding:10px;font-size:13px;color:#555">${document.getElementById('r-opmerking').value}</div>` : ''}
   `;
 
@@ -4654,9 +4908,16 @@ async function submitRegistratie() {
 
   setTimeout(() => {
     closeSamenvatting();
+    // Verzonden: het opgeslagen concept (indien aanwezig) is niet meer nodig
+    if (regConceptId) regVerwijderConcept(regConceptId, true);
+    regConceptId = null;
+    regBootHandled = false;
+    const banner = document.getElementById('reg-concept-banner');
+    if (banner) banner.style.display = 'none';
     go('s-home');
     document.getElementById('r-temp').value = '';
     document.getElementById('r-rv').value = '';
+    document.getElementById('r-dp').value = '';
     document.getElementById('r-ondergrond').value = '';
     document.getElementById('r-vocht').value = '';
     document.getElementById('r-opmerking').value = '';
@@ -7640,6 +7901,13 @@ async function handleBeheerCsv(event) {
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('r-datum').value = new Date().toISOString().split('T')[0];
+  // Dagregistratie: elke wijziging aan een veld slaat automatisch (gedebouncet) een
+  // concept op, zodat werk niet verloren gaat als de app even verlaten/herladen wordt.
+  const regScherm = document.getElementById('s-registratie');
+  if (regScherm) {
+    regScherm.addEventListener('input', regAutosave);
+    regScherm.addEventListener('change', regAutosave);
+  }
   initSupabase();
   // Laad eerst fallback zodat app altijd bruikbaar is, dan remote data
   useFallback('');
