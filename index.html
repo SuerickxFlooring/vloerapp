@@ -654,7 +654,7 @@ textarea.form-input{min-height:80px;resize:vertical}
         <div id="aa-hervat-lijst"></div>
       </div>
       <div id="aa-editing-banner" style="display:none;background:#FFF8EC;border-radius:10px;padding:10px 12px;font-size:12px;color:#B5590A;margin-bottom:14px;font-weight:600">✏️ Je werkt een eerder verstuurde aanrijding verder af.</div>
-      <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:14px">ℹ️ Vul dit formulier samen met de andere bestuurder in, ter plaatse. Het vervangt het papieren Europees aanrijdingsformulier.</div>
+      <div style="background:#FDECEA;border:1px solid #A32D2D;border-radius:10px;padding:10px 12px;font-size:12px;color:#A32D2D;margin-bottom:14px">⚠️ Dit vervangt het papieren Europees aanrijdingsformulier <strong>niet</strong>. Vul dit formulier samen met de andere bestuurder ter plaatse in, druk het nadien af (zie stap 6) en bezorg het volledig ondertekend op papier aan de verzekering. De digitale versie hieronder is enkel een aanvullende kopie voor Cockpit.</div>
       <div class="input-row">
         <div class="form-group">
           <label class="form-label">Datum aanrijding</label>
@@ -6436,11 +6436,12 @@ async function submitAanrijding() {
       id = data;
     }
     aaBewaarLokaal(id, payload);
-    statusEl.innerHTML = '<div class="ok-box">✅ Aanrijdingsformulier verstuurd! Het is nu beschikbaar in Cockpit voor het kantoor. Je kan dit later nog aanvullen via "Eerder ingevulde aanrijdingen".</div>';
+    statusEl.innerHTML = '<div class="ok-box">✅ Digitale kopie verstuurd naar Cockpit! Je kan dit later nog aanvullen via "Eerder ingevulde aanrijdingen".</div>'
+      + '<div style="background:#FDECEA;border:1px solid #A32D2D;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12.5px;color:#A32D2D"><strong>⚠️ Vergeet niet:</strong> download/print het formulier hierboven en bezorg het volledig ondertekend op papier aan de verzekering — dit is verplicht en dit versturen alleen volstaat niet.</div>';
     setTimeout(() => {
       go('s-home');
       initAanrijding();
-    }, 3000);
+    }, 6000);
   } catch(e) {
     statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
   }
