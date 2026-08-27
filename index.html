@@ -446,18 +446,35 @@ textarea.form-input{min-height:80px;resize:vertical}
 </div>
 
 <!-- ══ HOME ═══════════════════════════════════════════════ -->
-<div class="screen active" id="s-home">
+<!-- ══ LOGIN — "Wie ben jij?" (lichte identificatie per teamleader) ══ -->
+<div class="screen active" id="s-login">
+  <div class="scroll-area" style="display:flex;flex-direction:column;justify-content:center;padding:28px 22px">
+    <div style="text-align:center;margin-bottom:26px">
+      <img src="icon-192x192.png" height="64" width="64" style="border-radius:16px;margin-bottom:14px" alt="Suerickx Flooring">
+      <h1 style="font-size:21px;margin:0 0 4px"><b>Vloer</b>Assistent</h1>
+      <p style="color:#888;font-size:14px;margin:0">Wie ben jij?</p>
+    </div>
+    <div id="login-lijst" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div style="text-align:center;margin-top:22px">
+      <button type="button" onclick="go('s-beheer')" style="background:none;border:1.5px solid #d1d5db;border-radius:10px;padding:10px 18px;color:#555;font-size:13px;font-weight:600;cursor:pointer">🔐 Beheerder</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-home">
   <div class="home-header">
     <img src="icon-192x192.png" height="42" width="42" style="border-radius:10px;flex-shrink:0;display:block" alt="Suerickx Flooring">
     <div style="flex:1;min-width:0">
       <h1><b>Vloer</b>Assistent</h1>
-      <p>Suerickx Flooring</p>
+      <p id="home-subtitel">Suerickx Flooring</p>
     </div>
+    <button onclick="algemeenUitloggen()" id="home-wissel-btn" style="display:none;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;align-items:center;justify-content:center" title="Uitloggen">🚪</button>
     <button onclick="go('s-beheer')" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:10px;width:40px;height:40px;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center" title="Beheer">🔐</button>
   </div>
   <div class="scroll-area">
+    <div id="mijn-dashboard" style="display:none;margin-bottom:14px"></div>
     <div class="project-pill" id="active-project-pill">
-      <div class="project-pill-lbl">🏗️ Actieve projecten</div>
+      <div class="project-pill-lbl">🏗️ Alle actieve projecten</div>
       <div id="active-project-name" style="font-size:14px;line-height:1.6">Laden...</div>
     </div>
     <div id="weather-alert-wrap"></div>
@@ -2470,28 +2487,52 @@ function setDocPeriodeFilter(periode, btn) {
 }
 
 async function initDocumenten() {
-  if (docState.projecten) { renderDocProjecten(); return; }
-  const lijst = document.getElementById('doc-projecten-lijst');
-  lijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
-  const client = initSbCockpit();
-  if (!client) {
-    lijst.innerHTML = '<div style="color:#c0392b;text-align:center;padding:20px 0">Kon geen verbinding maken met Project Cockpit.</div>';
-    return;
+  if (!docState.projecten) {
+    const lijst = document.getElementById('doc-projecten-lijst');
+    lijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
+    const client = initSbCockpit();
+    if (!client) {
+      lijst.innerHTML = '<div style="color:#c0392b;text-align:center;padding:20px 0">Kon geen verbinding maken met Project Cockpit.</div>';
+      return;
+    }
+    const [projRes, bijlRes] = await Promise.all([
+      client.from('cockpit_projecten')
+        .select('id,projectnummer,werfnaam,startdatum,einddatum')
+        .eq('gearchiveerd', false)
+        .order('startdatum', { ascending: true }),
+      client.from('cockpit_bijlagen').select('project_id,type')
+    ]);
+    if (projRes.error) {
+      lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(projRes.error.message)}</div>`;
+      return;
+    }
+    docState.projecten = projRes.data || [];
+    docState.bijlagen  = bijlRes.data || [];
   }
-  const [projRes, bijlRes] = await Promise.all([
-    client.from('cockpit_projecten')
-      .select('id,projectnummer,werfnaam,startdatum,einddatum')
-      .eq('gearchiveerd', false)
-      .order('startdatum', { ascending: true }),
-    client.from('cockpit_bijlagen').select('project_id,type')
-  ]);
-  if (projRes.error) {
-    lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(projRes.error.message)}</div>`;
-    return;
-  }
-  docState.projecten = projRes.data || [];
-  docState.bijlagen  = bijlRes.data || [];
+  await vulDocZoekMetMijnWerf();
   renderDocProjecten();
+}
+
+// Een ingelogde ploegbaas ziet Projectinfo meteen gefilterd op zijn eigen
+// actieve werf van vandaag (via de Planning), i.p.v. de volledige werflijst.
+async function vulDocZoekMetMijnWerf() {
+  const zoekEl = document.getElementById('doc-zoek');
+  if (!zoekEl) return;
+  const mij = huidigeGebruiker();
+  const werven = mij ? await mijnWervenVandaag(mij) : [];
+  // Geen (of geen andere) ingelogde gebruiker met een werf van vandaag:
+  // filter wissen zodat de volledige lijst weer zichtbaar wordt.
+  zoekEl.value = werven.length ? (projectCode(werven[0]) || werfNaamKort(werven[0])) : '';
+}
+
+// Vanaf de dashboard-pil "Startwerkbespreking" meteen naar de documentenlijst
+// van die specifieke werf springen — niet enkel naar het gefilterde overzicht.
+async function gaNaarStartwerk(werf) {
+  go('s-documenten');
+  await initDocumenten();
+  const projs = docState.projecten || [];
+  const match = projs.find(p => tekstOverlap(werf, p.projectnummer || '') || tekstOverlap(werf, p.werfnaam || ''));
+  if (match) kiesDocProject(match.id);
 }
 
 // Compacte pillen (TRA/Offerte/Andere) zodat je in de werflijst al ziet welke
@@ -2874,6 +2915,216 @@ const fallbackProjects = [{naam:'Depot Gent – Hal 3',status:'ACTIEF'}];
 const fallbackTeamleaders = [{naam:'Jan V.'},{naam:'Peter D.'},{naam:'Luc M.'}];
 
 // ═══════════════════════════════════════════════════════════
+// LOGIN — lichte identificatie per teamleader
+// Geen echt account/wachtwoord: enkel onthouden wie er bezig is,
+// zodat we een persoonlijk dashboard + herinneringen kunnen tonen.
+// ═══════════════════════════════════════════════════════════
+function huidigeGebruiker() {
+  try { return JSON.parse(localStorage.getItem('ingelogdeTeamleader') || 'null'); }
+  catch(e) { return null; }
+}
+
+// Los van huidigeGebruiker(): een kantoor/admin-login via Supabase Auth
+// telt ook als "aangemeld" voor de login-poort in go(). Bijgehouden als
+// gewone variabele (niet localStorage) omdat de Supabase-client de echte
+// sessie al persistent bijhoudt — checkBeheerSession() herstelt dit bij opstart.
+let beheerIngelogd = false;
+let beheerUser = null;
+
+function renderLoginLijst() {
+  const wrap = document.getElementById('login-lijst');
+  if (!wrap) return;
+  const tls = appData.teamleaders.length ? appData.teamleaders : fallbackTeamleaders;
+  wrap.innerHTML = tls.map(t => {
+    const weergave = t.weergave || t.naam;
+    return `<button type="button" onclick='kiesIngelogdeTeamleader(${JSON.stringify(JSON.stringify({naam:t.naam,weergave}))})' style="padding:16px;border:1.5px solid #d1d5db;border-radius:12px;background:#fff;font-size:16px;font-weight:600;color:#1a1a2e;cursor:pointer;text-align:left">${escapeHtml(weergave)}</button>`;
+  }).join('');
+}
+
+function kiesIngelogdeTeamleader(json) {
+  const mij = JSON.parse(json);
+  localStorage.setItem('ingelogdeTeamleader', JSON.stringify(mij));
+  go('s-home');
+}
+
+function wisselGebruiker() {
+  if (!confirm('Wisselen van gebruiker?')) return;
+  localStorage.removeItem('ingelogdeTeamleader');
+  renderLoginLijst();
+  go('s-login');
+}
+
+// Haalt een leesbare naam uit een e-mailadres, bv. "frederik.truyers@x.com"
+// → "Frederik Truyers". Enkel gebruikt als weergavenaam voor een beheerder
+// die inlogt met e-mail/wachtwoord (die heeft geen "weergave"-veld zoals
+// teamleaders).
+function naamUitEmail(email) {
+  const lokaal = (email || '').split('@')[0] || '';
+  return lokaal.split(/[.\-_]+/).filter(Boolean).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(' ') || email || '';
+}
+
+// Eén gemeenschappelijke uitlogknop voor zowel een teamleader als een
+// ingelogde beheerder — logt af wie er ook actief is en stuurt terug naar
+// het "Wie ben jij?"-scherm.
+function algemeenUitloggen() {
+  if (!confirm('Uitloggen?')) return;
+  if (huidigeGebruiker()) localStorage.removeItem('ingelogdeTeamleader');
+  if (beheerIngelogd) { beheerLogout(); return; }
+  renderLoginLijst();
+  go('s-login');
+}
+
+function updateHomeHeaderVoorGebruiker() {
+  const mij = huidigeGebruiker();
+  const sub = document.getElementById('home-subtitel');
+  const btn = document.getElementById('home-wissel-btn');
+  if (mij) {
+    if (sub) sub.innerHTML = 'Ingelogd als ' + escapeHtml(mij.weergave || mij.naam) +
+      ' · <span onclick="event.stopPropagation();algemeenUitloggen()" style="text-decoration:underline;cursor:pointer">Uitloggen</span>';
+    if (btn) btn.style.display = 'flex';
+  } else if (beheerIngelogd && beheerUser) {
+    const naam = naamUitEmail(beheerUser.email);
+    if (sub) sub.innerHTML = 'Ingelogd als ' + escapeHtml(naam) +
+      ' · <span onclick="event.stopPropagation();algemeenUitloggen()" style="text-decoration:underline;cursor:pointer">Uitloggen</span>';
+    if (btn) btn.style.display = 'flex';
+  } else {
+    if (sub) sub.textContent = 'Suerickx Flooring';
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+// Best-effort naamvergelijking: de teamleader-lijst, de teamleden-lijst
+// (Planning) en de vrije tekstvelden in registraties/lmra gebruiken elk
+// een lichtjes andere schrijfwijze van dezelfde naam (bv. "Avni Gashi"
+// vs. "Avni G." vs. "Avni"). Voor deze test-functie volstaat een
+// tolerante vergelijking; een echte koppeling zou een gedeeld id vergen.
+function naamOverlap(a, b) {
+  a = (a || '').toLowerCase().trim();
+  b = (b || '').toLowerCase().trim();
+  if (!a || !b) return false;
+  return a === b || a.startsWith(b) || b.startsWith(a);
+}
+// Enkel voor weergave bij "jouw werf": het werfnummer (bv. F26-00263.000) eraf
+// halen, want dat vind je toch al terug bij "Actieve projecten" — hier volstaat
+// de blote werfnaam.
+function werfNaamKort(s) {
+  return (s || '')
+    .replace(/^F\d{2}-\d{5}\.\d{3}\s*/i, '')
+    .replace(/\s*\(F\d{2}-\d{5}\.\d{3}\)\s*$/i, '')
+    .trim() || s || '';
+}
+function projectCode(s) {
+  const m = (s || '').match(/F\d{2}-\d{5}\.\d{3}/i);
+  return m ? m[0].toUpperCase() : null;
+}
+function tekstOverlap(a, b) {
+  a = (a || '').toLowerCase().trim();
+  b = (b || '').toLowerCase().trim();
+  if (!a || !b) return false;
+  // Projectnamen komen uit twee bronnen (Sheets-sync vs. Cockpit) met een andere
+  // woordvolgorde, bv. "F26-00274.000 Barry Callebaut Wieze" vs.
+  // "Barry Callebaut Wieze (F26-00274.000)". De projectcode is in beide stabiel,
+  // dus vergelijk die eerst; val terug op substring als er geen code in zit.
+  const codeA = projectCode(a), codeB = projectCode(b);
+  if (codeA && codeB) return codeA === codeB;
+  return a.includes(b) || b.includes(a);
+}
+
+// Zoekt de werf(ven) waar een teamleader vandaag volgens de Planning op
+// ingepland staat. Gedeeld tussen het persoonlijk dashboard en de
+// automatische filter op het Projectinfo-scherm.
+async function mijnWervenVandaag(mij) {
+  if (!mij) return [];
+  if (!sb && !initSupabase()) return [];
+  const vandaag = new Date().toISOString().split('T')[0];
+  try {
+    const { data: teamledenData } = await sb.from('teamleden').select('id,naam');
+    const mijnTeamlidIds = (teamledenData || []).filter(t => naamOverlap(t.naam, mij.naam)).map(t => t.id);
+    if (!mijnTeamlidIds.length) return [];
+    const { data: planningData } = await sb.from('planning')
+      .select('werf,status')
+      .eq('datum', vandaag)
+      .in('teamlid_id', mijnTeamlidIds);
+    return [...new Set((planningData || [])
+      .filter(p => p.status !== 'niet_beschikbaar' && p.werf && p.werf.trim())
+      .map(p => p.werf.trim()))];
+  } catch(e) {
+    console.warn('[Planning] laden mislukt:', e.message);
+    return [];
+  }
+}
+
+async function laadMijnDashboard() {
+  const wrap = document.getElementById('mijn-dashboard');
+  if (!wrap) return;
+  const mij = huidigeGebruiker();
+  if (!mij) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  wrap.innerHTML = '<div style="text-align:center;padding:16px;color:#888;font-size:13px">⏳ Dashboard laden...</div>';
+
+  if (!sb && !initSupabase()) {
+    wrap.innerHTML = '<div style="text-align:center;padding:16px;color:#888;font-size:13px">📴 Geen verbinding — dashboard niet beschikbaar.</div>';
+    return;
+  }
+
+  const vandaag = new Date().toISOString().split('T')[0];
+
+  try {
+    const werven = await mijnWervenVandaag(mij);
+
+    if (!werven.length) {
+      wrap.innerHTML = `<div style="font-weight:700;font-size:16px;margin:4px 0 10px">👋 ${escapeHtml(mij.weergave || mij.naam)}</div>
+      <div style="background:#fff;border-radius:var(--card-radius);box-shadow:var(--shadow-sm);padding:16px;text-align:center">
+        <div style="font-size:13px;color:#888">Geen geplande werf gevonden voor vandaag in de Planning.</div>
+      </div>`;
+      return;
+    }
+
+    const [{ data: regData }, { data: lmraData }, { data: swbData }] = await Promise.all([
+      sb.from('registraties').select('project,teamleader').eq('datum', vandaag),
+      sb.from('lmra_invullingen').select('project,teamleader').eq('datum', vandaag),
+      sb.from('swb_invullingen').select('project'),
+    ]);
+
+    const taakRij = (icon, iconBg, label, done, actie, isLast) => `
+      <div onclick='${actie}' style="display:flex;align-items:center;gap:12px;padding:13px 16px;${isLast ? '' : 'border-bottom:1px solid #f4f5fa;'}cursor:pointer">
+        <div style="width:36px;height:36px;border-radius:11px;background:${iconBg};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${icon}</div>
+        <div style="flex:1;font-size:13.5px;font-weight:700;color:#1a1a2e;line-height:1.3">${label}</div>
+        <div style="flex-shrink:0;padding:7px 13px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;background:${done ? '#EAF3DE' : '#FDECEA'};color:${done ? '#3B6D11' : '#A32D2D'}">${done ? 'Gedaan' : 'Nog niet →'}</div>
+      </div>`;
+
+    const naam = escapeHtml(mij.weergave || mij.naam);
+    const kaarten = werven.map((werf, idx) => {
+      const regDone  = (regData  || []).some(r => naamOverlap(r.teamleader, mij.weergave) && tekstOverlap(r.project, werf));
+      const lmraDone = (lmraData || []).some(r => naamOverlap(r.teamleader, mij.weergave) && tekstOverlap(r.project, werf));
+      const swbDone  = (swbData  || []).some(r => tekstOverlap(r.project, werf));
+
+      const rijen = [
+        { icon: '⚠️', bg: '#FFE8D6', label: 'LMRA vandaag', done: lmraDone, actie: 'go("s-lmra")' },
+        { icon: '📋', bg: '#E7ECFA', label: 'Dagregistratie vandaag', done: regDone, actie: 'go("s-registratie")' },
+      ];
+      if (!swbDone) rijen.push({ icon: '📅', bg: '#DCEBFB', label: 'Startwerkbespreking (eenmalig per project)', done: false, actie: `gaNaarStartwerk(${JSON.stringify(werf)})` });
+      const rijenHtml = rijen.map((r, i) => taakRij(r.icon, r.bg, r.label, r.done, r.actie, i === rijen.length - 1)).join('');
+
+      // Eerste (of enige) werf: gecombineerd met de begroeting op één regel
+      // i.p.v. een aparte rij mét icoonvakje — bespaart een volledige rij hoogte.
+      const kop = idx === 0
+        ? `<div style="font-weight:700;font-size:15px;margin:4px 0 8px">👋 ${naam} — jouw werf is <span style="color:var(--accent)">${escapeHtml(werfNaamKort(werf))}</span></div>`
+        : `<div style="font-weight:700;font-size:13px;color:#888;margin:10px 0 6px">🏗️ Ook op ${escapeHtml(werfNaamKort(werf))}</div>`;
+
+      return `${kop}<div style="background:#fff;border-radius:var(--card-radius);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:10px">
+        ${rijenHtml}
+      </div>`;
+    }).join('');
+
+    wrap.innerHTML = kaarten;
+  } catch(e) {
+    console.warn('[Dashboard] laden mislukt:', e.message);
+    wrap.innerHTML = '<div style="text-align:center;padding:16px;color:#888;font-size:13px">Kon dashboard niet laden.</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // NAVIGATIE
 // ═══════════════════════════════════════════════════════════
 function goDesktop(id) {
@@ -2892,7 +3143,16 @@ function goDesktop(id) {
   if (active) active.classList.add('active');
 }
 
+// Login-poort: zonder gekozen teamleader én zonder ingelogde beheerder mag
+// enkel het login-scherm zelf (en het Beheer-inlogscherm, om er te geraken)
+// actief worden — anders kan je via de navigatiebalk/knoppen rond de
+// "Wie ben jij?"-keuze heen klikken zonder ooit aan te melden.
+function magNaarScherm(id) {
+  return id === 's-login' || id === 's-beheer' || !!huidigeGebruiker() || beheerIngelogd;
+}
+
 function go(id) {
+  if (!magNaarScherm(id)) id = 's-login';
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.documentElement.scrollTop = 0;
@@ -2912,6 +3172,8 @@ function go(id) {
   if (id === 's-weeknieuws') initWeeknieuws();
   if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') regEnterScherm();
+  if (id === 's-login') renderLoginLijst();
+  if (id === 's-home') { updateHomeHeaderVoorGebruiker(); laadMijnDashboard(); }
 }
 
 // SDS/TDS worden nu gelezen uit Google Sheets (kolommen T-Y)
@@ -3114,6 +3376,7 @@ async function loadRemoteData() {
     updateActiveProject();
     updateTeamleaderDropdown();
     updateProductDropdowns();
+    renderLoginLijst();
 
     if (appData.products.length === 0) {
       console.warn('[Supabase] Geen producten geladen — controleer of producten.csv geïmporteerd is');
@@ -7521,8 +7784,15 @@ function setAdminUiVisible(visible) {
 async function checkBeheerSession() {
   if (!initSupabase()) return;
   const { data } = await sb.auth.getSession();
-  if (data && data.session && data.session.user) showBeheerPanel(data.session.user);
-  else setAdminUiVisible(false);
+  if (data && data.session && data.session.user) {
+    showBeheerPanel(data.session.user);
+    // Kantoor/admin met een geldige eigen login hoeft niet via de
+    // teamleader-kieslijst — meteen door naar Home als die nog op het
+    // "Wie ben jij?"-scherm stonden te wachten.
+    if (document.querySelector('.screen.active')?.id === 's-login') go('s-home');
+  } else {
+    setAdminUiVisible(false);
+  }
 }
 
 async function beheerLogin() {
@@ -7537,18 +7807,25 @@ async function beheerLogin() {
   statusEl.textContent = '';
   document.getElementById('beheer-password').value = '';
   showBeheerPanel(data.user);
+  go('s-home');
 }
 
 async function beheerLogout() {
   if (sb) { try { await sb.auth.signOut(); } catch(e) {} }
+  beheerIngelogd = false;
+  beheerUser = null;
   document.getElementById('beheer-panel').style.display = 'none';
   document.getElementById('beheer-login').style.display = 'block';
   document.getElementById('beheer-email').value = '';
   document.getElementById('beheer-password').value = '';
   setAdminUiVisible(false);
+  // Geen enkele geldige login meer over: terug naar het "Wie ben jij?"-scherm.
+  if (!huidigeGebruiker()) go('s-login');
 }
 
 function showBeheerPanel(user) {
+  beheerIngelogd = true;
+  beheerUser = user;
   document.getElementById('beheer-login').style.display = 'none';
   document.getElementById('beheer-panel').style.display = 'block';
   document.getElementById('beheer-user-email').textContent = user.email || '';
@@ -7917,6 +8194,8 @@ async function handleBeheerCsv(event) {
 // INIT
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  // Al eerder gekozen wie je bent? Toon dan meteen Home i.p.v. het login-scherm.
+  if (huidigeGebruiker()) { go('s-home'); } else { renderLoginLijst(); }
   document.getElementById('r-datum').value = new Date().toISOString().split('T')[0];
   // Dagregistratie: elke wijziging aan een veld slaat automatisch (gedebouncet) een
   // concept op, zodat werk niet verloren gaat als de app even verlaten/herladen wordt.
