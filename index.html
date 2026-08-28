@@ -383,6 +383,12 @@ textarea.form-input{min-height:80px;resize:vertical}
   .app { margin-left: 240px; width: calc(100vw - 240px); }
   .form-pad { max-width: 900px; }
 }
+
+/* AANRIJDINGSFORMULIER TIJDELIJK GEARCHIVEERD (2026-08-27) — verzekeraar
+   laat deze functie voorlopig niet toe. Enkel de toegangsknoppen verbergen;
+   het scherm, de logica en de data blijven volledig in de code staan.
+   Verwijder deze regel om de knoppen weer te tonen. */
+[onclick*="s-aanrijding"] { display: none !important; }
 </style>
 </head>
 <body>
@@ -408,11 +414,14 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item" id="snav-registratie" onclick="goDesktop('s-registratie')">
     <span class="s-icon">📋</span> Dagregistratie
   </div>
-  <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
-    <span class="s-icon">🧾</span> Regiebon
-  </div>
   <div class="sidebar-nav-item" id="snav-documenten" onclick="goDesktop('s-documenten')">
     <span class="s-icon">📎</span> Projectinfo
+  </div>
+  <div class="sidebar-nav-item" id="snav-levering" onclick="goDesktop('s-levering')">
+    <span class="s-icon">📦</span> Levering
+  </div>
+  <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
+    <span class="s-icon">🧾</span> Regiebon
   </div>
   <div class="sidebar-nav-item" id="snav-planning" onclick="openPlanning()">
     <span class="s-icon">📅</span> Planning
@@ -461,6 +470,28 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<!-- ══ WACHTWOORD HERSTEL — verschijnt automatisch wanneer iemand via de
+     "wachtwoord vergeten"-mail (recovery-link) op de app terechtkomt ══ -->
+<div class="screen" id="s-wachtwoord-herstel">
+  <div class="scroll-area" style="display:flex;flex-direction:column;justify-content:center;padding:28px 22px">
+    <div style="text-align:center;margin-bottom:26px">
+      <img src="icon-192x192.png" height="64" width="64" style="border-radius:16px;margin-bottom:14px" alt="Suerickx Flooring">
+      <h1 style="font-size:21px;margin:0 0 4px"><b>Vloer</b>Assistent</h1>
+      <p style="color:#888;font-size:14px;margin:0">Nieuw wachtwoord instellen</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nieuw wachtwoord</label>
+      <input type="password" class="form-input" id="wh-wachtwoord1" autocomplete="new-password">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Herhaal wachtwoord</label>
+      <input type="password" class="form-input" id="wh-wachtwoord2" autocomplete="new-password">
+    </div>
+    <button class="btn-primary" onclick="wachtwoordHerstellen()">🔐 Wachtwoord instellen</button>
+    <div id="wh-status" style="font-size:13px;color:#888;text-align:center;margin-top:10px"></div>
+  </div>
+</div>
+
 <div class="screen" id="s-home">
   <div class="home-header">
     <img src="icon-192x192.png" height="42" width="42" style="border-radius:10px;flex-shrink:0;display:block" alt="Suerickx Flooring">
@@ -493,8 +524,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <div class="menu-grid">
       <button class="menu-btn" onclick="go('s-lmra')"><div class="ico">🦺</div><div class="lbl">LMRA</div><div class="sub">Dagelijkse risicoanalyse</div></button>
       <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
-      <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
       <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Projectinformatie</div><div class="sub">TRA & offertes</div></button>
+      <button class="menu-btn" onclick="go('s-levering')"><div class="ico">📦</div><div class="lbl">Levering</div><div class="sub">Foto's van bestelling</div></button>
+      <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
       <button class="menu-btn" onclick="openPlanning()"><div class="ico">📅</div><div class="lbl">Planning</div><div class="sub">Wie staat waar</div></button>
       <button class="menu-btn" onclick="go('s-producten')"><div class="ico">📦</div><div class="lbl">Producten</div><div class="sub">Info & instructies</div></button>
       <button class="menu-btn" onclick="go('s-berekening')"><div class="ico">🔢</div><div class="lbl">Berekening</div><div class="sub">Hoeveelheden</div></button>
@@ -508,8 +540,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item active" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -969,8 +1002,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item active"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -991,8 +1025,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -1075,8 +1110,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item active"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -1340,8 +1376,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item active"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -1976,8 +2013,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -2023,8 +2061,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -2197,8 +2236,72 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item active"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
+    <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
+    <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
+    <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
+    <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
+    <button class="nav-item" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
+    <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
+  </div>
+</div>
+
+<!-- ══ LEVERING — foto's van leveringbon per werf ══════════════════ -->
+<div class="screen" id="s-levering">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">📦 Levering</div>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+    <div class="form-pad">
+      <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:14px">ℹ️ Maak een foto van de leveringbon zodra een bestelling toekomt op de werf — het kantoor ziet dan meteen in Cockpit wat er al geleverd is.</div>
+
+      <div class="form-group">
+        <label class="form-label">Projectnaam</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <select class="form-select" id="lv-project-select" onchange="onLvProjectSelect()" style="flex:1">
+            <option value="">Kies werf...</option>
+          </select>
+          <button onclick="toggleLvManualProject()" style="padding:11px 12px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px" id="btn-lv-manual-project">✏️ Vrij</button>
+        </div>
+        <input type="text" class="form-input" id="lv-project-manual" placeholder="Typ werfnaam..." style="margin-top:8px;display:none">
+        <input type="hidden" id="lv-project" value="">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input type="date" class="form-input" id="lv-datum">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Foto('s) van de leveringbon</label>
+        <div id="lv-foto-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+        <label style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border:2px dashed #3547C8;border-radius:12px;background:#F7F8FF;cursor:pointer;font-size:14px;font-weight:600;color:#3547C8">
+          📷 Foto maken of kiezen
+          <input type="file" accept="image/*" multiple id="lv-foto-input" style="display:none" onchange="lvVerwerkFotos(this)">
+        </label>
+        <div id="lv-foto-upload-status" style="font-size:12px;color:#888;margin-top:6px;text-align:center"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Opmerking <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <textarea class="form-input" id="lv-opmerking" rows="2" placeholder="bv. gedeeltelijke levering, 2 pallets ontbreken..."></textarea>
+      </div>
+
+      <button class="btn-primary btn-green" onclick="submitLevering()" style="width:100%;margin-top:8px">✅ Versturen</button>
+      <div id="lv-submit-status" style="margin-top:10px"></div>
+      <div style="height:10px"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
+    <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
+    <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
+    <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item active"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -2226,8 +2329,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -2296,6 +2400,9 @@ textarea.form-input{min-height:80px;resize:vertical}
         <input type="password" class="form-input" id="beheer-password" autocomplete="current-password">
       </div>
       <button class="btn-primary" onclick="beheerLogin()">🔐 Inloggen</button>
+      <div style="text-align:center;margin-top:10px">
+        <span onclick="beheerWachtwoordVergeten()" style="font-size:12.5px;color:#3547C8;text-decoration:underline;cursor:pointer">Wachtwoord vergeten?</span>
+      </div>
       <div id="beheer-login-status" style="font-size:13px;color:#888;text-align:center;margin-top:10px"></div>
       <div style="font-size:12px;color:#888;margin-top:18px;line-height:1.5">
         Nog geen account? Vraag een beheerder om je via Supabase Dashboard → Authentication → Users uit te nodigen.
@@ -2327,8 +2434,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-home')"><div class="ni">🏠</div><span class="nl">Home</span></button>
     <button class="nav-item" onclick="go('s-lmra')"><div class="ni">🦺</div><span class="nl">LMRA</span></button>
     <button class="nav-item" onclick="go('s-registratie')"><div class="ni">📋</div><span class="nl">Registratie</span></button>
-    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="go('s-documenten')"><div class="ni">📁</div><span class="nl">Projectinfo</span></button>
+    <button class="nav-item" onclick="go('s-levering')"><div class="ni">📦</div><span class="nl">Levering</span></button>
+    <button class="nav-item" onclick="go('s-regiebon')"><div class="ni">🧾</div><span class="nl">Regiebon</span></button>
     <button class="nav-item" onclick="openPlanning()"><div class="ni">📅</div><span class="nl">Planning</span></button>
     <button class="nav-item" onclick="go('s-producten')"><div class="ni">📦</div><span class="nl">Producten</span></button>
     <button class="nav-item" onclick="go('s-berekening')"><div class="ni">🔢</div><span class="nl">Berekening</span></button>
@@ -2429,6 +2537,12 @@ function initSupabase() {
   if (url && key && window.supabase) {
     try {
       sb = window.supabase.createClient(url, key);
+      // Supabase parseert een "wachtwoord vergeten"-link automatisch en logt
+      // meteen in — zonder dit zou de gebruiker gewoon in de gewone app
+      // belanden i.p.v. een nieuw wachtwoord te kunnen instellen.
+      sb.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') go('s-wachtwoord-herstel');
+      });
       return true;
     } catch (e) {
       console.warn('[Supabase] Client init mislukt:', e.message);
@@ -2866,6 +2980,202 @@ function resetFotos() {
   if (status) status.textContent = '';
 }
 
+// ── LEVERING — foto's van leveringbon (eigen array, los van de foto's
+// van Dagregistratie, zodat de twee schermen elkaar niet kunnen overschrijven) ──
+let lvFotoUrls = [];
+let lvFotoPaths = [];
+let lvFotoData = [];
+
+function lvVerwerkFotos(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const statusEl = document.getElementById('lv-foto-upload-status');
+
+  const huidigAantal = lvFotoData.filter(Boolean).length;
+  const beschikbaar = 6 - huidigAantal;
+  if (beschikbaar <= 0) {
+    if (statusEl) statusEl.textContent = 'Maximum van 6 foto\'s bereikt.';
+    input.value = '';
+    return;
+  }
+  const toegestaan = Array.from(files).slice(0, beschikbaar);
+  if (files.length > beschikbaar) {
+    if (statusEl) statusEl.textContent = 'Max. 6 foto\'s — enkel de eerste ' + beschikbaar + ' worden toegevoegd.';
+  } else {
+    if (statusEl) statusEl.textContent = toegestaan.length + ' foto(s) geselecteerd...';
+  }
+  toegestaan.forEach(function(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      verkleenFoto(e.target.result, 1200, function(b64) {
+        const i = lvFotoData.length;
+        lvFotoData.push(b64);
+        const list = document.getElementById('lv-foto-preview-list');
+        if (list) {
+          const w = document.createElement('div');
+          w.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0';
+          w.id = 'lv-foto-prev-' + i;
+          w.innerHTML = '<img src="' + b64 + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #D0D5F0">' +
+            '<button type="button" onclick="lvVerwijderFoto(' + i + ')" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">X</button>';
+          list.appendChild(w);
+        }
+        lvUploadFoto(b64, i);
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+async function lvUploadFoto(b64, i) {
+  const statusEl = document.getElementById('lv-foto-upload-status');
+  if (!sb && !initSupabase()) {
+    lvFotoUrls[i] = '';
+    if (statusEl) statusEl.textContent = 'Geen verbinding — foto niet opgeslagen';
+    return;
+  }
+  try {
+    const blob = dataURLtoBlob(b64);
+    const path = 'leveringen/' + Date.now() + '-' + i + '.jpg';
+    const { error: upErr } = await sb.storage.from('fotos').upload(path, blob, { contentType: 'image/jpeg' });
+    if (upErr) throw upErr;
+    const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
+    lvFotoUrls[i] = pub.publicUrl;
+    lvFotoPaths[i] = path;
+    if (statusEl) statusEl.textContent = 'Foto ' + (i + 1) + ' opgeslagen';
+  } catch (e) {
+    lvFotoUrls[i] = '';
+    lvFotoPaths[i] = '';
+    if (statusEl) statusEl.textContent = 'Upload mislukt: ' + (e.message || 'onbekende fout');
+  }
+}
+
+function lvVerwijderFoto(i) {
+  const el = document.getElementById('lv-foto-prev-' + i);
+  if (el) el.remove();
+  lvFotoData[i] = null;
+  lvFotoUrls[i] = null;
+  lvFotoPaths[i] = null;
+}
+
+function lvGetFotos() {
+  const urls = lvFotoUrls, paths = lvFotoPaths;
+  return urls.map((url, i) => url ? { url, path: paths[i] || '' } : null).filter(Boolean);
+}
+
+function lvResetFotos() {
+  lvFotoUrls = []; lvFotoPaths = []; lvFotoData = [];
+  const list = document.getElementById('lv-foto-preview-list');
+  if (list) list.innerHTML = '';
+  const status = document.getElementById('lv-foto-upload-status');
+  if (status) status.textContent = '';
+}
+
+function onLvProjectSelect() {
+  const sel = document.getElementById('lv-project-select');
+  const hidden = document.getElementById('lv-project');
+  hidden.value = sel.value;
+}
+
+function toggleLvManualProject() {
+  const manual = document.getElementById('lv-project-manual');
+  const hidden = document.getElementById('lv-project');
+  const btn = document.getElementById('btn-lv-manual-project');
+  const sel = document.getElementById('lv-project-select');
+  if (manual.style.display === 'none') {
+    manual.style.display = 'block';
+    sel.style.opacity = '0.4';
+    sel.disabled = true;
+    btn.style.background = '#3547C8';
+    btn.style.color = '#fff';
+    btn.textContent = '✕ Lijst';
+    manual.focus();
+    manual.oninput = () => { hidden.value = manual.value; };
+  } else {
+    manual.style.display = 'none';
+    sel.style.opacity = '1';
+    sel.disabled = false;
+    btn.style.background = '#f7f7f7';
+    btn.style.color = '#1a1a1a';
+    btn.textContent = '✏️ Vrij';
+    hidden.value = sel.value;
+  }
+}
+
+async function initLevering() {
+  document.getElementById('lv-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('lv-opmerking').value = '';
+  document.getElementById('lv-project-select').value = '';
+  document.getElementById('lv-project').value = '';
+  const manual = document.getElementById('lv-project-manual');
+  if (manual.style.display !== 'none') toggleLvManualProject();
+  manual.value = '';
+  lvResetFotos();
+  document.getElementById('lv-submit-status').innerHTML = '';
+
+  const selProj = document.getElementById('lv-project-select');
+  const alleProjs = appData.projects.length ? appData.projects : fallbackProjects;
+  const actiefProjs = alleProjs.filter(isWerfActief);
+  const overige = alleProjs.filter(p => !isWerfActief(p));
+  selProj.innerHTML = '<option value="">Kies werf...</option>' +
+    (actiefProjs.length ? '<optgroup label="Actief">' + actiefProjs.map(p => `<option value="${p.naam}">${p.naam}</option>`).join('') + '</optgroup>' : '') +
+    (overige.length ? '<optgroup label="Overige">' + overige.map(p => `<option value="${p.naam}">${p.naam}</option>`).join('') + '</optgroup>' : '');
+
+  // Ingelogde ploegbaas: eigen werf van vandaag automatisch voorinvullen.
+  const mij = huidigeGebruiker();
+  if (mij) {
+    const werven = await mijnWervenVandaag(mij);
+    if (werven.length) {
+      const match = alleProjs.find(p => tekstOverlap(werven[0], p.naam));
+      if (match) { selProj.value = match.naam; onLvProjectSelect(); }
+    }
+  }
+}
+
+async function submitLevering() {
+  const statusEl = document.getElementById('lv-submit-status');
+  if (!sb && !initSupabase()) {
+    statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
+    return;
+  }
+  const project = document.getElementById('lv-project').value.trim();
+  const datum = document.getElementById('lv-datum').value;
+  const opmerking = document.getElementById('lv-opmerking').value.trim();
+  const fotos = lvGetFotos();
+
+  const ontbrekend = [];
+  if (!project) ontbrekend.push('Projectnaam');
+  if (!fotos.length) ontbrekend.push('Minstens 1 foto van de leveringbon');
+  if (ontbrekend.length) {
+    statusEl.innerHTML = `<div class="err-box">⚠️ Nog niet ingevuld: ${escapeHtml(ontbrekend.join(', '))}</div>`;
+    return;
+  }
+
+  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen...</div>';
+  const gps = getGpsForSubmit();
+  const mij = huidigeGebruiker();
+  const payload = {
+    client_timestamp: localTimestamp(),
+    datum,
+    project,
+    teamleader: mij ? (mij.weergave || mij.naam) : '',
+    opmerking,
+    fotos,
+    gps_lat: gps.gps_lat != null ? String(gps.gps_lat) : '',
+    gps_lon: gps.gps_lon != null ? String(gps.gps_lon) : '',
+    gps_accuracy: gps.gps_accuracy != null ? String(gps.gps_accuracy) : '',
+  };
+
+  try {
+    const { error } = await sb.rpc('submit_levering', { p: payload });
+    if (error) throw error;
+    statusEl.innerHTML = '<div class="ok-box">✅ Levering verstuurd! Zichtbaar in Cockpit voor het kantoor.</div>';
+    setTimeout(() => { go('s-home'); initLevering(); }, 2200);
+  } catch(e) {
+    statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
 let appData = {
   products: [],
   projects: [],
@@ -3137,6 +3447,7 @@ function goDesktop(id) {
                's-planning':'snav-planning',
                's-regiebon':'snav-regiebon',
                's-aanrijding':'snav-aanrijding',
+               's-levering':'snav-levering',
                's-handleidingen':'snav-handleidingen',
                's-documenten':'snav-documenten'};
   const active = document.getElementById(map[id]);
@@ -3148,10 +3459,22 @@ function goDesktop(id) {
 // actief worden — anders kan je via de navigatiebalk/knoppen rond de
 // "Wie ben jij?"-keuze heen klikken zonder ooit aan te melden.
 function magNaarScherm(id) {
-  return id === 's-login' || id === 's-beheer' || !!huidigeGebruiker() || beheerIngelogd;
+  return id === 's-login' || id === 's-beheer' || id === 's-wachtwoord-herstel' || !!huidigeGebruiker() || beheerIngelogd;
 }
 
+// AANRIJDINGSFORMULIER TIJDELIJK GEARCHIVEERD (2026-08-27) — de verzekeraar
+// laat deze functie voorlopig niet toe. Alle knoppen die hiernaartoe leidden
+// zijn verborgen (zie CSS-regel .archief-aanrijding) en deze poort blokkeert
+// ook rechtstreekse/programmatische navigatie. Code, data en logica blijven
+// volledig intact — enkel de toegang staat uit. Zet AANRIJDING_GEARCHIVEERD
+// terug op false om de functie opnieuw vrij te geven.
+const AANRIJDING_GEARCHIVEERD = true;
+
 function go(id) {
+  if (id === 's-aanrijding' && AANRIJDING_GEARCHIVEERD) {
+    alert('Het aanrijdingsformulier is momenteel niet beschikbaar in de app. Gebruik het papieren Europees aanrijdingsformulier.');
+    return;
+  }
   if (!magNaarScherm(id)) id = 's-login';
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -3167,10 +3490,11 @@ function go(id) {
   if (id === 's-berekening' || id === 's-registratie') updateProductDropdowns();
   if (id === 's-regiebon') initRegiebon();
   if (id === 's-aanrijding') initAanrijding();
+  if (id === 's-levering') initLevering();
   if (id === 's-lmra') initLmra();
   if (id === 's-documenten') initDocumenten();
   if (id === 's-weeknieuws') initWeeknieuws();
-  if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra') { primeGpsSilently(); updateCopyPrevButtons(); }
+  if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra' || id === 's-levering') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') regEnterScherm();
   if (id === 's-login') renderLoginLijst();
   if (id === 's-home') { updateHomeHeaderVoorGebruiker(); laadMijnDashboard(); }
@@ -7793,6 +8117,38 @@ async function checkBeheerSession() {
   } else {
     setAdminUiVisible(false);
   }
+}
+
+// Wordt getoond nadat iemand via een "wachtwoord vergeten"-link op de app
+// terechtkomt (zie de PASSWORD_RECOVERY-listener in initSupabase()). Op dat
+// moment heeft Supabase al automatisch een geldige sessie aangemaakt vanuit
+// de link — we moeten enkel nog het nieuwe wachtwoord opslaan.
+async function wachtwoordHerstellen() {
+  const statusEl = document.getElementById('wh-status');
+  const p1 = document.getElementById('wh-wachtwoord1').value;
+  const p2 = document.getElementById('wh-wachtwoord2').value;
+  if (!p1 || p1.length < 6) { statusEl.textContent = '❌ Wachtwoord moet minstens 6 tekens lang zijn.'; return; }
+  if (p1 !== p2) { statusEl.textContent = '❌ De twee wachtwoorden komen niet overeen.'; return; }
+  if (!sb && !initSupabase()) { statusEl.textContent = '❌ Geen verbinding met de server.'; return; }
+  statusEl.textContent = '⏳ Bezig met opslaan...';
+  const { data, error } = await sb.auth.updateUser({ password: p1 });
+  if (error) { statusEl.textContent = '❌ ' + error.message; return; }
+  statusEl.textContent = '';
+  document.getElementById('wh-wachtwoord1').value = '';
+  document.getElementById('wh-wachtwoord2').value = '';
+  showBeheerPanel(data.user);
+  go('s-home');
+}
+
+async function beheerWachtwoordVergeten() {
+  const statusEl = document.getElementById('beheer-login-status');
+  const email = document.getElementById('beheer-email').value.trim();
+  if (!email) { statusEl.textContent = '❌ Vul eerst je e-mailadres in, dan sturen we een resetlink.'; return; }
+  if (!sb && !initSupabase()) { statusEl.textContent = '❌ Geen verbinding met de server.'; return; }
+  statusEl.textContent = '⏳ Bezig met versturen...';
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+  if (error) { statusEl.textContent = '❌ ' + error.message; return; }
+  statusEl.innerHTML = '<span style="color:#3B6D11">✅ Als dit e-mailadres bestaat, is er een resetlink verstuurd. Check je mailbox (ook spam).</span>';
 }
 
 async function beheerLogin() {
