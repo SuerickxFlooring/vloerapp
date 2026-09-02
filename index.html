@@ -15,6 +15,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>VloerAssistent</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- Leaflet: alleen-lezen kaart voor het Plaatsbezoek-verslag uit Project Cockpit -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="pdf-lib.min.js"></script>
 <style>
 .env-banner{background:#fff;border-bottom:1px solid #eef0f7;padding:6px 14px;flex-shrink:0;display:none !important}
@@ -601,7 +604,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <!-- STAP 2: Artikelen toevoegen -->
     <div id="rb-stap-2" style="padding:12px 16px;display:none">
       <!-- Categorie tabs -->
-      <div class="filter-row" id="rb-cat-row" style="padding:0 0 10px;gap:6px;flex-wrap:wrap"></div>
+      <div class="filter-row" id="rb-cat-row" style="padding:0 0 10px;gap:6px"></div>
 
       <!-- Zoekbalk -->
       <input type="text" class="search-input" id="rb-zoek" placeholder="🔍 Zoek artikel..." oninput="filterRbArtikelen()" autocomplete="off" style="margin-bottom:8px">
@@ -2412,6 +2415,7 @@ textarea.form-input{min-height:80px;resize:vertical}
   <!-- Stap 2: bijlagen van de gekozen werf -->
   <div id="doc-stap-bijlagen" style="display:none;flex-direction:column;flex:1;min-height:0">
     <div class="scroll-area">
+      <div id="doc-plaatsbezoek-lijst" style="padding:14px 14px 0;display:flex;flex-direction:column;gap:8px"></div>
       <div id="doc-bijlagen-lijst" style="padding:14px;display:flex;flex-direction:column;gap:8px"></div>
     </div>
   </div>
@@ -2429,6 +2433,31 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
     <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
+  </div>
+</div>
+
+<!-- ══ PLAATSBEZOEK BEKIJKEN (alleen-lezen, uit Project Cockpit) ══════ -->
+<div class="screen" id="s-plaatsbezoek">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-documenten')" aria-label="Terug">←</button>
+    <div class="topbar-title" id="pbv-topbar-title">Plaatsbezoek</div>
+    <span class="topbar-icon">🗺️</span>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+    <div style="padding:0 16px">
+      <div id="pbv-meta" style="font-size:12.5px;color:#888;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="chip active" id="pbv-laag-straat" onclick="pbvZetKaartlaag('straat')">🗺️ Straat</button>
+        <button class="chip" id="pbv-laag-satelliet" onclick="pbvZetKaartlaag('satelliet')">🛰️ Satelliet</button>
+      </div>
+      <div id="pbv-map" style="height:320px;border-radius:12px;overflow:hidden;border:1px solid #eee"></div>
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Aangeduide locaties</div>
+      <div id="pbv-pins-lijst" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div id="pbv-opmerkingen-wrap" style="display:none;margin:16px 0 24px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:6px">Opmerkingen</div>
+        <div id="pbv-opmerkingen" style="font-size:13.5px;color:#444;background:#f7f7fa;border-radius:10px;padding:12px 14px"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3062,6 +3091,8 @@ async function kiesDocProject(projectId) {
   document.getElementById('doc-stap-lijst').style.display = 'none';
   document.getElementById('doc-stap-bijlagen').style.display = '';
 
+  laadPlaatsbezoekenVoorProject(projectId, proj);
+
   const bijlLijst = document.getElementById('doc-bijlagen-lijst');
   bijlLijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
 
@@ -3103,6 +3134,135 @@ async function kiesDocProject(projectId) {
       ${isSwb ? `<button onclick="event.stopPropagation();openSwbInvullen(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
     </div>`;
   }).join('');
+}
+
+// ── Plaatsbezoek (alleen-lezen, uit Project Cockpit) ──────────────────
+// Zelfde categorieën/kleuren als in Cockpit zelf (PB_CATEGORIEEN daar) —
+// hier apart gedefinieerd omdat het twee losse single-file apps zijn zonder
+// gedeelde module.
+const PBV_CATEGORIEEN = {
+  stroom:     { label:'Stroom',      icon:'⚡',  kleur:'#e8a020' },
+  water:      { label:'Water',       icon:'💧', kleur:'#3aa0d8' },
+  parking:    { label:'Parking',     icon:'🅿️', kleur:'#5566cc' },
+  aanmelding: { label:'Aanmelding',  icon:'🛎️', kleur:'#8a5cc4' },
+  ehbo:       { label:'EHBO',        icon:'⛑️', kleur:'#c0392b' },
+  eetruimte:  { label:'Eetruimte',   icon:'🍽️', kleur:'#3a9a5c' },
+  andere:     { label:'Andere',      icon:'📍',  kleur:'#666' },
+};
+let pbvBezoeken = [];
+let pbvHuidig = null;
+let pbvMap = null;
+let pbvMarkersLayer = null;
+let pbvLagen = {};
+
+async function laadPlaatsbezoekenVoorProject(projectId, proj) {
+  const wrap = document.getElementById('doc-plaatsbezoek-lijst');
+  wrap.innerHTML = '';
+  const client = initSbCockpit();
+  if (!client) return;
+  const { data, error } = await client.from('cockpit_plaatsbezoeken')
+    .select('*').eq('project_id', projectId).order('datum', { ascending: false });
+  if (error || !data || !data.length) return;
+  pbvBezoeken = data;
+  wrap.innerHTML = data.map((b, i) => `
+    <div class="prod-card" onclick="openPlaatsbezoek(${i})" style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px;flex-shrink:0">🗺️</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px">Plaatsbezoek ${fmtDocDatum(b.datum)}</div>
+        <div style="font-size:12px;color:#888">${(b.pins||[]).length} locatie${(b.pins||[]).length!==1?'s':''}${b.bezoeker ? ' · ' + escapeHtml(b.bezoeker) : ''}</div>
+      </div>
+      <span style="color:#3547C8;font-size:20px">›</span>
+    </div>`).join('');
+}
+
+function openPlaatsbezoek(index) {
+  const b = pbvBezoeken[index];
+  if (!b) return;
+  pbvHuidig = b;
+  go('s-plaatsbezoek');
+
+  const proj = (docState.projecten || []).find(p => p.id === docState.huidigProject);
+  document.getElementById('pbv-topbar-title').textContent = proj?.werfnaam || 'Plaatsbezoek';
+  document.getElementById('pbv-meta').textContent =
+    `${fmtDocDatum(b.datum)}${b.bezoeker ? ' · Bezoeker: ' + b.bezoeker : ''}`;
+
+  if (pbvMap) { pbvMap.remove(); pbvMap = null; }
+  pbvMap = L.map('pbv-map', { dragging: true, scrollWheelZoom: false })
+    .setView([b.kaart_lat || 50.85, b.kaart_lon || 4.35], b.kaart_zoom || 8);
+  pbvLagen = {
+    // Zie cockpit/index.html: OSM's eigen tile-server blokkeert app-verkeer
+    // (403 "Referer required"), en CARTO vereist intussen een eigen
+    // API-sleutel. Esri's gratis ArcGIS-tiles (zelfde domein als de
+    // satellietlaag hieronder) hebben geen van beide beperkingen.
+    straat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 20, attribution: 'Esri, HERE, Garmin, © OpenStreetMap-bijdragers'
+    }),
+    satelliet: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 20, attribution: 'Esri, Maxar, Earthstar Geographics'
+    }),
+  };
+  pbvZetKaartlaag('straat');
+  pbvMarkersLayer = L.layerGroup().addTo(pbvMap);
+  setTimeout(() => { if (pbvMap) pbvMap.invalidateSize(); }, 80);
+
+  const pins = b.pins || [];
+  const pinLatLngs = [];
+  pins.forEach(pin => {
+    const c = PBV_CATEGORIEEN[pin.categorie] || PBV_CATEGORIEEN.andere;
+    const icon = L.divIcon({
+      className: 'pbv-marker',
+      html: `<div style="background:${c.kleur};width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center">
+        <span style="transform:rotate(45deg);font-size:14px">${c.icon}</span></div>`,
+      iconSize: [28,28], iconAnchor: [14,28],
+    });
+    L.marker([pin.lat, pin.lon], { icon }).addTo(pbvMarkersLayer);
+    pinLatLngs.push([pin.lat, pin.lon]);
+  });
+  // De opgeslagen kaartpositie (center/zoom) is het laatste standpunt van
+  // kantoor tijdens het bewerken — dat komt niet altijd overeen met waar de
+  // aangeduide locaties liggen. Zoom daarom, ná het tekenen van de pins,
+  // altijd zelf bij zodat alle locaties gegarandeerd zichtbaar zijn.
+  if (pinLatLngs.length) {
+    setTimeout(() => {
+      if (!pbvMap) return;
+      pbvMap.fitBounds(pinLatLngs, { padding: [30, 30], maxZoom: 18 });
+    }, 100);
+  }
+
+  const pinsWrap = document.getElementById('pbv-pins-lijst');
+  pinsWrap.innerHTML = pins.length ? pins.map(pin => {
+    const c = PBV_CATEGORIEEN[pin.categorie] || PBV_CATEGORIEEN.andere;
+    const naam = pin.categorie === 'andere' && pin.label ? pin.label : c.label;
+    const details = [
+      pin.categorie === 'stroom' && pin.ampere ? `${pin.ampere}A` : '',
+      pin.opmerking || '',
+    ].filter(Boolean).join(' — ');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f7f7fa;border-radius:10px">
+      <span style="width:26px;height:26px;border-radius:50%;background:${c.kleur};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${c.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13.5px">${escapeHtml(naam)}</div>
+        ${details ? `<div style="font-size:12px;color:#888">${escapeHtml(details)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<div style="color:#aaa;font-size:13px;padding:8px 0">Geen locaties aangeduid.</div>';
+
+  const opmWrap = document.getElementById('pbv-opmerkingen-wrap');
+  if (b.algemene_opmerkingen) {
+    opmWrap.style.display = '';
+    document.getElementById('pbv-opmerkingen').textContent = b.algemene_opmerkingen;
+  } else {
+    opmWrap.style.display = 'none';
+  }
+}
+
+function pbvZetKaartlaag(naam) {
+  if (!pbvMap) return;
+  Object.values(pbvLagen).forEach(laag => { if (pbvMap.hasLayer(laag)) pbvMap.removeLayer(laag); });
+  pbvLagen[naam].addTo(pbvMap);
+  ['straat','satelliet'].forEach(k => {
+    const btn = document.getElementById('pbv-laag-' + k);
+    if (btn) btn.classList.toggle('active', k === naam);
+  });
 }
 
 function docTerugNaarLijst() {
