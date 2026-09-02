@@ -499,6 +499,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <h1><b>Vloer</b>Assistent</h1>
       <p id="home-subtitel">Suerickx Flooring</p>
     </div>
+    <button onclick="toonVolledigeChangelog()" style="background:transparent;border:none;color:rgba(255,255,255,.55);border-radius:8px;width:26px;height:26px;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center" title="Nieuwe functies">✨</button>
     <button onclick="algemeenUitloggen()" id="home-wissel-btn" style="display:none;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;align-items:center;justify-content:center" title="Uitloggen">🚪</button>
     <button onclick="go('s-beheer')" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:10px;width:40px;height:40px;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center" title="Beheer">🔐</button>
   </div>
@@ -1180,14 +1181,16 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
         <div class="input-row">
           <div class="form-group">
-            <label class="form-label">Aantal uren (per werker)</label>
-            <input type="text" class="form-input" id="r-uren" placeholder="bv. 8" inputmode="decimal">
+            <label class="form-label">Uren per persoon <span style="font-weight:400;color:#c0392b">(niet de som van het team!)</span></label>
+            <input type="text" class="form-input" id="r-uren" placeholder="bv. 8" inputmode="decimal" onblur="controleerRegistratieUren()">
+            <div style="font-size:11.5px;color:#999;margin-top:4px">Hoeveel uur werkte 1 persoon die dag — niet iedereen samengeteld.</div>
           </div>
           <div class="form-group">
             <label class="form-label">Aantal personen <span style="font-weight:400;color:#999">(optioneel)</span></label>
-            <input type="number" class="form-input" id="r-man" placeholder="bv. 2" inputmode="numeric">
+            <input type="number" class="form-input" id="r-man" placeholder="bv. 2" inputmode="numeric" onblur="controleerRegistratieUren()">
           </div>
         </div>
+        <div id="r-uren-melding"></div>
         <div class="form-group">
           <label class="form-label">Namen andere teamleden <span style="font-weight:400;color:#999">(optioneel)</span></label>
           <div style="display:flex;gap:8px">
@@ -3134,11 +3137,60 @@ function fmtWnDatum(s) {
 
 // PDF's tonen via een iframe met de rauwe bestands-URL werkt niet betrouwbaar
 // in een PWA/WebView (geen ingebouwde PDF-lezer op veel toestellen — blijft
-// dan leeg/kapot). Google Docs Viewer rendert de PDF altijd, overal.
-function wnViewerUrl(pdfPath, publicUrl) {
-  const isAfb = /\.(jpg|jpeg|png|gif|webp)$/i.test(pdfPath);
-  if (isAfb) return publicUrl;
-  return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(publicUrl)}`;
+// dan leeg/kapot). Externe viewer-diensten (bv. Google Docs Viewer) blijken
+// zelf ook niet betrouwbaar in een iframe (weigeren soms te tonen). Daarom
+// wordt de PDF hier zelf gerenderd als afbeelding(en) via PDF.js — dat werkt
+// altijd, overal, zonder externe afhankelijkheid van een viewer-dienst.
+function wnIsAfbeelding(pdfPath) {
+  return /\.(jpg|jpeg|png|gif|webp)$/i.test(pdfPath);
+}
+
+let pdfjsGeladen = null;
+function pdfjsLaden() {
+  if (window.pdfjsLib) return Promise.resolve();
+  if (pdfjsGeladen) return pdfjsGeladen;
+  pdfjsGeladen = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js';
+    s.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js';
+      resolve();
+    };
+    s.onerror = () => reject(new Error('pdf.js kon niet geladen worden'));
+    document.head.appendChild(s);
+  });
+  return pdfjsGeladen;
+}
+
+// Rendert alle pagina's van een PDF als <canvas>-afbeeldingen in `container`.
+// Bij een fout (geen internet voor de PDF.js-library, corrupt bestand, ...)
+// valt dit terug op een link om de PDF apart te openen — nooit een leeg scherm.
+async function pdfInlineRenderen(container, url) {
+  container.innerHTML = '<div style="color:#bbb;text-align:center;padding:24px 0;font-size:13px">📰 Briefing laden...</div>';
+  try {
+    await pdfjsLaden();
+    const pdf = await window.pdfjsLib.getDocument(url).promise;
+    container.innerHTML = '';
+    const breedte = container.clientWidth || 320;
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const pagina = await pdf.getPage(p);
+      const ruwViewport = pagina.getViewport({ scale: 1 });
+      const schaal = (breedte / ruwViewport.width) * (window.devicePixelRatio || 1);
+      const viewport = pagina.getViewport({ scale: schaal });
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'width:100%;display:block;margin-bottom:8px;border-radius:10px';
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await pagina.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      container.appendChild(canvas);
+    }
+  } catch (e) {
+    console.error('[Weeknieuws] PDF renderen mislukt:', e);
+    container.innerHTML = `<div style="text-align:center;padding:20px 0">
+      <div style="color:#c0392b;font-size:13px;margin-bottom:10px">Kon de PDF niet automatisch weergeven.</div>
+      <a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:#3547C8;font-weight:700;text-decoration:underline">Open de PDF in een nieuw tabblad</a>
+    </div>`;
+  }
 }
 
 let wnGegevens = null;
@@ -3176,11 +3228,13 @@ async function checkWeeknieuwsPopup() {
   document.getElementById('wn-popup-titel').textContent = nieuwste.titel;
   document.getElementById('wn-popup-datum').textContent =
     `Geldig: ${fmtWnDatum(nieuwste.geldig_van)} → ${fmtWnDatum(nieuwste.geldig_tot)}`;
-  const isAfb = /\.(jpg|jpeg|png|gif|webp)$/i.test(nieuwste.pdf_path);
   const content = document.getElementById('wn-popup-content');
-  content.innerHTML = isAfb
-    ? `<img src="${pub.publicUrl}" style="width:100%;height:auto;display:block;object-fit:contain">`
-    : `<iframe src="${wnViewerUrl(nieuwste.pdf_path, pub.publicUrl)}" style="width:100%;height:100%;min-height:60vh;border:none;display:block;flex:1"></iframe>`;
+  if (wnIsAfbeelding(nieuwste.pdf_path)) {
+    content.innerHTML = `<img src="${pub.publicUrl}" style="width:100%;height:auto;display:block;object-fit:contain">`;
+  } else {
+    content.innerHTML = '';
+    pdfInlineRenderen(content, pub.publicUrl);
+  }
   document.getElementById('wn-popup-modal').style.display = 'flex';
 
   localStorage.setItem(sleutel, '1');
@@ -3219,12 +3273,12 @@ async function initWeeknieuws() {
       ? `<span style="background:#f5f5f5;color:#aaa;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">Verlopen</span>`
       : `<span style="background:#EEF0FC;color:#3547C8;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">🔵 Gepland</span>`;
     const { data: pub } = client.storage.from('weekbriefing').getPublicUrl(b.pdf_path);
-    const isAfb = /\.(jpg|jpeg|png|gif|webp)$/i.test(b.pdf_path);
+    const isAfb = wnIsAfbeelding(b.pdf_path);
     // Actieve briefing: meteen inline tonen, geen klik nodig.
     const inline = actief
       ? (isAfb
           ? `<img src="${escapeHtml(pub.publicUrl)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">`
-          : `<iframe src="${escapeHtml(wnViewerUrl(b.pdf_path, pub.publicUrl))}" style="width:100%;height:70vh;border:none;border-radius:10px;margin-top:10px;display:block"></iframe>`)
+          : `<div id="wn-pdf-${b.id}" style="margin-top:10px"></div>`)
       : '';
     return `<div class="prod-card" style="display:flex;flex-direction:column;gap:0">
       <div style="display:flex;align-items:center;gap:12px">
@@ -3243,6 +3297,18 @@ async function initWeeknieuws() {
       ${inline}
     </div>`;
   }).join('');
+
+  // PDF's van actieve briefingen renderen we pas nadat de containers echt in
+  // de DOM staan (kon niet via de HTML-string hierboven, canvas-rendering
+  // vergt een bestaand element).
+  data.forEach(b => {
+    const actief = b.geldig_van <= vandaag && b.geldig_tot >= vandaag;
+    if (!actief || wnIsAfbeelding(b.pdf_path)) return;
+    const container = document.getElementById(`wn-pdf-${b.id}`);
+    if (!container) return;
+    const { data: pub } = client.storage.from('weekbriefing').getPublicUrl(b.pdf_path);
+    pdfInlineRenderen(container, pub.publicUrl);
+  });
 }
 
 // ── FOTO BEHEER (Supabase Storage, bucket "fotos") ────────
@@ -3633,7 +3699,8 @@ function kiesIngelogdeTeamleader(json) {
   const mij = JSON.parse(json);
   localStorage.setItem('ingelogdeTeamleader', JSON.stringify(mij));
   go('s-home');
-  setTimeout(() => checkWeeknieuwsPopup(), 500);
+  setTimeout(() => toonUpdateVensterIndienNieuw(), 300);
+  setTimeout(() => checkWeeknieuwsPopup(), 900);
 }
 
 function wisselGebruiker() {
@@ -4591,6 +4658,8 @@ function regStartNieuw() {
   document.getElementById('r-datum').value = new Date().toISOString().split('T')[0];
   document.getElementById('r-uren').value = '';
   document.getElementById('r-man').value = '';
+  const urenMelding0 = document.getElementById('r-uren-melding');
+  if (urenMelding0) urenMelding0.innerHTML = '';
   document.getElementById('r-omschrijving').value = '';
   document.getElementById('r-vloer').value = '';
   document.getElementById('r-temp').value = '';
@@ -5617,7 +5686,37 @@ function toggleHandleiding(id) {
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+// Ploegbazen typen soms per ongeluk het totaal van de hele ploeg in het
+// "Uren per persoon"-veld (bv. 32u voor een dag van 4 man i.p.v. 8u/persoon).
+// Een dag heeft realistisch nooit meer dan ~12u per persoon — is de waarde
+// hoger én is "Aantal personen" ingevuld, dan wordt automatisch terug
+// omgerekend naar uren per persoon, met een duidelijke melding.
+const REGISTRATIE_MAX_REALISTISCHE_UREN = 12;
+function controleerRegistratieUren() {
+  const urenEl = document.getElementById('r-uren');
+  const manEl = document.getElementById('r-man');
+  const meldingEl = document.getElementById('r-uren-melding');
+  if (!urenEl || !meldingEl) return;
+  meldingEl.innerHTML = '';
+  const uren = pf(urenEl.value, NaN);
+  const man = pf(manEl ? manEl.value : '', NaN);
+  if (!uren || uren <= REGISTRATIE_MAX_REALISTISCHE_UREN) return;
+
+  if (man && man > 1) {
+    const perPersoon = Math.round((uren / man) * 10) / 10;
+    urenEl.value = perPersoon;
+    meldingEl.innerHTML = `<div style="background:#FFF8EC;border:1px solid #F3D9A6;border-radius:10px;padding:10px 12px;color:#8A6116;font-size:12.5px;margin:-6px 0 12px">
+      ⚠️ <strong>${uren}u</strong> leek het totaal van de hele ploeg (${man} personen), niet per persoon — automatisch aangepast naar <strong>${perPersoon}u per persoon</strong>. Klopt dit niet? Pas gerust opnieuw aan.
+    </div>`;
+  } else {
+    meldingEl.innerHTML = `<div style="background:#FDECEA;border:1px solid #F5C6C0;border-radius:10px;padding:10px 12px;color:#A32D2D;font-size:12.5px;margin:-6px 0 12px">
+      ⚠️ <strong>${uren}u per persoon</strong> lijkt niet realistisch voor 1 dag. Bedoelde je het totaal van de hele ploeg? Vul dan ook "Aantal personen" in, of pas de uren aan.
+    </div>`;
+  }
+}
+
 function toonSamenvatting() {
+  controleerRegistratieUren();
   const selProj0 = document.getElementById('r-project-select');
   const manProj0 = document.getElementById('r-project-manual');
   const project0 = (manProj0 && manProj0.style.display !== 'none' ? manProj0.value : selProj0 ? selProj0.value : '').trim();
@@ -8147,6 +8246,7 @@ const LMRA_ANTWOORDEN = [
 let lmraStapNr = 1;
 let lmraBezetting = [];
 let lmraAntwoorden = {};
+let lmraOpmerkingenPerVraag = {};
 
 async function initLmra() {
   document.getElementById('lmra-datum').value = new Date().toISOString().split('T')[0];
@@ -8163,6 +8263,7 @@ async function initLmra() {
   document.getElementById('lmra-bezetting-vrij').style.display = 'none';
   renderLmraBezettingTags();
   lmraAntwoorden = {};
+  lmraOpmerkingenPerVraag = {};
   renderLmraVragen();
   aaSigState['lmra-sig'] = null;
   const c = document.getElementById('aa-canvas-lmra-sig');
@@ -8253,6 +8354,10 @@ function renderLmraVragen() {
             style="flex:1;min-width:70px;padding:8px 4px;border-radius:8px;border:2px solid ${a.bg};background:${lmraAntwoorden[i]===a.val ? a.bg : '#fff'};color:${lmraAntwoorden[i]===a.val ? '#fff' : a.fg};font-size:11.5px;font-weight:700;cursor:pointer">${a.label}</button>
         `).join('')}
       </div>
+      <input type="text" class="form-input" placeholder="Opmerking bij deze vraag (optioneel)"
+        value="${escapeHtml(lmraOpmerkingenPerVraag[i]||'')}"
+        oninput="lmraOpmerkingenPerVraag[${i}]=this.value"
+        style="margin-top:8px;font-size:12.5px;padding:7px 10px">
     </div>`).join('');
 }
 function lmraSetAntwoord(i, val) {
@@ -8292,7 +8397,10 @@ async function submitLmra() {
   const gps = getGpsForSubmit();
   const projSel = document.getElementById('lmra-project');
   const projLabel = projSel.selectedOptions[0]?.textContent || '';
-  const vragenPayload = LMRA_VRAGEN.map((vraag, i) => ({ vraag, antwoord: lmraAntwoorden[i] || 'nvt' }));
+  const vragenPayload = LMRA_VRAGEN.map((vraag, i) => ({
+    vraag, antwoord: lmraAntwoorden[i] || 'nvt',
+    opmerking: (lmraOpmerkingenPerVraag[i] || '').trim(),
+  }));
   const heeftRood = vragenPayload.some(v => v.antwoord === 'rood');
   const uitvoerder = document.getElementById('lmra-uitvoerder').value;
 
@@ -8346,16 +8454,19 @@ const CHANGELOG_VA = [
   { version:1, datum:'13 augustus 2026', items:[
     {icon:'📎', titel:'Projectinformatie per werf', tekst:'Onder "Projectinfo" vind je nu de TRA en offerte per werf terug, rechtstreeks vanuit Project Cockpit — zoek je werf op en open het document.'},
   ]},
+  { version:2, datum:'2 september 2026', items:[
+    {icon:'📦', titel:'Levering', tekst:'Nieuw scherm om een levering te bevestigen met foto\'s, rechtstreeks vanuit de app.'},
+    {icon:'⚙️', titel:'Duomix — volledige handleiding', tekst:'Stap-voor-stap met foto\'s, onderverdeeld in voorbereiding, opstarten en onderhoud — terug te vinden bij Handleidingen.'},
+    {icon:'🚐', titel:'Pechverhelping werfbusje', tekst:'Nieuwe handleiding bij Handleidingen: wat te doen bij pech of een ongeval, ook op de autosnelweg.'},
+    {icon:'📰', titel:'Weekbriefing beter zichtbaar', tekst:'De actieve briefing van kantoor wordt nu meteen getoond, zonder eerst op "Openen" te moeten klikken.'},
+    {icon:'🕐', titel:'Slimmere urencontrole', tekst:'Vul je per ongeluk het totaal van de hele ploeg in bij "Uren per persoon"? De app rekent dit nu automatisch om.'},
+  ]},
 ];
 
-function toonUpdateVensterIndienNieuw(){
-  const gezien = parseInt(localStorage.getItem('va_update_gezien'),10) || 0;
-  const nieuweReleases = CHANGELOG_VA.filter(r=>r.version>gezien);
-  if(!nieuweReleases.length) return;
-
-  const meerdereReleases = nieuweReleases.length>1;
+function renderUpdateBody(releases){
+  const meerdereReleases = releases.length>1;
   const body = document.getElementById('update-body');
-  body.innerHTML = nieuweReleases.map(release=>`
+  body.innerHTML = [...releases].sort((a,b)=>b.version-a.version).map(release=>`
     ${meerdereReleases ? `<div class="update-release-lbl">${escapeHtml(release.datum)}</div>` : ''}
     ${release.items.map(i=>`
       <div class="update-item">
@@ -8363,12 +8474,52 @@ function toonUpdateVensterIndienNieuw(){
         <div class="ui-txt"><strong>${escapeHtml(i.titel)}</strong><span>${escapeHtml(i.tekst)}</span></div>
       </div>`).join('')}
   `).join('');
+}
+
+// Toont het update-venster automatisch, maar pas na aanmelding (anders
+// verschijnt het over het "Wie ben jij?"-scherm), en enkel gedurende de
+// eerste 2 keer dat de app na een nieuwe release wordt gebruikt — daarna
+// niet meer vanzelf, maar wel nog altijd terug te vinden via het kleine
+// ✨-knopje bovenaan Home (zie toonVolledigeChangelog()).
+function toonUpdateVensterIndienNieuw(){
+  if (!huidigeGebruiker() && !beheerIngelogd) return;
+
+  // Eenmalige migratie van de oude "gezien"-vlag (versie werd na 1x tonen
+  // meteen als definitief gelezen gemarkeerd) naar de nieuwe teller-aanpak,
+  // zodat bestaande gebruikers niet plots de volledige geschiedenis herzien.
+  const oudeVlag = localStorage.getItem('va_update_gezien');
+  if (oudeVlag && localStorage.getItem('va_update_erkend') === null) {
+    localStorage.setItem('va_update_erkend', oudeVlag);
+  }
+
+  const erkendTot = parseInt(localStorage.getItem('va_update_erkend'),10) || 0;
+  const nieuweReleases = CHANGELOG_VA.filter(r=>r.version>erkendTot);
+  if (!nieuweReleases.length) return;
+
+  let teller = parseInt(localStorage.getItem('va_update_teller'),10) || 0;
+  if (teller >= 2) return; // al 2x getoond sinds deze release — niet meer vanzelf tonen
+
+  teller++;
+  localStorage.setItem('va_update_teller', String(teller));
+  if (teller >= 2) {
+    // Klaar met vanzelf tonen: markeer deze release als "erkend" en reset de
+    // teller alvast, zodat een volgende nieuwe release weer bij 0 begint.
+    localStorage.setItem('va_update_erkend', String(Math.max(...nieuweReleases.map(r=>r.version))));
+    localStorage.setItem('va_update_teller', '0');
+  }
+
+  renderUpdateBody(nieuweReleases);
+  document.getElementById('update-modal').classList.add('open');
+}
+
+// Klein, subtiel ✨-knopje bovenaan Home — laat op elk moment de volledige
+// changelog herbekijken, los van de automatische 2x-melding hierboven.
+function toonVolledigeChangelog(){
+  renderUpdateBody(CHANGELOG_VA);
   document.getElementById('update-modal').classList.add('open');
 }
 
 function sluitUpdateVenster(){
-  const laatsteVersie = Math.max(...CHANGELOG_VA.map(r=>r.version));
-  localStorage.setItem('va_update_gezien', String(laatsteVersie));
   document.getElementById('update-modal').classList.remove('open');
 }
 
@@ -8523,7 +8674,8 @@ async function wachtwoordHerstellen() {
   document.getElementById('wh-wachtwoord2').value = '';
   showBeheerPanel(data.user);
   go('s-home');
-  setTimeout(() => checkWeeknieuwsPopup(), 500);
+  setTimeout(() => toonUpdateVensterIndienNieuw(), 300);
+  setTimeout(() => checkWeeknieuwsPopup(), 900);
 }
 
 async function beheerWachtwoordVergeten() {
@@ -8550,7 +8702,8 @@ async function beheerLogin() {
   document.getElementById('beheer-password').value = '';
   showBeheerPanel(data.user);
   go('s-home');
-  setTimeout(() => checkWeeknieuwsPopup(), 500);
+  setTimeout(() => toonUpdateVensterIndienNieuw(), 300);
+  setTimeout(() => checkWeeknieuwsPopup(), 900);
 }
 
 async function beheerLogout() {
@@ -8960,13 +9113,14 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshWeather();
   syncPendingRegistraties();
   syncPendingUren();
-  toonUpdateVensterIndienNieuw();
-  // Weeknieuws popup — pas checken nadat een eventuele bestaande sessie
-  // (teamleader via localStorage, of beheerder via checkBeheerSession) zeker
-  // hersteld is, anders kan de popup foutief overgeslagen worden bij het
-  // heropenen van de app terwijl iemand al aangemeld was. Kleine extra
-  // vertraging zodat de app eerst zichtbaar is.
+  // Update-venster en weeknieuws-popup — pas checken nadat een eventuele
+  // bestaande sessie (teamleader via localStorage, of beheerder via
+  // checkBeheerSession) zeker hersteld is, anders kunnen ze foutief over
+  // het "Wie ben jij?"-scherm verschijnen of overgeslagen worden bij het
+  // heropenen van de app terwijl iemand al aangemeld was. Na elkaar (niet
+  // tegelijk) zodat de vensters niet over elkaar stapelen.
   Promise.resolve(beheerSessieHersteld).then(() => {
+    setTimeout(() => toonUpdateVensterIndienNieuw(), 800);
     setTimeout(() => checkWeeknieuwsPopup(), 1500);
   });
 });
