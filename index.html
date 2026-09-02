@@ -3132,6 +3132,15 @@ function fmtWnDatum(s) {
   return `${d}/${m}/${y}`;
 }
 
+// PDF's tonen via een iframe met de rauwe bestands-URL werkt niet betrouwbaar
+// in een PWA/WebView (geen ingebouwde PDF-lezer op veel toestellen — blijft
+// dan leeg/kapot). Google Docs Viewer rendert de PDF altijd, overal.
+function wnViewerUrl(pdfPath, publicUrl) {
+  const isAfb = /\.(jpg|jpeg|png|gif|webp)$/i.test(pdfPath);
+  if (isAfb) return publicUrl;
+  return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(publicUrl)}`;
+}
+
 let wnGegevens = null;
 
 async function laadWeeknieuws() {
@@ -3168,7 +3177,7 @@ async function checkWeeknieuwsPopup() {
   const content = document.getElementById('wn-popup-content');
   content.innerHTML = isAfb
     ? `<img src="${pub.publicUrl}" style="width:100%;height:auto;display:block;object-fit:contain">`
-    : `<iframe src="${pub.publicUrl}" style="width:100%;height:100%;min-height:60vh;border:none;display:block;flex:1"></iframe>`;
+    : `<iframe src="${wnViewerUrl(nieuwste.pdf_path, pub.publicUrl)}" style="width:100%;height:100%;min-height:60vh;border:none;display:block;flex:1"></iframe>`;
   document.getElementById('wn-popup-modal').style.display = 'flex';
 
   localStorage.setItem(sleutel, '1');
@@ -3207,18 +3216,28 @@ async function initWeeknieuws() {
       ? `<span style="background:#f5f5f5;color:#aaa;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">Verlopen</span>`
       : `<span style="background:#EEF0FC;color:#3547C8;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">🔵 Gepland</span>`;
     const { data: pub } = client.storage.from('weekbriefing').getPublicUrl(b.pdf_path);
-    return `<div class="prod-card" style="display:flex;align-items:center;gap:12px">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:15px;margin-bottom:4px">📰 ${escapeHtml(b.titel)}</div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          ${badge}
-          <span style="font-size:12px;color:#999">${fmtWnDatum(b.geldig_van)} → ${fmtWnDatum(b.geldig_tot)}</span>
+    const isAfb = /\.(jpg|jpeg|png|gif|webp)$/i.test(b.pdf_path);
+    // Actieve briefing: meteen inline tonen, geen klik nodig.
+    const inline = actief
+      ? (isAfb
+          ? `<img src="${escapeHtml(pub.publicUrl)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">`
+          : `<iframe src="${escapeHtml(wnViewerUrl(b.pdf_path, pub.publicUrl))}" style="width:100%;height:70vh;border:none;border-radius:10px;margin-top:10px;display:block"></iframe>`)
+      : '';
+    return `<div class="prod-card" style="display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px">📰 ${escapeHtml(b.titel)}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${badge}
+            <span style="font-size:12px;color:#999">${fmtWnDatum(b.geldig_van)} → ${fmtWnDatum(b.geldig_tot)}</span>
+          </div>
         </div>
+        <a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener"
+           style="flex-shrink:0;padding:10px 14px;background:#3547C8;color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">
+          Openen
+        </a>
       </div>
-      <a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener"
-         style="flex-shrink:0;padding:10px 14px;background:#3547C8;color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">
-        Openen
-      </a>
+      ${inline}
     </div>`;
   }).join('');
 }
