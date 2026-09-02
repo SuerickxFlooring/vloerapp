@@ -2454,6 +2454,16 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="pbv-map" style="height:320px;border-radius:12px;overflow:hidden;border:1px solid #eee"></div>
       <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Aangeduide locaties</div>
       <div id="pbv-pins-lijst" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div id="pbv-zones-wrap" style="display:none">
+        <div style="font-weight:700;font-size:14px;margin:16px 0 8px">Werfzones</div>
+        <div id="pbv-zones-lijst" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div id="pbv-plan-wrap" style="display:none">
+        <div style="font-weight:700;font-size:14px;margin:16px 0 8px" id="pbv-plan-titel">Plan</div>
+        <div style="border-radius:12px;overflow:auto;border:1px solid #eee;text-align:center;background:#f4f4f6;max-height:420px">
+          <canvas id="pbv-plan-canvas" style="display:inline-block;max-width:100%"></canvas>
+        </div>
+      </div>
       <div id="pbv-opmerkingen-wrap" style="display:none;margin:16px 0 24px">
         <div style="font-weight:700;font-size:14px;margin-bottom:6px">Opmerkingen</div>
         <div id="pbv-opmerkingen" style="font-size:13.5px;color:#444;background:#f7f7fa;border-radius:10px;padding:12px 14px"></div>
@@ -3150,10 +3160,12 @@ const PBV_CATEGORIEEN = {
   eetruimte:  { label:'Eetruimte',   icon:'🍽️', kleur:'#3a9a5c' },
   andere:     { label:'Andere',      icon:'📍',  kleur:'#666' },
 };
+const PBV_ZONE_KLEUREN = ['#e74c3c','#e8a020','#3aa0d8','#3a9a5c','#8a5cc4'];
 let pbvBezoeken = [];
 let pbvHuidig = null;
 let pbvMap = null;
 let pbvMarkersLayer = null;
+let pbvZonesLayer = null;
 let pbvLagen = {};
 
 async function laadPlaatsbezoekenVoorProject(projectId, proj) {
@@ -3204,7 +3216,32 @@ function openPlaatsbezoek(index) {
   };
   pbvZetKaartlaag('straat');
   pbvMarkersLayer = L.layerGroup().addTo(pbvMap);
+  pbvZonesLayer = L.layerGroup().addTo(pbvMap);
   setTimeout(() => { if (pbvMap) pbvMap.invalidateSize(); }, 80);
+
+  const zones = b.zones || [];
+  const zoneLatLngs = [];
+  zones.forEach(zone => {
+    const opts = { color: zone.kleur, weight: 2, fillColor: zone.kleur, fillOpacity: .22 };
+    const layer = zone.type === 'rechthoek' ? L.rectangle(zone.punten, opts) : L.polygon(zone.punten, opts);
+    layer.bindTooltip(zone.label, { permanent: true, direction: 'center' });
+    layer.addTo(pbvZonesLayer);
+    zone.punten.forEach(p => zoneLatLngs.push(p));
+  });
+  const zonesWrap = document.getElementById('pbv-zones-wrap');
+  if (zones.length) {
+    zonesWrap.style.display = '';
+    document.getElementById('pbv-zones-lijst').innerHTML = zones.map(zone => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f7f7fa;border-radius:10px">
+        <span style="width:20px;height:20px;border-radius:5px;background:${zone.kleur};flex-shrink:0"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13.5px">${escapeHtml(zone.label)}</div>
+          <div style="font-size:12px;color:#888">${zone.type === 'rechthoek' ? 'Rechthoek' : 'Vrije vorm'}</div>
+        </div>
+      </div>`).join('');
+  } else {
+    zonesWrap.style.display = 'none';
+  }
 
   const pins = b.pins || [];
   const pinLatLngs = [];
@@ -3221,12 +3258,13 @@ function openPlaatsbezoek(index) {
   });
   // De opgeslagen kaartpositie (center/zoom) is het laatste standpunt van
   // kantoor tijdens het bewerken — dat komt niet altijd overeen met waar de
-  // aangeduide locaties liggen. Zoom daarom, ná het tekenen van de pins,
-  // altijd zelf bij zodat alle locaties gegarandeerd zichtbaar zijn.
-  if (pinLatLngs.length) {
+  // aangeduide locaties liggen. Zoom daarom, ná het tekenen van de pins/
+  // zones, altijd zelf bij zodat alles gegarandeerd zichtbaar is.
+  const alleLatLngs = pinLatLngs.concat(zoneLatLngs);
+  if (alleLatLngs.length) {
     setTimeout(() => {
       if (!pbvMap) return;
-      pbvMap.fitBounds(pinLatLngs, { padding: [30, 30], maxZoom: 18 });
+      pbvMap.fitBounds(alleLatLngs, { padding: [30, 30], maxZoom: 18 });
     }, 100);
   }
 
@@ -3247,6 +3285,8 @@ function openPlaatsbezoek(index) {
     </div>`;
   }).join('') : '<div style="color:#aaa;font-size:13px;padding:8px 0">Geen locaties aangeduid.</div>';
 
+  pbvToonPlan(b);
+
   const opmWrap = document.getElementById('pbv-opmerkingen-wrap');
   if (b.algemene_opmerkingen) {
     opmWrap.style.display = '';
@@ -3264,6 +3304,79 @@ function pbvZetKaartlaag(naam) {
     const btn = document.getElementById('pbv-laag-' + k);
     if (btn) btn.classList.toggle('active', k === naam);
   });
+}
+
+// Toont het (optionele) geüploade plan met de erop aangeduide locaties/
+// zones — alleen-lezen, zelfde genormaliseerde (0..1) coördinaten als in
+// Cockpit zelf. Gebruikt pdf.js (zie pdfjsLaden hieronder, ook gebruikt
+// voor Weeknieuws) wanneer het plan een PDF is.
+async function pbvToonPlan(b) {
+  const wrap = document.getElementById('pbv-plan-wrap');
+  if (!b.plan_storage_path) { wrap.style.display = 'none'; return; }
+  try {
+    const client = initSbCockpit();
+    const { data: pub } = client.storage.from('project-documenten').getPublicUrl(b.plan_storage_path);
+    let img;
+    if ((b.plan_bestandsnaam || '').toLowerCase().endsWith('.pdf')) {
+      await pdfjsLaden();
+      const resp = await fetch(pub.publicUrl);
+      const buf = await resp.arrayBuffer();
+      const doc = await window.pdfjsLib.getDocument({ data: buf }).promise;
+      const page = await doc.getPage(1);
+      const viewport = page.getViewport({ scale: 2 });
+      const tmp = document.createElement('canvas');
+      tmp.width = viewport.width; tmp.height = viewport.height;
+      await page.render({ canvasContext: tmp.getContext('2d'), viewport }).promise;
+      img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve(im); im.onerror = reject;
+        im.src = tmp.toDataURL('image/png');
+      });
+    } else {
+      img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        im.crossOrigin = 'anonymous';
+        im.onload = () => resolve(im); im.onerror = reject;
+        im.src = pub.publicUrl;
+      });
+    }
+    document.getElementById('pbv-plan-titel').textContent = b.plan_bestandsnaam || 'Plan';
+    const canvas = document.getElementById('pbv-plan-canvas');
+    const maxBreedte = 900;
+    const schaal = Math.min(1, maxBreedte / img.naturalWidth);
+    canvas.width = Math.round(img.naturalWidth * schaal);
+    canvas.height = Math.round(img.naturalHeight * schaal);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    (b.plan_annotaties || []).forEach(a => {
+      if (a.type === 'pin') {
+        const c = PBV_CATEGORIEEN[a.categorie] || PBV_CATEGORIEEN.andere;
+        const x = a.x * canvas.width, y = a.y * canvas.height;
+        ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2);
+        ctx.fillStyle = c.kleur; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
+        ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#fff'; ctx.fillText(c.icon, x, y + 1);
+      } else {
+        const hoeken = a.type === 'rechthoek'
+          ? [[a.punten[0][0],a.punten[0][1]],[a.punten[1][0],a.punten[0][1]],[a.punten[1][0],a.punten[1][1]],[a.punten[0][0],a.punten[1][1]]]
+          : a.punten;
+        const pts = hoeken.map(p => [p[0]*canvas.width, p[1]*canvas.height]);
+        ctx.beginPath();
+        pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
+        ctx.closePath();
+        ctx.fillStyle = a.kleur + '3a'; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = a.kleur; ctx.stroke();
+        const cx = pts.reduce((s,p)=>s+p[0],0)/pts.length, cy = pts.reduce((s,p)=>s+p[1],0)/pts.length;
+        ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = a.kleur; ctx.fillText(a.label, cx, cy);
+      }
+    });
+    wrap.style.display = '';
+  } catch (e) {
+    console.warn('[Plaatsbezoek] Kon het plan niet weergeven:', e.message);
+    wrap.style.display = 'none';
+  }
 }
 
 function docTerugNaarLijst() {
