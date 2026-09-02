@@ -3157,6 +3157,9 @@ async function laadWeeknieuws() {
 }
 
 async function checkWeeknieuwsPopup() {
+  // Nooit tonen vóór er iemand aangemeld is (bv. nog op het "Wie ben jij?"-
+  // of inlogscherm) — anders verschijnt de briefing over het aanmeldscherm.
+  if (!huidigeGebruiker() && !beheerIngelogd) return;
   const data = await laadWeeknieuws();
   if (!data || !data.length) return;
   const nieuwste = data[0];
@@ -3630,6 +3633,7 @@ function kiesIngelogdeTeamleader(json) {
   const mij = JSON.parse(json);
   localStorage.setItem('ingelogdeTeamleader', JSON.stringify(mij));
   go('s-home');
+  setTimeout(() => checkWeeknieuwsPopup(), 500);
 }
 
 function wisselGebruiker() {
@@ -8519,6 +8523,7 @@ async function wachtwoordHerstellen() {
   document.getElementById('wh-wachtwoord2').value = '';
   showBeheerPanel(data.user);
   go('s-home');
+  setTimeout(() => checkWeeknieuwsPopup(), 500);
 }
 
 async function beheerWachtwoordVergeten() {
@@ -8545,6 +8550,7 @@ async function beheerLogin() {
   document.getElementById('beheer-password').value = '';
   showBeheerPanel(data.user);
   go('s-home');
+  setTimeout(() => checkWeeknieuwsPopup(), 500);
 }
 
 async function beheerLogout() {
@@ -8949,14 +8955,20 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     loadRemoteData();
   }
-  checkBeheerSession();
+  const beheerSessieHersteld = checkBeheerSession();
   loadHomeMeldingen(true).then(() => buildWeatherAlerts(null, null, null, false, 0));
   refreshWeather();
   syncPendingRegistraties();
   syncPendingUren();
   toonUpdateVensterIndienNieuw();
-  // Weeknieuws popup — kleine vertraging zodat de app eerst zichtbaar is
-  setTimeout(() => checkWeeknieuwsPopup(), 1500);
+  // Weeknieuws popup — pas checken nadat een eventuele bestaande sessie
+  // (teamleader via localStorage, of beheerder via checkBeheerSession) zeker
+  // hersteld is, anders kan de popup foutief overgeslagen worden bij het
+  // heropenen van de app terwijl iemand al aangemeld was. Kleine extra
+  // vertraging zodat de app eerst zichtbaar is.
+  Promise.resolve(beheerSessieHersteld).then(() => {
+    setTimeout(() => checkWeeknieuwsPopup(), 1500);
+  });
 });
 
 function filterHandleidingen(cat) {
