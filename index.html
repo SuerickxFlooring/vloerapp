@@ -1197,14 +1197,9 @@ textarea.form-input{min-height:80px;resize:vertical}
         <div id="r-uren-melding"></div>
         <div class="form-group">
           <label class="form-label">Namen andere teamleden <span style="font-weight:400;color:#999">(optioneel)</span></label>
-          <div style="display:flex;gap:8px">
-            <select class="form-select" id="r-teamleden-select" onchange="regTeamledenSelectChange()" style="flex:1">
-              <option value="">Kies teamlid...</option>
-              <option value="__vrij__">✏️ Naam niet in de lijst...</option>
-            </select>
-            <button type="button" onclick="regTeamlidToevoegen()" style="background:#3547C8;color:#fff;border:none;border-radius:10px;padding:0 18px;font-weight:700;cursor:pointer;flex-shrink:0">＋</button>
-          </div>
-          <input type="text" class="form-input" id="r-teamleden-vrij" placeholder="Typ naam..." style="display:none;margin-top:8px" onkeydown="if(event.key==='Enter'){event.preventDefault();regTeamlidToevoegen();}">
+          <input type="text" class="form-input" id="r-teamleden-zoek" placeholder="🔍 Zoek of typ een naam..." oninput="renderTeamledenKeuzelijst('r')" onfocus="renderTeamledenKeuzelijst('r')" autocomplete="off" style="margin-bottom:8px">
+          <div id="r-teamleden-keuzelijst" style="border:1px solid #ddd;border-radius:10px;max-height:190px;overflow-y:auto;background:#fff"></div>
+          <button type="button" id="r-teamleden-toevoeg-btn" onclick="teamledenToevoegenGekozen('r')" style="display:none;width:100%;margin-top:8px;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer">Toevoegen (<span id="r-teamleden-teller">0</span>) →</button>
           <div id="r-teamleden-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
           <input type="hidden" id="r-teamleden">
         </div>
@@ -1938,22 +1933,90 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="h3" style="display:none">
         <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px">
 
+          <div class="det-sec"><h3>🏠 Home — je dashboard</h3>
+            <div class="step-list">
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Na het kiezen van je naam zie je bovenaan meteen of <strong>LMRA</strong> en <strong>Dagregistratie</strong> van vandaag al zijn ingevuld voor jouw werf.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Is een van beide om 12u nog niet ingevuld, dan krijgt die regel een <strong>rood kader</strong> met "⏰ Nog steeds niet ingevuld na 12u!" — extra aandacht dus.</div></div>
+              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Daaronder: je actieve project(en), eventuele weerswaarschuwingen en het lokaal weer (tik erop om te vernieuwen).</div></div>
+              <div class="step-item"><div class="step-num">4</div><div class="step-txt">Onderaan het menu vind je alle onderdelen: LMRA, Registratie, Projectinfo, Levering, Regiebon, Planning, Producten, Berekening, Handleidingen, Weeknieuws en Aanrijding.</div></div>
+            </div>
+            <div class="aandacht-box">
+              <div class="aandacht-lbl">Tip</div>
+              <div class="aandacht-txt">Bovenaan Home staat een klein ✨-knopje ("Nieuwe functies") — daarmee bekijk je op elk moment opnieuw wat er allemaal is bijgekomen of veranderd in de app.</div>
+            </div>
+          </div>
+
+          <div class="det-sec"><h3>🦺 LMRA invullen</h3>
+            <div class="step-list">
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>LMRA</strong> in het menu onderaan. Kies de werf, vul datum/tijdstip en de uitvoerder van de controle in.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Bij <strong>Bezetting</strong> geef je aan wie er die dag op de werf is: typ of zoek in het veld, vink één of meerdere namen tegelijk aan, en tik op <strong>Toevoegen</strong> om ze allemaal in één keer bij te voegen. Staat een naam er niet bij? Typ hem gewoon in het zoekveld en vink de "➕ toevoegen"-rij aan.</div></div>
+              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Doorloop de 17 controlevragen: <strong>N.v.t.</strong>, <strong>OK</strong>, <strong>OK, mits extra aandacht</strong> of <strong>Niet OK, niet starten</strong>.</div></div>
+              <div class="step-item"><div class="step-num">4</div><div class="step-txt">Vul tot slot opmerkingen en noodinfo (EHBO, nooddouche, evacuatiepunt, contactpersoon) in en onderteken digitaal.</div></div>
+            </div>
+            <div class="warn-item">
+              <div class="wi">⚠️</div>
+              <div class="wt">Staat er een "Niet OK, niet starten" bij een vraag? Start dan niet met de werken vooraleer dit is opgelost.</div>
+            </div>
+          </div>
+
+          <div class="det-sec"><h3>📋 Dagregistratie invullen</h3>
+            <div class="step-list">
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Registratie</strong> in het menu onderaan. Kies het actieve project via de dropdown, of tik op <strong>✏️ Vrij</strong> om zelf een werfnaam in te typen.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Vul datum en teamleader in, en <strong>Uren per persoon</strong> — dit is het aantal uur dat 1 individuele werknemer die dag werkte, <strong>niet</strong> de som van de hele ploeg. Vul je toch een onrealistisch hoog aantal in (bv. 32u), dan rekent de app dit — als "Aantal personen" is ingevuld — automatisch om naar uren per persoon, met een duidelijke melding.</div></div>
+              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Bij <strong>Namen andere teamleden</strong> zoek/typ je een naam, vink er meerdere tegelijk aan en tik op <strong>Toevoegen</strong> om ze allemaal in één keer bij te voegen — net als bij LMRA.</div></div>
+              <div class="step-item"><div class="step-num">4</div><div class="step-txt">Vul onder <strong>Uitvoering</strong> in: oppervlakte, type ondervloer, gebruikt product, verbruikte kg en resterend stock — de app berekent automatisch of het verbruik binnen de norm valt (groen = OK, rood = controleer).</div></div>
+              <div class="step-item"><div class="step-num">5</div><div class="step-txt">Vul de <strong>omgevingscondities</strong> in: temperatuur, RV, temp. ondergrond en vochtgehalte. De app berekent automatisch het dauwpunt en geeft een waarschuwing indien nodig.</div></div>
+              <div class="step-item"><div class="step-num">6</div><div class="step-txt">Voeg foto's en eventuele opmerkingen toe en tik op <strong>→ Bekijk samenvatting</strong>.</div></div>
+              <div class="step-item"><div class="step-num">7</div><div class="step-txt">Controleer de samenvatting en tik op <strong>✓ Bevestigen & Versturen</strong>. Je krijgt een bevestiging: ✅ Verstuurd, of 📴 Opgeslagen bij geen internet — wordt automatisch verstuurd zodra je terug verbinding hebt.</div></div>
+            </div>
+            <div class="aandacht-box">
+              <div class="aandacht-lbl">Tip</div>
+              <div class="aandacht-txt">Met <strong>🔁 Vorige keer overnemen</strong> vult de app project en context vooraf in op basis van je laatste registratie. Verlaat je het scherm halverwege, dan blijft je invulling bewaard bij "📂 Opgeslagen dagregistraties" om later verder te werken.</div>
+            </div>
+          </div>
+
+          <div class="det-sec"><h3>📎 Projectinfo raadplegen</h3>
+            <div class="step-list">
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Projectinfo</strong> en zoek/kies je werf.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Staat er een <strong>Plaatsbezoek</strong> bovenaan? Tik erop voor de kaart met aangeduide locaties (stroom, water, parking, aanmelding, EHBO, eetruimte, ...) die kantoor vooraf heeft vastgelegd.</div></div>
+              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Daaronder vind je de documenten van de werf: TRA, offerte, VGM-plan en — indien van toepassing — een digitale startwerkbespreking om zelf in te vullen (✏️ Invullen).</div></div>
+            </div>
+          </div>
+
+          <div class="det-sec"><h3>📦 Levering bevestigen</h3>
+            <div class="step-list">
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Levering</strong>, kies het project en de datum.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Voeg minstens 1 foto van de levering toe en vul eventueel een opmerking in.</div></div>
+              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Tik op <strong>Versturen</strong> — kantoor ziet de levering meteen terug in Project Cockpit.</div></div>
+            </div>
+          </div>
+
+          <div class="det-sec"><h3>🧾 Regiebon opmaken</h3>
+            <div class="step-list">
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt"><strong>Stap 1 — Project &amp; datum:</strong> kies het project, vul datum, omschrijving van de werken en je naam in.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt"><strong>Stap 2 — Artikelen:</strong> schuif door de categorieën (Arbeid, Verf, Betonafwerking, ...) of zoek een artikel, en tik op ＋ om het toe te voegen. Niet in de lijst? Typ het zelf in bij "Vrij artikel invoeren". Pas per item aantal en eenheid aan in "Toegevoegde items".</div></div>
+              <div class="step-item"><div class="step-num">3</div><div class="step-txt"><strong>Stap 3 — Overzicht:</strong> controleer alles in één oogopslag.</div></div>
+              <div class="step-item"><div class="step-num">4</div><div class="step-txt"><strong>Stap 4 — Handtekeningen:</strong> jouw handtekening en, optioneel, naam + handtekening van de klantvertegenwoordiger. Tik op <strong>✅ Indienen</strong>.</div></div>
+            </div>
+          </div>
+
+          <div class="det-sec"><h3>📅 Planning</h3>
+            <div class="step-list">
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Planning</strong> om te zien wie waar wordt ingepland — per week, per ploegbaas en per werf.</div></div>
+            </div>
+          </div>
+
           <div class="det-sec"><h3>📦 Producten raadplegen</h3>
             <div class="step-list">
-              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Producten</strong> in het menu onderaan.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Gebruik de filterknop bovenaan om te filteren op type: Epoxy, PU, Ucrete, Egaline, Mortel of Overige.</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Tik op een product om de volledige fiche te zien: mengverhouding, verbruik, potlife, droogtijd, max. RV en aandachtspunten.</div></div>
-              <div class="step-item"><div class="step-num">4</div><div class="step-txt">Gebruik het zoekvak bovenaan om snel een product op naam op te zoeken.</div></div>
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Producten</strong>. Filter op type (Epoxy, PU, Ucrete, Egaline, Mortel, Overige) of zoek op naam.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Tik op een product voor de volledige fiche: mengverhouding, verbruik, potlife, droogtijd, max. RV en aandachtspunten.</div></div>
             </div>
           </div>
 
           <div class="det-sec"><h3>🔢 Hoeveelheden berekenen</h3>
             <div class="step-list">
-              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Berekening</strong> in het menu onderaan.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Kies het <strong>type ondervloer</strong>: nieuw beton, oud beton, bestaande coating of onbekend.</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Kies het <strong>systeem / product</strong> uit de lijst.</div></div>
-              <div class="step-item"><div class="step-num">4</div><div class="step-txt">Vul de <strong>oppervlakte in m²</strong> in.</div></div>
-              <div class="step-item"><div class="step-num">5</div><div class="step-txt">Tik op <strong>Bereken hoeveelheden</strong> — de app toont het totaal benodigde gewicht en het aantal sets.</div></div>
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Berekening</strong>, kies het type ondervloer en het systeem/product.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Vul de oppervlakte in m² in en tik op <strong>Bereken hoeveelheden</strong> — de app toont het totaal benodigde gewicht en het aantal sets.</div></div>
             </div>
             <div class="aandacht-box">
               <div class="aandacht-lbl">Tip</div>
@@ -1961,48 +2024,30 @@ textarea.form-input{min-height:80px;resize:vertical}
             </div>
           </div>
 
-          <div class="det-sec"><h3>📋 Dagregistratie invullen</h3>
+          <div class="det-sec"><h3>📖 Handleidingen</h3>
             <div class="step-list">
-              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Registratie</strong> in het menu onderaan.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Kies het actieve project via de dropdown, of tik op <strong>✏️ Vrij</strong> om zelf een werfnaam in te typen.</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Vul datum en teamleader in.</div></div>
-              <div class="step-item"><div class="step-num">4</div><div class="step-txt">Vul onder <strong>Uitvoering</strong> in: oppervlakte, type ondervloer, gebruikt product, verbruikte kg en resterend stock.</div></div>
-              <div class="step-item"><div class="step-num">5</div><div class="step-txt">De app berekent automatisch of het verbruik binnen de norm valt (groen = OK, rood = controleer).</div></div>
-              <div class="step-item"><div class="step-num">6</div><div class="step-txt">Vul de <strong>omgevingscondities</strong> in: temperatuur, RV, temp. ondergrond en vochtgehalte. De app berekent automatisch het dauwpunt en geeft een waarschuwing indien nodig.</div></div>
-              <div class="step-item"><div class="step-num">7</div><div class="step-txt">Voeg eventuele opmerkingen toe en tik op <strong>→ Bekijk samenvatting</strong>.</div></div>
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Alle machine-, techniek- en veiligheidshandleidingen (zoals deze) staan hier gebundeld, filterbaar per categorie bovenaan.</div></div>
             </div>
           </div>
 
-          <div class="det-sec"><h3>✅ Samenvatting bevestigen & versturen</h3>
+          <div class="det-sec"><h3>📰 Weeknieuws</h3>
             <div class="step-list">
-              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Na het invullen van de registratie verschijnt een <strong>samenvatting</strong> met alle gegevens.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Controleer of alles correct is. Tik op <strong>← Terug aanpassen</strong> om te corrigeren.</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Tik op <strong>✓ Bevestigen & Versturen naar Supabase</strong> om de registratie door te sturen naar het kantoor.</div></div>
-              <div class="step-item"><div class="step-num">4</div><div class="step-txt">Je krijgt een bevestiging: ✅ Verstuurd of 📴 Opgeslagen (bij geen internet — wordt automatisch verstuurd zodra je terug verbinding hebt).</div></div>
+              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Een nieuwe briefing van kantoor verschijnt automatisch als pop-up nadat je bent aangemeld — geen extra klik nodig.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Via <strong>Weeknieuws</strong> in het menu vind je de actieve briefing ook meteen inline terug, plus eerdere/geplande briefingen.</div></div>
             </div>
           </div>
 
-          <div class="det-sec"><h3>⚙️ Instellingen</h3>
-            <div class="step-list">
-              <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op het ⚙️ icoon rechtsboven op de homepagina.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Hier kan je de Google Sheets URL en Power Automate URL instellen (normaal al ingevuld door de beheerder).</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Tik op <strong>Verbinding testen</strong> om te controleren of de koppeling met de spreadsheet werkt.</div></div>
-            </div>
-          </div>
-
-          <div class="det-sec"><h3>📍 Lokaal weer & waarschuwingen</h3>
-            <div class="step-list">
-              <div class="step-item"><div class="step-num">1</div><div class="step-txt">De homepagina toont automatisch het <strong>lokale weer</strong> op basis van je GPS-locatie.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Bij ongunstige omstandigheden (te lage temp., hoge RV, kans op regen) verschijnt automatisch een <strong>waarschuwing</strong> bovenaan.</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Tik op het weervak om de gegevens te vernieuwen.</div></div>
+          <div class="det-sec"><h3>🚨 Aanrijding</h3>
+            <div class="warn-item">
+              <div class="wi">⚠️</div>
+              <div class="wt">Het digitale aanrijdingsformulier in de app is momenteel niet beschikbaar. Gebruik bij een aanrijding altijd het <strong>papieren Europees aanrijdingsformulier</strong>.</div>
             </div>
           </div>
 
           <div class="det-sec"><h3>📶 Offline werken</h3>
             <div class="step-list">
               <div class="step-item"><div class="step-num">1</div><div class="step-txt">De app werkt ook zonder internet. Producten en projecten worden lokaal opgeslagen na de eerste keer laden.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Registraties die je offline invult worden lokaal bewaard en automatisch verstuurd zodra je weer verbinding hebt.</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Onderaan de homepagina zie je wanneer de data voor het laatst gesynchroniseerd werd.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Formulieren die je offline invult (Registratie, LMRA, Regiebon, Levering, ...) worden lokaal bewaard en automatisch verstuurd zodra je weer verbinding hebt.</div></div>
             </div>
             <div class="warn-item">
               <div class="wi">ℹ️</div>
@@ -2012,9 +2057,9 @@ textarea.form-input{min-height:80px;resize:vertical}
 
           <div class="det-sec"><h3>💡 Handige tips</h3>
             <div style="display:flex;flex-direction:column;gap:8px">
-              <div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;font-size:14px;color:#3B6D11">✓ Voeg de app toe aan je startscherm via je browser voor snelle toegang (Safari → Deel → Zet op beginscherm)</div>
-              <div style="background:#E6F1FB;border-radius:8px;padding:10px 12px;font-size:14px;color:#185FA5">ℹ️ Productdata en projecten komen automatisch uit de spreadsheet van het kantoor — je hoeft zelf niets aan te passen</div>
-              <div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;font-size:14px;color:#7A4F00">⚠️ Klopt een product of project niet? Meld dit aan de projectopvolger — die past de spreadsheet aan</div>
+              <div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;font-size:14px;color:#3B6D11">✓ Voeg de app toe aan je startscherm via je browser voor snelle toegang (Safari → Deel → Zet op beginscherm; Chrome/Android → menu → Toevoegen aan startscherm)</div>
+              <div style="background:#E6F1FB;border-radius:8px;padding:10px 12px;font-size:14px;color:#185FA5">ℹ️ Productdata, projecten en documenten komen automatisch uit Project Cockpit van kantoor — je hoeft zelf niets aan te passen</div>
+              <div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;font-size:14px;color:#7A4F00">⚠️ Klopt een product of project niet? Meld dit aan het kantoor</div>
             </div>
           </div>
 
@@ -2578,14 +2623,9 @@ textarea.form-input{min-height:80px;resize:vertical}
       </div>
       <div class="form-group">
         <label class="form-label">Bezetting <span style="font-weight:400;color:#999">(wie is er vandaag op de werf?)</span></label>
-        <div style="display:flex;gap:8px">
-          <select class="form-select" id="lmra-bezetting-select" onchange="lmraBezettingSelectChange()" style="flex:1">
-            <option value="">Kies teamlid...</option>
-            <option value="__vrij__">✏️ Naam niet in de lijst...</option>
-          </select>
-          <button type="button" onclick="lmraBezettingToevoegen()" style="background:#3547C8;color:#fff;border:none;border-radius:10px;padding:0 18px;font-weight:700;cursor:pointer;flex-shrink:0">＋</button>
-        </div>
-        <input type="text" class="form-input" id="lmra-bezetting-vrij" placeholder="Typ naam..." style="display:none;margin-top:8px" onkeydown="if(event.key==='Enter'){event.preventDefault();lmraBezettingToevoegen();}">
+        <input type="text" class="form-input" id="lmra-teamleden-zoek" placeholder="🔍 Zoek of typ een naam..." oninput="renderTeamledenKeuzelijst('lmra')" onfocus="renderTeamledenKeuzelijst('lmra')" autocomplete="off" style="margin-bottom:8px">
+        <div id="lmra-teamleden-keuzelijst" style="border:1px solid #ddd;border-radius:10px;max-height:190px;overflow-y:auto;background:#fff"></div>
+        <button type="button" id="lmra-teamleden-toevoeg-btn" onclick="teamledenToevoegenGekozen('lmra')" style="display:none;width:100%;margin-top:8px;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer">Toevoegen (<span id="lmra-teamleden-teller">0</span>) →</button>
         <div id="lmra-bezetting-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
       </div>
     </div>
@@ -4175,6 +4215,7 @@ function goDesktop(id) {
                's-aanrijding':'snav-aanrijding',
                's-levering':'snav-levering',
                's-handleidingen':'snav-handleidingen',
+               's-weeknieuws':'snav-weeknieuws',
                's-documenten':'snav-documenten'};
   const active = document.getElementById(map[id]);
   if (active) active.classList.add('active');
@@ -4647,50 +4688,23 @@ function updateTeamleaderDropdown() {
   updateTeamledenSelect();
 }
 
-// ── "Namen andere teamleden" — dropdown gevuld met de volledige ploeglijst
-// uit Planning (tabel "teamleden", ruimer dan enkel ploegbazen), met de
-// mogelijkheid om zelf een naam toe te voegen die niet in de lijst staat.
+// ── "Namen andere teamleden" — aanvinklijst gevuld met de volledige
+// ploeglijst uit Planning (tabel "teamleden", ruimer dan enkel ploegbazen),
+// met de mogelijkheid om meerdere namen in 1 keer aan te vinken en samen toe
+// te voegen, of zelf een naam te typen die niet in de lijst staat. Dezelfde
+// herbruikbare widget (zie "TEAMLEDEN-KEUZELIJST" verderop) wordt ook door
+// LMRA (prefix 'lmra') gebruikt.
 let regTeamledenGeselecteerd = [];
 
 function updateTeamledenSelect() {
-  const sel = document.getElementById('r-teamleden-select');
-  if (!sel) return;
-  const namen = appData.teamleden.map(t => t.naam);
-  sel.innerHTML = '<option value="">Kies teamlid...</option>' +
-    namen.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') +
-    '<option value="__vrij__">✏️ Naam niet in de lijst...</option>';
-}
-
-function regTeamledenSelectChange() {
-  const sel = document.getElementById('r-teamleden-select');
-  const vrij = document.getElementById('r-teamleden-vrij');
-  if (sel.value === '__vrij__') {
-    vrij.style.display = 'block';
-    vrij.focus();
-  } else {
-    vrij.style.display = 'none';
-    vrij.value = '';
-  }
-}
-
-function regTeamlidToevoegen() {
-  const sel = document.getElementById('r-teamleden-select');
-  const vrij = document.getElementById('r-teamleden-vrij');
-  const naam = (sel.value === '__vrij__' ? vrij.value : sel.value).trim();
-  if (!naam) return;
-  if (!regTeamledenGeselecteerd.includes(naam)) regTeamledenGeselecteerd.push(naam);
-  sel.value = '';
-  vrij.value = '';
-  vrij.style.display = 'none';
-  syncTeamledenHidden();
-  renderTeamledenTags();
-  regAutosave();
+  renderTeamledenKeuzelijst('r');
 }
 
 function verwijderTeamlid(naam) {
   regTeamledenGeselecteerd = regTeamledenGeselecteerd.filter(n => n !== naam);
   syncTeamledenHidden();
   renderTeamledenTags();
+  renderTeamledenKeuzelijst('r');
   regAutosave();
 }
 
@@ -4711,12 +4725,94 @@ function syncTeamledenHidden() {
 
 function resetTeamledenSelectie() {
   regTeamledenGeselecteerd = [];
-  const sel = document.getElementById('r-teamleden-select');
-  const vrij = document.getElementById('r-teamleden-vrij');
-  if (sel) sel.value = '';
-  if (vrij) { vrij.value = ''; vrij.style.display = 'none'; }
+  const zoek = document.getElementById('r-teamleden-zoek');
+  if (zoek) zoek.value = '';
+  teamledenAangevinkt.r = new Set();
   syncTeamledenHidden();
   renderTeamledenTags();
+  renderTeamledenKeuzelijst('r');
+}
+
+// ── TEAMLEDEN-KEUZELIJST — herbruikbare "kies meerdere teamleden"-widget ──
+// Vervangt de oude "kies 1 naam uit dropdown → druk +" flow: toont alle
+// teamleden als aanvinkbare rijen (met zoekveld), zodat je er in 1 keer
+// meerdere kan aanvinken en met één klik op "Toevoegen (n)" samen toevoegen
+// i.p.v. persoon per persoon. Werkt voor elk scherm met een eigen prefix
+// (momenteel 'r' = Dagregistratie, 'lmra' = LMRA/bezetting) via het config-
+// object hieronder, dat vertelt waar de al-toegevoegde namen van dat scherm
+// staan en hoe ze te tonen/opslaan.
+const TEAMLEDEN_PICKER_CFG = {
+  r: {
+    getGeselecteerd: () => regTeamledenGeselecteerd,
+    setGeselecteerd: (arr) => { regTeamledenGeselecteerd = arr; syncTeamledenHidden(); },
+    renderTags: renderTeamledenTags,
+    onChange: () => regAutosave(),
+  },
+  lmra: {
+    getGeselecteerd: () => lmraBezetting,
+    setGeselecteerd: (arr) => { lmraBezetting = arr; },
+    renderTags: () => renderLmraBezettingTags(),
+    onChange: null,
+  },
+};
+const teamledenAangevinkt = { r: new Set(), lmra: new Set() };
+
+function renderTeamledenKeuzelijst(prefix) {
+  const cfg = TEAMLEDEN_PICKER_CFG[prefix];
+  const lijstEl = document.getElementById(prefix + '-teamleden-keuzelijst');
+  if (!cfg || !lijstEl) return;
+  const zoekEl = document.getElementById(prefix + '-teamleden-zoek');
+  const rauw = (zoekEl?.value || '').trim();
+  const q = rauw.toLowerCase();
+  const aangevinkt = teamledenAangevinkt[prefix];
+  const reedsToegevoegd = cfg.getGeselecteerd();
+
+  const rij = (naam, label, extraStyle = '') => {
+    const checked = aangevinkt.has(naam);
+    return `<div onclick='teamlidAanvinken(${JSON.stringify(prefix)},${JSON.stringify(naam)})'
+         style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f2f8;cursor:pointer;${checked ? 'background:#EEF0FC' : ''}${extraStyle}">
+      <span style="width:20px;height:20px;border-radius:6px;flex-shrink:0;border:2px solid ${checked ? '#3547C8' : '#ccc'};background:${checked ? '#3547C8' : '#fff'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">${checked ? '✓' : ''}</span>
+      <span style="font-size:14px">${label}</span>
+    </div>`;
+  };
+
+  let namen = (appData.teamleden || []).map(t => t.naam).filter(n => !reedsToegevoegd.includes(n));
+  if (q) namen = namen.filter(n => n.toLowerCase().includes(q));
+  let html = namen.map(n => rij(n, escapeHtml(n))).join('');
+
+  // Naam niet in de lijst? Laat toe die als vrije tekst mee aan te vinken.
+  const bestaatAl = namen.some(n => n.toLowerCase() === q) || reedsToegevoegd.some(n => n.toLowerCase() === q);
+  if (rauw && !bestaatAl) {
+    html += rij(rauw, `➕ "${escapeHtml(rauw)}" toevoegen (niet in lijst)`, ';color:#3547C8;font-weight:600');
+  }
+
+  lijstEl.innerHTML = html || '<div style="padding:14px;text-align:center;color:#aaa;font-size:13px">Geen teamleden gevonden</div>';
+
+  const btn = document.getElementById(prefix + '-teamleden-toevoeg-btn');
+  const teller = document.getElementById(prefix + '-teamleden-teller');
+  if (teller) teller.textContent = aangevinkt.size;
+  if (btn) btn.style.display = aangevinkt.size ? 'block' : 'none';
+}
+
+function teamlidAanvinken(prefix, naam) {
+  const aangevinkt = teamledenAangevinkt[prefix];
+  if (aangevinkt.has(naam)) aangevinkt.delete(naam); else aangevinkt.add(naam);
+  renderTeamledenKeuzelijst(prefix);
+}
+
+function teamledenToevoegenGekozen(prefix) {
+  const cfg = TEAMLEDEN_PICKER_CFG[prefix];
+  const aangevinkt = teamledenAangevinkt[prefix];
+  if (!cfg || !aangevinkt.size) return;
+  const nieuw = cfg.getGeselecteerd().slice();
+  aangevinkt.forEach(n => { if (!nieuw.includes(n)) nieuw.push(n); });
+  cfg.setGeselecteerd(nieuw);
+  aangevinkt.clear();
+  const zoekEl = document.getElementById(prefix + '-teamleden-zoek');
+  if (zoekEl) zoekEl.value = '';
+  cfg.renderTags();
+  renderTeamledenKeuzelijst(prefix);
+  if (cfg.onChange) cfg.onChange();
 }
 
 // ── "Vorige keer overnemen" — vult project/team/product vooraf in
@@ -8532,9 +8628,9 @@ async function initLmra() {
   });
   lmraStapNr = 1;
   lmraBezetting = [];
-  document.getElementById('lmra-bezetting-select').value = '';
-  document.getElementById('lmra-bezetting-vrij').value = '';
-  document.getElementById('lmra-bezetting-vrij').style.display = 'none';
+  const lmraTeamledenZoek = document.getElementById('lmra-teamleden-zoek');
+  if (lmraTeamledenZoek) lmraTeamledenZoek.value = '';
+  teamledenAangevinkt.lmra = new Set();
   renderLmraBezettingTags();
   lmraAntwoorden = {};
   lmraOpmerkingenPerVraag = {};
@@ -8544,7 +8640,7 @@ async function initLmra() {
   if (c && c.width) c.getContext('2d').clearRect(0, 0, c.width, c.height);
   updateLmraNav();
   lmraUpdateUitvoerderDropdown();
-  lmraUpdateBezettingSelect();
+  renderTeamledenKeuzelijst('lmra');
   await lmraLaadProjecten();
 }
 
@@ -8579,32 +8675,12 @@ function lmraUpdateUitvoerderDropdown() {
 }
 
 function lmraUpdateBezettingSelect() {
-  const sel = document.getElementById('lmra-bezetting-select');
-  if (!sel) return;
-  const namen = (appData.teamleden || []).map(t => t.naam);
-  sel.innerHTML = '<option value="">Kies teamlid...</option>' +
-    namen.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') +
-    '<option value="__vrij__">✏️ Naam niet in de lijst...</option>';
-}
-function lmraBezettingSelectChange() {
-  const sel = document.getElementById('lmra-bezetting-select');
-  const vrij = document.getElementById('lmra-bezetting-vrij');
-  if (sel.value === '__vrij__') { vrij.style.display = 'block'; vrij.focus(); }
-  else if (sel.value) { vrij.style.display = 'none'; vrij.value = ''; lmraBezettingToevoegen(); }
-  else { vrij.style.display = 'none'; vrij.value = ''; }
-}
-function lmraBezettingToevoegen() {
-  const sel = document.getElementById('lmra-bezetting-select');
-  const vrij = document.getElementById('lmra-bezetting-vrij');
-  const naam = (sel.value === '__vrij__' ? vrij.value : sel.value).trim();
-  if (!naam) return;
-  if (!lmraBezetting.includes(naam)) lmraBezetting.push(naam);
-  sel.value = ''; vrij.value = ''; vrij.style.display = 'none';
-  renderLmraBezettingTags();
+  renderTeamledenKeuzelijst('lmra');
 }
 function lmraBezettingVerwijderen(naam) {
   lmraBezetting = lmraBezetting.filter(n => n !== naam);
   renderLmraBezettingTags();
+  renderTeamledenKeuzelijst('lmra');
 }
 function renderLmraBezettingTags() {
   const wrap = document.getElementById('lmra-bezetting-tags');
