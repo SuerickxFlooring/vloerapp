@@ -1979,7 +1979,8 @@ textarea.form-input{min-height:80px;resize:vertical}
             <div class="step-list">
               <div class="step-item"><div class="step-num">1</div><div class="step-txt">Tik op <strong>Projectinfo</strong> en zoek/kies je werf.</div></div>
               <div class="step-item"><div class="step-num">2</div><div class="step-txt">Staat er een <strong>Plaatsbezoek</strong> bovenaan? Tik erop voor de kaart met aangeduide locaties (stroom, water, parking, aanmelding, EHBO, eetruimte, ...) die kantoor vooraf heeft vastgelegd.</div></div>
-              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Daaronder vind je de documenten van de werf: TRA, offerte, VGM-plan en — indien van toepassing — een digitale startwerkbespreking om zelf in te vullen (✏️ Invullen).</div></div>
+              <div class="step-item"><div class="step-num">3</div><div class="step-txt">Daaronder vind je de documenten van de werf: TRA, VGM-plan, WMS, offerte en — indien van toepassing — een digitale startwerkbespreking om zelf in te vullen (✏️ Invullen).</div></div>
+              <div class="step-item"><div class="step-num">4</div><div class="step-txt">In de werflijst zie je per werf meteen aan de groene/grijze pilletjes (TRA, VGM, WMS, Offerte, Startwerk, Andere) welke documenten er al staan, zonder de werf te moeten openen.</div></div>
             </div>
           </div>
 
@@ -3080,20 +3081,33 @@ async function vulDocZoekMetMijnWerf() {
 
 // Vanaf de dashboard-pil "Startwerkbespreking" meteen naar de documentenlijst
 // van die specifieke werf springen — niet enkel naar het gefilterde overzicht.
+// Vanaf de dashboard-pil "Startwerkbespreking" meteen naar het invulformulier
+// zelf springen — niet enkel naar de documentenlijst, want daar moest de
+// gebruiker dan nog eens apart op "✏️ Invullen" tikken.
 async function gaNaarStartwerk(werf) {
   go('s-documenten');
   await initDocumenten();
   const projs = docState.projecten || [];
   const match = projs.find(p => tekstOverlap(werf, p.projectnummer || '') || tekstOverlap(werf, p.werfnaam || ''));
-  if (match) kiesDocProject(match.id);
+  if (!match) return;
+  const bijlagen = await kiesDocProject(match.id);
+  const swb = (bijlagen || []).find(b => b.type === 'Startwerkbespreking');
+  if (swb) {
+    openSwbInvullen(match.id, swb.id);
+  } else {
+    // Kantoor heeft voor deze werf nog geen startwerkbespreking-document
+    // klaargezet — de gebruiker blijft op de documentenlijst staan, met
+    // uitleg waarom er niet meteen een invulformulier verschijnt.
+    alert('Voor deze werf staat er nog geen startwerkbespreking klaar om in te vullen. Neem contact op met kantoor.');
+  }
 }
 
-// Compacte pillen (TRA/Offerte/Andere) zodat je in de werflijst al ziet welke
-// documenten er al zijn, zonder elk project apart te moeten openen.
-const BIJLAGE_PILL_LABEL = { TRA: 'TRA', Offerte: 'Offerte', Startwerkbespreking: 'Startwerk', Andere: 'Andere' };
+// Compacte pillen (TRA/VGM/WMS/Offerte/Andere) zodat je in de werflijst al
+// ziet welke documenten er al zijn, zonder elk project apart te moeten openen.
+const BIJLAGE_PILL_LABEL = { TRA: 'TRA', VGM: 'VGM', WMS: 'WMS', Offerte: 'Offerte', Startwerkbespreking: 'Startwerk', Andere: 'Andere' };
 function bijlagenPillenVoorProject(projectId) {
   const vanProj = (docState.bijlagen || []).filter(b => b.project_id === projectId);
-  return ['TRA', 'Offerte', 'Startwerkbespreking', 'Andere'].map(t => {
+  return ['TRA', 'VGM', 'WMS', 'Offerte', 'Startwerkbespreking', 'Andere'].map(t => {
     const aanwezig = vanProj.some(b => b.type === t);
     return `<span style="font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:10px;${
       aanwezig ? 'background:#EAF3DE;color:#3B6D11' : 'background:#f2f2f2;color:#aaa'
@@ -3130,7 +3144,7 @@ function renderDocProjecten() {
         <span class="prod-sub" style="flex:1">${escapeHtml(p.projectnummer || '')}</span>
         ${datums}
       </div>
-      <div style="display:flex;gap:5px;margin-top:8px">${bijlagenPillenVoorProject(p.id)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${bijlagenPillenVoorProject(p.id)}</div>
     </div>`;
   }).join('');
 }
@@ -3152,14 +3166,14 @@ async function kiesDocProject(projectId) {
     .select('*').eq('project_id', projectId).order('geupload_op', { ascending: false });
   if (error) {
     bijlLijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(error.message)}</div>`;
-    return;
+    return [];
   }
   if (!data || !data.length) {
     bijlLijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px 14px">Nog geen documenten geüpload voor deze werf.</div>';
-    return;
+    return [];
   }
-  const TYPE_ICOON = { TRA: '⚠️', Offerte: '💰', Startwerkbespreking: '🦺' };
-  const TYPE_BADGE = { TRA: 'badge-epoxy', Offerte: 'badge-pu', Startwerkbespreking: 'badge-preventie' };
+  const TYPE_ICOON = { TRA: '⚠️', VGM: '🦺', WMS: '📋', Offerte: '💰', Startwerkbespreking: '🦺' };
+  const TYPE_BADGE = { TRA: 'badge-epoxy', VGM: 'badge-preventie', WMS: 'badge-preventie', Offerte: 'badge-pu', Startwerkbespreking: 'badge-preventie' };
   // Offertes bevatten prijzen die ploegbazen nooit te zien mogen krijgen.
   // Toon daarom NOOIT de originele storage_path voor type Offerte — enkel de
   // automatisch prijs-geredigeerde storage_path_veilig. Ontbreekt die (bv.
@@ -3185,6 +3199,7 @@ async function kiesDocProject(projectId) {
       ${isSwb ? `<button onclick="event.stopPropagation();openSwbInvullen(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
     </div>`;
   }).join('');
+  return data;
 }
 
 // ── Plaatsbezoek (alleen-lezen, uit Project Cockpit) ──────────────────
@@ -3508,6 +3523,7 @@ async function pdfInlineRenderen(container, url) {
 }
 
 let wnGegevens = null;
+let wnAlleGegevens = []; // volledige lijst zoals getoond op het Weeknieuws-scherm (voor toggleWnBriefing)
 
 async function laadWeeknieuws() {
   const client = initSbCockpit();
@@ -3578,6 +3594,8 @@ async function initWeeknieuws() {
     lijst.innerHTML = '<div style="color:#bbb;text-align:center;padding:30px 0">Nog geen briefingen beschikbaar.</div>';
     return;
   }
+  wnAlleGegevens = data;
+  wnGerenderd.clear();
   lijst.innerHTML = data.map(b => {
     const actief = b.geldig_van <= vandaag && b.geldig_tot >= vandaag;
     const verlopen = b.geldig_tot < vandaag;
@@ -3587,15 +3605,8 @@ async function initWeeknieuws() {
       ? `<span style="background:#f5f5f5;color:#aaa;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">Verlopen</span>`
       : `<span style="background:#EEF0FC;color:#3547C8;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">🔵 Gepland</span>`;
     const { data: pub } = client.storage.from('weekbriefing').getPublicUrl(b.pdf_path);
-    const isAfb = wnIsAfbeelding(b.pdf_path);
-    // Actieve briefing: meteen inline tonen, geen klik nodig.
-    const inline = actief
-      ? (isAfb
-          ? `<img src="${escapeHtml(pub.publicUrl)}" style="width:100%;height:auto;border-radius:10px;margin-top:10px;display:block">`
-          : `<div id="wn-pdf-${b.id}" style="margin-top:10px"></div>`)
-      : '';
     return `<div class="prod-card" style="display:flex;flex-direction:column;gap:0">
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;cursor:pointer" onclick="toggleWnBriefing(${b.id})">
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:15px;margin-bottom:4px">📰 ${escapeHtml(b.titel)}</div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -3603,26 +3614,37 @@ async function initWeeknieuws() {
             <span style="font-size:12px;color:#999">${fmtWnDatum(b.geldig_van)} → ${fmtWnDatum(b.geldig_tot)}</span>
           </div>
         </div>
-        <a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener"
+        <a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
            style="flex-shrink:0;padding:10px 14px;background:#3547C8;color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">
           Openen
         </a>
       </div>
-      ${inline}
+      <div id="wn-body-${b.id}" style="display:none;margin-top:10px"></div>
     </div>`;
   }).join('');
+}
 
-  // PDF's van actieve briefingen renderen we pas nadat de containers echt in
-  // de DOM staan (kon niet via de HTML-string hierboven, canvas-rendering
-  // vergt een bestaand element).
-  data.forEach(b => {
-    const actief = b.geldig_van <= vandaag && b.geldig_tot >= vandaag;
-    if (!actief || wnIsAfbeelding(b.pdf_path)) return;
-    const container = document.getElementById(`wn-pdf-${b.id}`);
-    if (!container) return;
-    const { data: pub } = client.storage.from('weekbriefing').getPublicUrl(b.pdf_path);
-    pdfInlineRenderen(container, pub.publicUrl);
-  });
+// Briefing staat standaard toe — pas bij een tik op de kaart wordt hij
+// getoond (en pas dan, lazy, gerenderd) i.p.v. automatisch open te staan.
+const wnGerenderd = new Set();
+function toggleWnBriefing(id) {
+  const body = document.getElementById(`wn-body-${id}`);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  if (open) { body.style.display = 'none'; return; }
+  body.style.display = 'block';
+  if (wnGerenderd.has(id)) return;
+  wnGerenderd.add(id);
+  const b = (wnGegevens || []).find(x => x.id === id) || (wnAlleGegevens || []).find(x => x.id === id);
+  if (!b) return;
+  const client = initSbCockpit();
+  if (!client) return;
+  const { data: pub } = client.storage.from('weekbriefing').getPublicUrl(b.pdf_path);
+  if (wnIsAfbeelding(b.pdf_path)) {
+    body.innerHTML = `<img src="${escapeHtml(pub.publicUrl)}" style="width:100%;height:auto;border-radius:10px;display:block">`;
+  } else {
+    pdfInlineRenderen(body, pub.publicUrl);
+  }
 }
 
 // ── FOTO BEHEER (Supabase Storage, bucket "fotos") ────────
@@ -4635,16 +4657,20 @@ function getProjectenVoorRapport() {
   }
 }
 
+// "Actief" = het project loopt ergens binnen het venster [vandaag-1, vandaag+1]
+// — dus ook een werf die gisteren afliep of morgen pas start telt nog mee,
+// niet enkel exact vandaag.
 function isWerfActief(p) {
   const status = (p.status || '').toLowerCase();
   if (!status.includes('bevestigd')) return false;
   const today = new Date(); today.setHours(0,0,0,0);
-  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  const gisteren = new Date(today); gisteren.setDate(gisteren.getDate() - 1);
+  const morgen = new Date(today); morgen.setDate(morgen.getDate() + 1);
   const fmt = d => d.toISOString().split('T')[0];
-  const todayStr = fmt(today), tomorrowStr = fmt(tomorrow);
+  const gisterenStr = fmt(gisteren), morgenStr = fmt(morgen);
   const start = p.start || '0000-01-01';
   const einde = p.einde || '9999-12-31';
-  return start <= tomorrowStr && einde >= todayStr;
+  return start <= morgenStr && einde >= gisterenStr;
 }
 
 function updateActiveProject() {
