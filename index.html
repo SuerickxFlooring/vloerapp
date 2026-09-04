@@ -1936,7 +1936,7 @@ textarea.form-input{min-height:80px;resize:vertical}
           <div class="det-sec"><h3>🏠 Home — je dashboard</h3>
             <div class="step-list">
               <div class="step-item"><div class="step-num">1</div><div class="step-txt">Na het kiezen van je naam zie je bovenaan meteen of <strong>LMRA</strong> en <strong>Dagregistratie</strong> van vandaag al zijn ingevuld voor jouw werf.</div></div>
-              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Is een van beide om 12u nog niet ingevuld, dan krijgt die regel een <strong>rood kader</strong> met "⏰ Nog steeds niet ingevuld na 12u!" — extra aandacht dus.</div></div>
+              <div class="step-item"><div class="step-num">2</div><div class="step-txt">Is een van beide om 12u nog niet ingevuld, dan krijgt die regel een <strong>rood kader</strong> met "⏰ Nog in te vullen" — extra aandacht dus.</div></div>
               <div class="step-item"><div class="step-num">3</div><div class="step-txt">Daaronder: je actieve project(en), eventuele weerswaarschuwingen en het lokaal weer (tik erop om te vernieuwen).</div></div>
               <div class="step-item"><div class="step-num">4</div><div class="step-txt">Onderaan het menu vind je alle onderdelen: LMRA, Registratie, Projectinfo, Levering, Regiebon, Planning, Producten, Berekening, Handleidingen, Weeknieuws en Aanrijding.</div></div>
             </div>
@@ -4165,7 +4165,7 @@ async function laadMijnDashboard() {
           ? 'border:2px solid #A32D2D;border-radius:10px;background:#FFF3F2;margin:6px;'
           : (isLast ? '' : 'border-bottom:1px solid #f4f5fa;')}">
         <div style="width:36px;height:36px;border-radius:11px;background:${iconBg};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${icon}</div>
-        <div style="flex:1;font-size:13.5px;font-weight:700;color:#1a1a2e;line-height:1.3">${label}${urgent ? '<div style="font-size:11px;font-weight:800;color:#A32D2D;margin-top:2px">⏰ Nog steeds niet ingevuld na 12u!</div>' : ''}</div>
+        <div style="flex:1;font-size:13.5px;font-weight:700;color:#1a1a2e;line-height:1.3">${label}${urgent ? '<div style="font-size:11px;font-weight:800;color:#A32D2D;margin-top:2px">⏰ Nog in te vullen</div>' : ''}</div>
         <div style="flex-shrink:0;padding:7px 13px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;background:${done ? '#EAF3DE' : '#FDECEA'};color:${done ? '#3B6D11' : '#A32D2D'}">${done ? 'Gedaan' : 'Nog in te vullen →'}</div>
       </div>`;
 
