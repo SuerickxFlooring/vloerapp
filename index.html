@@ -3040,29 +3040,36 @@ function setDocPeriodeFilter(periode, btn) {
   renderDocProjecten();
 }
 
+// Haalt cockpit_projecten (en de bijhorende bijlagen) altijd VERS op — dus
+// niet enkel de eerste keer. Cockpit-project-ID's kunnen tussentijds
+// veranderen (bv. wanneer de planning-sync een werf een nieuw projectnummer
+// geeft), en de app blijft vaak de hele dag open op een telefoon. Met een
+// eenmalige cache per sessie bleven LMRA/Projectinfo/Startwerkbespreking dan
+// een verouderd project-ID gebruiken bij het versturen — de inzending kwam
+// wel binnen, maar gekoppeld aan een project-ID dat cockpit niet meer kende,
+// waardoor ze in cockpit als "niet ingevuld" leek (zie bv. Ineos Oxide
+// F26-00194.000, 2026-09-11).
 async function initDocumenten() {
-  if (!docState.projecten) {
-    const lijst = document.getElementById('doc-projecten-lijst');
-    lijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
-    const client = initSbCockpit();
-    if (!client) {
-      lijst.innerHTML = '<div style="color:#c0392b;text-align:center;padding:20px 0">Kon geen verbinding maken met Project Cockpit.</div>';
-      return;
-    }
-    const [projRes, bijlRes] = await Promise.all([
-      client.from('cockpit_projecten')
-        .select('id,projectnummer,werfnaam,startdatum,einddatum')
-        .eq('gearchiveerd', false)
-        .order('startdatum', { ascending: true }),
-      client.from('cockpit_bijlagen').select('project_id,type')
-    ]);
-    if (projRes.error) {
-      lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(projRes.error.message)}</div>`;
-      return;
-    }
-    docState.projecten = projRes.data || [];
-    docState.bijlagen  = bijlRes.data || [];
+  const lijst = document.getElementById('doc-projecten-lijst');
+  lijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
+  const client = initSbCockpit();
+  if (!client) {
+    lijst.innerHTML = '<div style="color:#c0392b;text-align:center;padding:20px 0">Kon geen verbinding maken met Project Cockpit.</div>';
+    return;
   }
+  const [projRes, bijlRes] = await Promise.all([
+    client.from('cockpit_projecten')
+      .select('id,projectnummer,werfnaam,startdatum,einddatum')
+      .eq('gearchiveerd', false)
+      .order('startdatum', { ascending: true }),
+    client.from('cockpit_bijlagen').select('project_id,type')
+  ]);
+  if (projRes.error) {
+    lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(projRes.error.message)}</div>`;
+    return;
+  }
+  docState.projecten = projRes.data || [];
+  docState.bijlagen  = bijlRes.data || [];
   await vulDocZoekMetMijnWerf();
   renderDocProjecten();
 }
@@ -8711,17 +8718,17 @@ async function initLmra() {
 async function lmraLaadProjecten() {
   const sel = document.getElementById('lmra-project');
   if (!sel) return;
-  if (!docState.projecten) {
-    const client = initSbCockpit();
-    if (client) {
-      try {
-        const { data } = await client.from('cockpit_projecten')
-          .select('id,projectnummer,werfnaam,startdatum,einddatum')
-          .eq('gearchiveerd', false)
-          .order('startdatum', { ascending: true });
-        docState.projecten = data || [];
-      } catch(e) { console.warn('[LMRA] projecten laden mislukt:', e.message); }
-    }
+  // Altijd vers ophalen (zie toelichting bij initDocumenten) — anders kan een
+  // LMRA hier tegen een verouderd, inmiddels vervangen project-ID belanden.
+  const client = initSbCockpit();
+  if (client) {
+    try {
+      const { data } = await client.from('cockpit_projecten')
+        .select('id,projectnummer,werfnaam,startdatum,einddatum')
+        .eq('gearchiveerd', false)
+        .order('startdatum', { ascending: true });
+      docState.projecten = data || [];
+    } catch(e) { console.warn('[LMRA] projecten laden mislukt:', e.message); }
   }
   const projs = docState.projecten || [];
   sel.innerHTML = '<option value="">Kies werf...</option>' +
