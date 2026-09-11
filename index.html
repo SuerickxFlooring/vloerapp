@@ -4101,18 +4101,29 @@ function naamOverlap(a, b) {
 // de blote werfnaam.
 function werfNaamKort(s) {
   return (s || '')
-    .replace(/^F\d{2}-\d{5}\.\d{3}\s*/i, '')
-    .replace(/\s*\(F\d{2}-\d{5}\.\d{3}\)\s*$/i, '')
+    .replace(/^[FP]\d{2}-\d{5}\.\d{3}\s*/i, '')
+    .replace(/\s*\([FP]\d{2}-\d{5}\.\d{3}\)\s*$/i, '')
     .trim() || s || '';
 }
-function projectCode(s) {
-  const m = (s || '').match(/F\d{2}-\d{5}\.\d{3}/i);
-  return m ? m[0].toUpperCase() : null;
+// Haalt alle projectcodes uit een string (F- én P-projecten, bv. F26-00148.000
+// of P23-00955.000). Een planning-werf kan er meerdere bevatten wanneer
+// iemand op één dag op meerdere werven staat, bv. "F26-00193.000 Ineos Oxide
+// + F26-00194.000 Ineos Oxide" — vandaar een lijst i.p.v. enkel de eerste.
+function projectCodes(s) {
+  const m = (s || '').match(/[FP]\d{2}-\d{5}\.\d{3}/gi);
+  return m ? m.map(c => c.toUpperCase()) : [];
 }
-function tekstOverlap(a, b) {
-  a = (a || '').toLowerCase().trim();
-  b = (b || '').toLowerCase().trim();
-  if (!a || !b) return false;
+function projectCode(s) {
+  return projectCodes(s)[0] || null;
+}
+// Splitst een (eventueel gecombineerd) planning-label op in de afzonderlijke
+// werven, bv. "Edelchemie + Vynova" -> ["edelchemie", "vynova"]. Nodig omdat
+// iemand op 1 dag op meerdere werven kan staan — de Planning zet die dan
+// samen in 1 tekstveld.
+function werfDelen(s) {
+  return (s || '').split('+').map(x => x.trim()).filter(Boolean);
+}
+function tekstOverlapEnkelvoudig(a, b) {
   // Projectnamen komen uit twee bronnen (Sheets-sync vs. Cockpit) met een andere
   // woordvolgorde, bv. "F26-00274.000 Barry Callebaut Wieze" vs.
   // "Barry Callebaut Wieze (F26-00274.000)". De projectcode is in beide stabiel,
@@ -4120,6 +4131,17 @@ function tekstOverlap(a, b) {
   const codeA = projectCode(a), codeB = projectCode(b);
   if (codeA && codeB) return codeA === codeB;
   return a.includes(b) || b.includes(a);
+}
+function tekstOverlap(a, b) {
+  a = (a || '').toLowerCase().trim();
+  b = (b || '').toLowerCase().trim();
+  if (!a || !b) return false;
+  // Vergelijk elke werf uit a met elke werf uit b — zo telt een match op
+  // één van de gecombineerde werven ook als overlap, i.p.v. dat een
+  // gecombineerd label ("Edelchemie + Vynova") nooit meer matcht met de
+  // effectief ingediende, losse projectnaam ("F26-00148.000 Vynova").
+  const delenA = werfDelen(a), delenB = werfDelen(b);
+  return delenA.some(da => delenB.some(db => tekstOverlapEnkelvoudig(da, db)));
 }
 
 // Zoekt de werf(ven) waar een teamleader vandaag volgens de Planning op
@@ -6139,13 +6161,25 @@ function toonSamenvatting() {
   if (ondergrond0 === '')  ontbrekend.push('Temp. ondergrond');
   if (vocht0 === '')       ontbrekend.push('Vocht ondergrond');
 
+  const geenProducten = regProducten.length === 0;
+
   const missingEl = document.getElementById('samenvatting-missing');
   if (missingEl) {
-    missingEl.innerHTML = ontbrekend.length
-      ? '<div style="background:#FFF8EC;border-radius:10px;padding:12px 14px;color:#8A6116;font-size:13px;margin-bottom:14px">' +
+    const optioneleMelding = ontbrekend.length
+      ? '<div style="background:#FFF8EC;border-radius:10px;padding:12px 14px;color:#8A6116;font-size:13px;margin-bottom:10px">' +
         '⚠️ <strong>Niet ingevuld:</strong> ' + ontbrekend.join(', ') +
         '<div style="font-size:12px;color:#8A6116;opacity:.85;margin-top:4px">Je kan toch versturen — dit is enkel een melding.</div></div>'
       : '';
+    // Zonder product is er geen echte dagregistratie (enkel uren) — dit apart en
+    // dwingend tonen (rood, i.p.v. tussen de andere optionele velden), want dit
+    // wordt anders makkelijk over het hoofd gezien en leek voordien "verstuurd"
+    // terwijl er niets bruikbaars in de cockpit terechtkwam.
+    const productenMelding = geenProducten
+      ? '<div style="background:#FDECEA;border:1px solid #F5C6C0;border-radius:10px;padding:12px 14px;color:#A32D2D;font-size:13px;margin-bottom:10px">' +
+        '🚫 <strong>Geen product toegevoegd</strong> — zonder product wordt enkel je uren opgeslagen, geen dagregistratie met verbruik. Ga terug naar stap 3 om een product toe te voegen, tenzij dit bewust is (bv. enkel voorbereiding vandaag).' +
+        '</div>'
+      : '';
+    missingEl.innerHTML = productenMelding + optioneleMelding;
   }
   const errEl = document.getElementById('r-form-error');
   if (errEl) errEl.innerHTML = '';
@@ -6211,6 +6245,10 @@ function closeSamenvatting() {
 }
 
 async function bevestigEnVerstuur() {
+  if (regProducten.length === 0) {
+    const doorgaan = confirm('Je hebt geen product toegevoegd — er wordt dan enkel je uren opgeslagen, geen dagregistratie met verbruik.\n\nToch versturen zonder product?');
+    if (!doorgaan) return;
+  }
   const statusEl = document.getElementById('samenvatting-status');
   const btn = document.querySelector('#samenvatting-modal .btn-green');
   btn.disabled = true;
