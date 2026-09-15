@@ -5175,11 +5175,20 @@ function kopieerVorigeRegistratie() {
   if (optionExists) {
     if (manProj.style.display !== 'none') toggleManualProject();
     selProj.value = last.project;
-  } else if (last.project) {
-    if (manProj.style.display === 'none') toggleManualProject();
-    manProj.value = last.project;
+    hiddenProj.value = last.project;
+  } else {
+    // De vorige werf staat niet (meer) in de actuele lijst — bv. omdat ze
+    // toen zelf vrij werd ingetypt, of nooit gekozen ("Onbekend project").
+    // Dat blindelings terug in het vrije tekstveld zetten liet zo'n foute of
+    // niet-gekoppelde werfnaam telkens weer doorsijpelen naar de volgende
+    // registratie (want de volgende "Vorige keer overnemen" pakt hem dan
+    // gewoon weer over) — vandaar hier bewust leeg laten en een verse,
+    // bewuste keuze afdwingen.
+    if (manProj.style.display !== 'none') toggleManualProject();
+    selProj.value = '';
+    hiddenProj.value = '';
+    if (last.project) alert('Let op: de vorige werf ("' + last.project + '") staat niet (meer) in de lijst — kies hieronder opnieuw de juiste werf.');
   }
-  hiddenProj.value = last.project || '';
 
   const tl = document.getElementById('r-teamleader');
   if (tl && last.teamleader) tl.value = last.teamleader;
@@ -6252,6 +6261,13 @@ function closeSamenvatting() {
 }
 
 async function bevestigEnVerstuur() {
+  const selProj = document.getElementById('r-project-select');
+  const manProj = document.getElementById('r-project-manual');
+  const projectWaarde = (manProj && manProj.style.display !== 'none' ? manProj.value : selProj ? selProj.value : '').trim();
+  if (!projectWaarde) {
+    const doorgaan = confirm('Je hebt geen werf gekozen — deze registratie wordt dan opgeslagen als "Onbekend project" en is voor kantoor niet meer terug te vinden bij de juiste werf.\n\nToch versturen zonder werf?');
+    if (!doorgaan) return;
+  }
   if (regProducten.length === 0) {
     const doorgaan = confirm('Je hebt geen product toegevoegd — er wordt dan enkel je uren opgeslagen, geen dagregistratie met verbruik.\n\nToch versturen zonder product?');
     if (!doorgaan) return;
