@@ -1203,10 +1203,22 @@ textarea.form-input{min-height:80px;resize:vertical}
           <div id="r-teamleden-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
           <input type="hidden" id="r-teamleden">
         </div>
-        <div class="form-group">
+        <div id="r-meetstaat-wrap"></div>
+        <div class="form-group" id="r-omschrijving-wrap">
           <label class="form-label">Omschrijving van de werken</label>
           <textarea class="form-input" id="r-omschrijving" rows="2" placeholder="bv. slijpen en egaline aanbrengen in hal 2..."></textarea>
         </div>
+        <div class="step-nav-row">
+          <button class="btn-primary" onclick="regGoToStep(2)">Volgende →</button>
+        </div>
+      </div>
+
+      <!-- ── STAP 3: Producten toevoegen (optioneel) ── -->
+      <div class="reg-step" data-step="3">
+        <div class="reg-step-meta">Stap 3 van 4 — Producten <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">(optioneel)</span></div>
+
+        <!-- Ondergrond eerst kiezen: geldt als voorstel voor elk product dat je
+             hierna toevoegt (per product hieronder nog aan te passen indien nodig). -->
         <div class="form-group">
           <label class="form-label">Type ondervloer</label>
           <select class="form-select" id="r-vloer" onchange="checkVerbruik()">
@@ -1217,14 +1229,6 @@ textarea.form-input{min-height:80px;resize:vertical}
             <option value="onbekend">Onbekend / te beoordelen</option>
           </select>
         </div>
-        <div class="step-nav-row">
-          <button class="btn-primary" onclick="regGoToStep(2)">Volgende →</button>
-        </div>
-      </div>
-
-      <!-- ── STAP 3: Producten toevoegen (optioneel) ── -->
-      <div class="reg-step" data-step="3">
-        <div class="reg-step-meta">Stap 3 van 4 — Producten <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">(optioneel)</span></div>
 
         <!-- Product zoeken & selecteren -->
         <div class="form-group">
@@ -4558,6 +4562,117 @@ function onProjectSelect() {
   const sel = document.getElementById('r-project-select');
   const hidden = document.getElementById('r-project');
   hidden.value = sel.value;
+  laadMeetstaatPostenVoorRegistratie();
+}
+
+// ── Meetstaatpost kiezen bij een dagregistratie ─────────────────────────
+// Zodra een geldig project gekozen is (via de lijst, niet vrije invoer),
+// halen we de meetstaatposten van dat project op uit Project Cockpit zodat
+// de ploegbaas zijn uren meteen aan de juiste post kan koppelen i.p.v. dat
+// kantoor dit nadien manueel moet uitzoeken bij Meetstaat-controle. Geen
+// posten gevonden (nog geen calculatiebestand geüpload, of vrij project) →
+// gewoon het bestaande vrije-tekstveld tonen, zoals voorheen.
+let regMeetstaatPosten = [];
+let regMeetstaatGeselecteerd = new Set();
+let regMeetstaatVrijeInvoer = false;
+
+async function laadMeetstaatPostenVoorRegistratie() {
+  regMeetstaatPosten = [];
+  regMeetstaatGeselecteerd = new Set();
+  regMeetstaatVrijeInvoer = false;
+  renderMeetstaatPicker();
+  const manProj = document.getElementById('r-project-manual');
+  const isManual = manProj && manProj.style.display !== 'none';
+  const projectTekst = (document.getElementById('r-project').value || '').trim();
+  if (isManual || !projectTekst) return;
+  const client = initSbCockpit();
+  if (!client) return;
+  const wrap = document.getElementById('r-meetstaat-wrap');
+  if (wrap) wrap.innerHTML = '<div style="color:#aaa;font-size:13px;padding:6px 0">Meetstaatposten laden...</div>';
+  try {
+    const { data: projs } = await client.from('cockpit_projecten')
+      .select('id,projectnummer,werfnaam').eq('gearchiveerd', false);
+    const match = (projs || []).find(p => tekstOverlap(projectTekst, p.projectnummer || '') || tekstOverlap(projectTekst, p.werfnaam || ''));
+    if (!match) { regMeetstaatPosten = []; renderMeetstaatPicker(); return; }
+    const { data: posten } = await client.from('cockpit_meetstaatposten')
+      .select('id,omschrijving,aantal,eenheid')
+      .eq('project_id', match.id).eq('actief', true).order('volgnr');
+    regMeetstaatPosten = posten || [];
+  } catch(e) {
+    console.warn('[Meetstaat] Laden mislukt:', e.message);
+    regMeetstaatPosten = [];
+  }
+  renderMeetstaatPicker();
+}
+
+function renderMeetstaatPicker() {
+  const wrap = document.getElementById('r-meetstaat-wrap');
+  const omschrWrap = document.getElementById('r-omschrijving-wrap');
+  if (!wrap) return;
+  if (!regMeetstaatPosten.length) {
+    wrap.innerHTML = '';
+    if (omschrWrap) omschrWrap.style.display = '';
+    return;
+  }
+  if (regMeetstaatVrijeInvoer) {
+    wrap.innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Aan welke meetstaatpost(en) werkte je?</label>
+        <button type="button" onclick="regMeetstaatTerugNaarLijst()" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer;text-align:left">← Terug naar lijst met meetstaatposten</button>
+      </div>`;
+    if (omschrWrap) omschrWrap.style.display = '';
+    return;
+  }
+  if (omschrWrap) omschrWrap.style.display = 'none';
+  wrap.innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Aan welke meetstaatpost(en) werkte je?</label>
+      <div style="border:1px solid #ddd;border-radius:10px;max-height:240px;overflow-y:auto;background:#fff">
+        ${regMeetstaatPosten.map(p => `
+          <label style="display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border-bottom:1px solid #eee;cursor:pointer">
+            <input type="checkbox" style="margin-top:3px;width:18px;height:18px;flex-shrink:0" onchange="toggleMeetstaatPost(${p.id}, this.checked)" ${regMeetstaatGeselecteerd.has(p.id) ? 'checked' : ''}>
+            <span style="font-size:14px;line-height:1.3">${escapeHtml(p.omschrijving)}${p.aantal != null ? ` <span style="color:#999;font-size:12.5px">(${p.aantal}${p.eenheid ? ' ' + escapeHtml(p.eenheid) : ''})</span>` : ''}</span>
+          </label>`).join('')}
+      </div>
+      <button type="button" onclick="regMeetstaatVrijInvoeren()" style="width:100%;margin-top:8px;padding:10px 12px;border:1px dashed #999;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer">✏️ Mijn werk staat er niet bij / zelf invoeren</button>
+    </div>`;
+}
+
+function toggleMeetstaatPost(id, checked) {
+  if (checked) regMeetstaatGeselecteerd.add(id);
+  else regMeetstaatGeselecteerd.delete(id);
+}
+function regMeetstaatVrijInvoeren() {
+  regMeetstaatVrijeInvoer = true;
+  regMeetstaatGeselecteerd = new Set();
+  renderMeetstaatPicker();
+}
+function regMeetstaatTerugNaarLijst() {
+  regMeetstaatVrijeInvoer = false;
+  renderMeetstaatPicker();
+}
+// Herstelt een opgeslagen meetstaat-keuze bij het hervatten van een concept.
+// Herlaadt eerst de posten van het (al ingevulde) project en past de eerder
+// aangevinkte selectie/"zelf invoeren"-status daarna terug toe — het project-
+// veld moet op dat moment al gezet zijn door regApplyState hierboven.
+async function herstelMeetstaatSelectie(gekozenIds, vrijeInvoer) {
+  await laadMeetstaatPostenVoorRegistratie();
+  if (vrijeInvoer) {
+    regMeetstaatVrijeInvoer = true;
+  } else if (gekozenIds && gekozenIds.length) {
+    regMeetstaatGeselecteerd = new Set(gekozenIds);
+  }
+  renderMeetstaatPicker();
+}
+
+function resetMeetstaatPicker() {
+  regMeetstaatPosten = [];
+  regMeetstaatGeselecteerd = new Set();
+  regMeetstaatVrijeInvoer = false;
+  const wrap = document.getElementById('r-meetstaat-wrap');
+  if (wrap) wrap.innerHTML = '';
+  const omschrWrap = document.getElementById('r-omschrijving-wrap');
+  if (omschrWrap) omschrWrap.style.display = '';
 }
 
 function toggleManualProduct() {
@@ -4620,6 +4735,7 @@ function toggleManualProject() {
     btn.textContent = '✕ Lijst';
     manual.focus();
     manual.oninput = () => { hidden.value = manual.value; };
+    resetMeetstaatPicker();
   } else {
     manual.style.display = 'none';
     sel.style.opacity = '1';
@@ -4628,6 +4744,7 @@ function toggleManualProject() {
     btn.style.color = '#1a1a1a';
     btn.textContent = '✏️ Vrij';
     hidden.value = sel.value;
+    laadMeetstaatPostenVoorRegistratie();
   }
 }
 
@@ -4938,6 +5055,7 @@ function resetRegStappen() {
   // Productenlijst wissen
   regProducten = [];
   updateRegProductenLijst();
+  resetMeetstaatPicker();
   regGoToStep(1);
 }
 
@@ -4971,6 +5089,8 @@ function regSerializeState() {
     man: document.getElementById('r-man')?.value || '',
     teamleden: regTeamledenGeselecteerd.slice(),
     omschrijving: document.getElementById('r-omschrijving')?.value || '',
+    meetstaatGeselecteerd: Array.from(regMeetstaatGeselecteerd),
+    meetstaatVrijeInvoer: regMeetstaatVrijeInvoer,
     vloer: document.getElementById('r-vloer')?.value || '',
     producten: JSON.parse(JSON.stringify(regProducten)),
     temp: document.getElementById('r-temp')?.value || '',
@@ -5017,6 +5137,7 @@ function regApplyState(s) {
   setVal('r-uren', s.uren);
   setVal('r-man', s.man);
   setVal('r-omschrijving', s.omschrijving);
+  herstelMeetstaatSelectie(s.meetstaatGeselecteerd, s.meetstaatVrijeInvoer);
   setVal('r-vloer', s.vloer);
   setVal('r-temp', s.temp);
   setVal('r-rv', s.rv);
@@ -5176,6 +5297,7 @@ function kopieerVorigeRegistratie() {
     if (manProj.style.display !== 'none') toggleManualProject();
     selProj.value = last.project;
     hiddenProj.value = last.project;
+    laadMeetstaatPostenVoorRegistratie();
   } else {
     // De vorige werf staat niet (meer) in de actuele lijst — bv. omdat ze
     // toen zelf vrij werd ingetypt, of nooit gekozen ("Onbekend project").
@@ -5498,6 +5620,15 @@ function updateRegProductenLijst() {
           </div>
         </div>
         <button onclick="regProducten.splice(${i},1);updateRegProductenLijst();regAutosave()" style="background:none;border:none;color:#999;font-size:18px;cursor:pointer;padding:0 0 0 8px;line-height:1">✕</button>
+      </div>
+      <div style="margin-top:8px">
+        <select onchange="regProducten[${i}].ondervloer=this.value;regAutosave()" style="padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:12.5px;background:#fff;color:#555">
+          <option value="" ${!p.ondervloer?'selected':''}>Ondergrond: onbekend</option>
+          <option value="nieuwbeton" ${p.ondervloer==='nieuwbeton'?'selected':''}>Nieuw beton (&lt; 28 dagen)</option>
+          <option value="oudbeton" ${p.ondervloer==='oudbeton'?'selected':''}>Oud beton (&gt; 28 dagen)</option>
+          <option value="coating" ${p.ondervloer==='coating'?'selected':''}>Bestaande coating</option>
+          <option value="onbekend" ${p.ondervloer==='onbekend'?'selected':''}>Onbekend / te beoordelen</option>
+        </select>
       </div>
     </div>`).join('');
 }
@@ -6222,6 +6353,7 @@ function toonSamenvatting() {
     return `<div style="background:#f7f8fc;border:1px solid #e4e7f0;border-radius:10px;padding:12px 14px;margin-bottom:10px">
       <div style="font-size:12px;font-weight:700;color:#3547C8;margin-bottom:6px">Product ${i+1}</div>
       ${row('Product', escapeHtml(p.product))}
+      ${row('Ondergrond', vloerLabels[p.ondervloer] || '–')}
       ${row('Opp.', p.opp ? p.opp + ' m²' : '–')}
       ${dikteRij}
       ${row('Verbruikt', p.kg + ' ' + p.eenheid)}
@@ -6324,7 +6456,28 @@ async function insertRegistratieInSupabase(reg) {
   // hierdoor leken registraties van teamleaders nooit door te komen.
   const { data, error } = await sb.rpc('submit_registratie', { p: payload, p_fotos: fotosPayload });
   if (error) throw error;
-  return { id: data };
+  const registratieId = data;
+
+  // Meetstaatpost-koppeling: schrijft rechtstreeks naar Project Cockpit
+  // (cockpit_meetstaat_koppelingen) zodat de gekozen post(en) meteen mee
+  // tellen bij Meetstaat-controle, zonder dat kantoor dit nog manueel moet
+  // koppelen. Best-effort: mag het versturen van de registratie zelf nooit
+  // blokkeren (bv. bij offline/mislukte cross-project call) — de registratie
+  // komt dan gewoon binnen zonder koppeling, net als vóór deze functie bestond.
+  if (reg.meetstaatpostIds && reg.meetstaatpostIds.length) {
+    try {
+      const cpClient = initSbCockpit();
+      if (cpClient) {
+        await cpClient.from('cockpit_meetstaat_koppelingen').insert(
+          reg.meetstaatpostIds.map(mid => ({ meetstaatpost_id: mid, registratie_id: registratieId }))
+        );
+      }
+    } catch(e) {
+      console.warn('[Meetstaat] Koppeling opslaan mislukt:', e.message);
+    }
+  }
+
+  return { id: registratieId };
 }
 
 async function submitRegistratie() {
@@ -6399,7 +6552,8 @@ async function submitRegistratie() {
     aantalFotos,
     _fotoUrls: fotoUrls,
     _fotoPaths: fotoPaths,
-    statusCheck: p.statusCheck === 'ok' ? '✅ OK' : p.statusCheck === 'hoog' ? '⚠️ Oververbruik' : p.statusCheck === 'laag' ? '⚠️ Onderverbruik' : '✅ OK'
+    statusCheck: p.statusCheck === 'ok' ? '✅ OK' : p.statusCheck === 'hoog' ? '⚠️ Oververbruik' : p.statusCheck === 'laag' ? '⚠️ Onderverbruik' : '✅ OK',
+    meetstaatpostIds: Array.from(regMeetstaatGeselecteerd)
   }));
 
   // Lokaal opslaan
@@ -6466,6 +6620,7 @@ async function submitRegistratie() {
     document.getElementById('r-man').value = '';
     resetTeamledenSelectie();
     document.getElementById('r-omschrijving').value = '';
+    resetMeetstaatPicker();
     resetFotos();
     document.getElementById('verbruik-check').innerHTML = '';
     document.getElementById('dauwpunt-info').innerHTML = '';
