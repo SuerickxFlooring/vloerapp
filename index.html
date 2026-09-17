@@ -2538,11 +2538,19 @@ textarea.form-input{min-height:80px;resize:vertical}
 
     <!-- Progress bar -->
     <div style="display:flex;gap:4px;padding:12px 16px 0">
-      <div id="swb-step-1" class="step-dot active" style="flex:1;height:4px;border-radius:2px;background:#3547C8"></div>
+      <div id="swb-step-0" class="step-dot active" style="flex:1;height:4px;border-radius:2px;background:#3547C8"></div>
+      <div id="swb-step-1" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
       <div id="swb-step-2" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
       <div id="swb-step-3" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
     </div>
-    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="swb-step-label">Stap 1 van 3 — Basisgegevens</div>
+    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="swb-step-label">Stap 1 van 4 — Veiligheidsinstructies</div>
+
+    <!-- STAP 0: Inhoud van de startwerkbespreking (lezen vóór invullen) —
+         dezelfde inhoud als de PDF die WerfKompas Beheer genereert
+         (regels, taakspecifieke risico's, PBM, klantafspraken), maar in een
+         overzichtelijke, doorscrolbare mobiele vorm i.p.v. enkel een link
+         naar het PDF-bestand. -->
+    <div id="swb-stap-0" style="padding:12px 16px"></div>
 
     <!-- STAP 1: Basisgegevens -->
     <div id="swb-stap-1" style="padding:12px 16px">
@@ -3110,7 +3118,7 @@ async function gaNaarStartwerk(werf) {
   const bijlagen = await kiesDocProject(match.id);
   const swb = (bijlagen || []).find(b => b.type === 'Startwerkbespreking');
   if (swb) {
-    openSwbInvullen(match.id, swb.id);
+    openSwbInvullen(match.id, swb);
   } else {
     // Kantoor heeft voor deze werf nog geen startwerkbespreking-document
     // klaargezet — de gebruiker blijft op de documentenlijst staan, met
@@ -3185,6 +3193,7 @@ async function kiesDocProject(projectId) {
     bijlLijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(error.message)}</div>`;
     return [];
   }
+  docState.huidigeBijlagen = data || [];
   if (!data || !data.length) {
     bijlLijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px 14px">Nog geen documenten geüpload voor deze werf.</div>';
     return [];
@@ -3213,7 +3222,7 @@ async function kiesDocProject(projectId) {
       ${veiligOntbreekt
         ? `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;opacity:.55">${inhoud}</div>`
         : `<a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;flex:1;min-width:0">${inhoud}</a>`}
-      ${isSwb ? `<button onclick="event.stopPropagation();openSwbInvullen(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
+      ${isSwb ? `<button onclick="event.stopPropagation();openSwbInvullenVanuitLijst(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
     </div>`;
   }).join('');
   return data;
@@ -8612,18 +8621,32 @@ let swbDeelnemers = [];
 let swbNextId = 0;
 const swbSigState = {};
 
-function openSwbInvullen(projectId, bijlageId) {
+// `bijlage` is de volledige cockpit_bijlagen-rij (niet enkel het id) — nodig
+// om swb_hoogrisico_json (de taakspecifieke risico's uit de TRA) mee te geven
+// aan de inhoud-stap hieronder.
+function openSwbInvullen(projectId, bijlage) {
   const proj = (docState.projecten || []).find(p => p.id === projectId);
-  swbState = { projectId, bijlageId, werfnaam: proj?.werfnaam || '' };
+  const bijlageId = bijlage && typeof bijlage === 'object' ? bijlage.id : bijlage;
+  const hoogRisico = (bijlage && Array.isArray(bijlage.swb_hoogrisico_json)) ? bijlage.swb_hoogrisico_json : [];
+  swbState = { projectId, bijlageId, werfnaam: proj?.werfnaam || '', hoogRisico };
   document.getElementById('swb-opdrachtgever').value = '';
   document.getElementById('swb-werf-ploeg').value = swbState.werfnaam;
   document.getElementById('swb-locatie').value = '';
   document.getElementById('swb-datum').value = new Date().toISOString().split('T')[0];
   document.getElementById('swb-uitgevoerd-door').value = '';
-  swbStapNr = 1;
+  swbStapNr = 0;
+  renderSwbInhoud();
   swbInitDeelnemers();
   go('s-swb-invullen');
   updateSwbNav();
+}
+
+// Wordt gebruikt vanuit de bijlagenlijst (✏️ Invullen-knop), waar enkel
+// project_id/bijlage-id in het onclick-attribuut passen — zoekt de volledige
+// bijlage-rij op uit de laatst geladen lijst i.p.v. een nieuwe query te doen.
+function openSwbInvullenVanuitLijst(projectId, bijlageId) {
+  const bijlage = (docState.huidigeBijlagen || []).find(b => b.id === bijlageId);
+  openSwbInvullen(projectId, bijlage);
 }
 
 function terugVanSwbInvullen() {
@@ -8754,27 +8777,128 @@ function swbGetCanvasData(id) {
 }
 
 function swbStap(delta) {
+  if (delta > 0 && swbStapNr === 0) {
+    const check = document.getElementById('swb-gelezen-check');
+    if (!check || !check.checked) { alert('Bevestig eerst dat je de veiligheidsinstructies gelezen en begrepen hebt.'); return; }
+  }
   if (delta > 0 && swbStapNr === 1) {
     const werf = document.getElementById('swb-werf-ploeg').value.trim();
     if (!werf) { alert('Vul minstens werf/ploeg in.'); return; }
   }
-  swbStapNr = Math.max(1, Math.min(3, swbStapNr + delta));
+  swbStapNr = Math.max(0, Math.min(3, swbStapNr + delta));
   updateSwbNav();
   if (swbStapNr === 3) renderSwbSamenvatting();
 }
 
 function updateSwbNav() {
-  [1, 2, 3].forEach(n => {
+  [0, 1, 2, 3].forEach(n => {
     document.getElementById(`swb-stap-${n}`).style.display = n === swbStapNr ? 'block' : 'none';
     document.getElementById(`swb-step-${n}`).style.background = n <= swbStapNr ? '#3547C8' : '#ddd';
   });
-  const labels = ['Stap 1 van 3 — Basisgegevens', 'Stap 2 van 3 — Deelnemers', 'Stap 3 van 3 — Overzicht & versturen'];
-  document.getElementById('swb-step-label').textContent = labels[swbStapNr - 1];
-  document.getElementById('swb-vorige-btn').style.display  = swbStapNr > 1 ? 'block' : 'none';
-  document.getElementById('swb-volgende-btn').style.display = swbStapNr < 3 ? 'block' : 'none';
+  const labels = ['Stap 1 van 4 — Veiligheidsinstructies', 'Stap 2 van 4 — Basisgegevens', 'Stap 3 van 4 — Deelnemers', 'Stap 4 van 4 — Overzicht & versturen'];
+  document.getElementById('swb-step-label').textContent = labels[swbStapNr];
+  document.getElementById('swb-vorige-btn').style.display  = swbStapNr > 0 ? 'block' : 'none';
+  const gelezenOk = swbStapNr !== 0 || !!(document.getElementById('swb-gelezen-check') && document.getElementById('swb-gelezen-check').checked);
+  const volgendeBtn = document.getElementById('swb-volgende-btn');
+  volgendeBtn.style.display = swbStapNr < 3 ? 'block' : 'none';
+  volgendeBtn.disabled = swbStapNr === 0 && !gelezenOk;
+  volgendeBtn.style.opacity = (swbStapNr === 0 && !gelezenOk) ? '.5' : '1';
   document.getElementById('swb-submit-btn').style.display  = swbStapNr === 3 ? 'block' : 'none';
   document.getElementById('swb-submit-status').innerHTML = '';
   if (swbStapNr === 2) { setTimeout(() => swbDeelnemers.forEach(d => swbSetupCanvas(d.id)), 50); }
+}
+
+// ── Inhoud van de startwerkbespreking — zelfde tekst/structuur als de PDF
+// die WerfKompas Beheer genereert (swbBuild), hier als leesbare mobiele
+// kaarten i.p.v. tabel/PDF. De ploegbaas moet dit eerst doorlopen (en
+// bevestigen dat hij het gelezen heeft) vóór hij naar de basisgegevens en
+// het aftekenveld mag — voorheen sprong de app daar meteen naartoe.
+const SWB_REGELS_GS = [
+  'Aanmelden/afmelden: hoe en bij wie',
+  'Start-werk meeting + TRA + VGM-plan zijn on-site beschikbaar',
+  'Werkvergunningen in orde vóór start',
+  'Vuurvergunningen + bijhorende maatregelen',
+  'Incidenten, bijna-incidenten, onveilige situaties/handelingen en klachten: meld dit meteen: contactgegevens op de werkvergunning + meld aan de GS-verantwoordelijke',
+  'Werk-specifieke risico\'s en maatregelen: zie verderop in dit document',
+  'LMRA op papier vóór start van de dagtaak — en STOP-DENK-DOE vóór elke handeling',
+  'Housekeeping: hou de werkplek zuiver en laat ze zuiver en veilig achter: dek openingen af, span de werkzone af, verwijder afval,...',
+];
+const SWB_KLANT_AFSPRAKEN = [
+  'Poortfilm met veiligheidsintroductie — door iedereen gevolgd vóór start van de werken',
+  'Sanitair / refter / rookplaats — voorzien door de klant',
+  'Noodplan / noodvoorziening / evacuatie / verzamelplaats',
+  'EHBO',
+  'Contactpersoon + contactgegevens op de vergunning',
+  'Aanmelden/afmelden bij de verantwoordelijke — hoe en wat',
+  'Klant-eigen risico\'s: eigen aan werk, omgeving, installatie, nabijgelegen werken',
+  'Hoe melden van incidenten/bijna-incidenten/onveilige situaties en klachten',
+];
+const SWB_PBM_STANDAARD = [
+  'Standaard kledij GS (Multinorm / antistatisch + Fluo)',
+  'Veiligheidsschoenen, S3 hoog',
+  'Veiligheidshelm + kinriem',
+  'Veiligheidsbril',
+  'Handschoenen, afgestemd op de werken',
+  'Gehoorbescherming (altijd bij — vanaf 85 dB)',
+];
+const SWB_PBM_OPTIONEEL = [
+  'Optioneel — Ruimzichtbril: bij kans op spatten / spaanders / oogcontact',
+  'Optioneel — Harnas + leeflijn (dubbele haak): bij valgevaar én gebruik hoogwerker',
+];
+
+function swbRisicoKleur(rWaarde) {
+  const r = parseFloat(rWaarde);
+  if (isNaN(r)) return '#eee';
+  if (r >= 400) return '#F5C6C6';
+  if (r >= 200) return '#FCE3B0';
+  return '#DCEFD1';
+}
+
+function swbChecklist(items) {
+  return items.map(t => `<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f4f5fa;font-size:13px;color:#333"><span style="color:#3547C8;flex-shrink:0">✓</span><span>${escapeHtml(t)}</span></div>`).join('');
+}
+
+function renderSwbInhoud() {
+  const hoogRisico = swbState.hoogRisico || [];
+  const risicoHtml = hoogRisico.length
+    ? hoogRisico.map(info => `
+      <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="font-weight:700;font-size:13.5px;flex:1">${escapeHtml(info.act || '')}</div>
+          <div style="flex-shrink:0;background:${swbRisicoKleur(info.r)};color:#5c2e00;font-weight:800;font-size:12px;padding:2px 9px;border-radius:20px">R ${escapeHtml(String(info.r ?? '—'))}</div>
+        </div>
+        <div style="font-size:12px;color:#777;margin-top:6px"><strong>Gevaar:</strong> ${escapeHtml(info.bron || '—')}</div>
+        <div style="font-size:12px;color:#777;margin-top:2px"><strong>Gevolg:</strong> ${escapeHtml(info.gevolg || '—')}</div>
+        <div style="font-size:12.5px;color:#1a1a2e;margin-top:6px;background:#EEF0FC;border-radius:8px;padding:8px 10px"><strong>🛡️ Maatregel:</strong> ${escapeHtml(info.preventie || '—')}</div>
+      </div>`).join('')
+    : `<div style="font-size:12.5px;color:#888;font-style:italic;padding:8px 0 4px">Geen taakspecifieke risico's met R ≥ 400 gevonden voor deze werf.</div>`;
+
+  const pbmHtml = [...SWB_PBM_STANDAARD, ...SWB_PBM_OPTIONEEL]
+    .map(label => `<div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:10px;padding:8px 10px;font-size:12.5px;color:#333">🦺 ${escapeHtml(label)}</div>`)
+    .join('');
+
+  document.getElementById('swb-stap-0').innerHTML = `
+    <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:16px">ℹ️ Lees dit samen met de ploeg door vóór je begint. Onderaan vul je de gegevens in en teken je af.</div>
+
+    <div style="font-weight:800;font-size:14px;margin:6px 0 8px">📋 Algemene regels — Group Suerickx</div>
+    <div style="background:#fff;border-radius:12px;padding:6px 12px;margin-bottom:18px">${swbChecklist(SWB_REGELS_GS)}</div>
+
+    <div style="font-weight:800;font-size:14px;margin:6px 0 8px">⚠️ Taakspecifieke risico's (R ≥ 400)</div>
+    ${risicoHtml}
+
+    <div style="font-weight:800;font-size:14px;margin:18px 0 8px">🦺 Verplichte PBM</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">${pbmHtml}</div>
+
+    <div style="font-weight:800;font-size:14px;margin:6px 0 8px">🏢 Afspraken van de klant</div>
+    <div style="background:#fff;border-radius:12px;padding:6px 12px;margin-bottom:18px">${swbChecklist(SWB_KLANT_AFSPRAKEN)}</div>
+
+    <div style="background:#FDECEA;border-left:4px solid #A32D2D;border-radius:8px;padding:10px;font-size:12.5px;color:#A32D2D;font-weight:700;margin-bottom:6px">🛑 STOP: als het niet veilig kan, dan doen we het niet!</div>
+
+    <label style="display:flex;align-items:flex-start;gap:10px;margin-top:18px;padding:12px;background:#fff;border:1.5px solid #3547C8;border-radius:12px;cursor:pointer">
+      <input type="checkbox" id="swb-gelezen-check" style="width:20px;height:20px;flex-shrink:0;margin-top:1px" onchange="updateSwbNav()">
+      <span style="font-size:13px;font-weight:600;color:#1a1a2e">Ik heb deze instructies samen met de ploeg gelezen en begrepen.</span>
+    </label>
+  `;
 }
 
 function renderSwbSamenvatting() {
@@ -9058,6 +9182,9 @@ const CHANGELOG_VA = [
     {icon:'🚐', titel:'Pechverhelping werfbusje', tekst:'Nieuwe handleiding bij Handleidingen: wat te doen bij pech of een ongeval, ook op de autosnelweg.'},
     {icon:'📰', titel:'Weekbriefing beter zichtbaar', tekst:'De actieve briefing van kantoor wordt nu meteen getoond, zonder eerst op "Openen" te moeten klikken.'},
     {icon:'🕐', titel:'Slimmere urencontrole', tekst:'Vul je per ongeluk het totaal van de hele ploeg in bij "Uren per persoon"? De app rekent dit nu automatisch om.'},
+  ]},
+  { version:3, datum:'17 september 2026', items:[
+    {icon:'🦺', titel:'Startwerkbespreking: inhoud eerst lezen, dan aftekenen', tekst:'Bij het invullen van de startwerkbespreking zie je nu eerst de volledige inhoud (regels, taakspecifieke risico\'s, verplichte PBM en klantafspraken) overzichtelijk op je scherm, in plaats van meteen naar het aftekenveld te springen. Bevestig dat je dit gelezen hebt om verder te gaan naar de gegevens en handtekeningen.'},
   ]},
 ];
 
