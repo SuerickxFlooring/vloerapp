@@ -2977,6 +2977,51 @@ textarea.form-input{min-height:80px;resize:vertical}
 
 <script>
 // ═══════════════════════════════════════════════════════════
+// KAART VAN DIT BESTAND — lees dit eerst
+// ═══════════════════════════════════════════════════════════
+// WerfKompas Assistent is bewust één groot, framework-loos bestand: geen
+// build-stap, geen modules, alles in deze <script>-tag. Navigeer met Ctrl+F
+// op de vetgedrukte sectienaam hieronder (elke sectie begint met een
+// banner-comment zoals hierboven "STATE & STORAGE"). Zie ook README.md voor
+// techstack, hosting en deploy (LET OP: hier deployt een git push naar
+// `main` WEL automatisch via GitHub Pages — anders dan bij WerfKompas
+// Beheer, zie README).
+//
+// Volgorde van de secties in dit bestand:
+//   STATE & STORAGE      globale filters + Supabase-client (initSupabase())
+//   LOGIN                lichte identificatie per teamleider (geen wachtwoord)
+//   NAVIGATIE            goDesktop() — schermwissel
+//   DATA LADEN           Supabase-data ophalen, met lokale fallback
+//   WEER                 Open-Meteo (gratis, geen API key nodig)
+//   PRODUCTEN / BEREKENING / DAUWPUNT & VOCHT
+//                        rekenkern van de dagregistratie (materiaalverbruik,
+//                        dauwpunt-/vochtcontrole vóór het aanbrengen van vloer)
+//   DAGREGISTRATIE OPSLAAN & NAAR POWER AUTOMATE
+//                        wegschrijven + doorsturen van de ingevulde registratie
+//   INSTELLINGEN         eigen Supabase-URL/key overschrijven (tandwiel-icoon)
+//   OFFLINE SYNC         wachtende registraties alsnog versturen bij verbinding
+//   BEHEER (admin) + PLANNING   login + CRUD + CSV-import, projectplanning
+//   AANRIJDING           digitaal Europees aanrijdingsformulier
+//   SCHETS               vector-tekeneditor voor de situatieschets (aanrijding)
+//   PAGINA 2             gedetailleerde aangifte voor de verzekeraar
+//   STARTWERKBESPREKING (SWB)   invullen door de ploegbaas + versturen naar
+//                        WerfKompas Beheer (gedeelde Supabase-tabellen)
+//   LMRA                 Laatste-Minuut-RisicoAnalyse, elke ochtend per project
+//   UPDATE-VENSTER       changelog-popup per releaseversie, per toestel
+//   INIT                 DOMContentLoaded — opstartvolgorde van de hele app
+//
+// Niet-vanzelfsprekende conventies:
+// - Gebruik altijd de publieke **anon** Supabase-key, nooit de service_role
+//   key — ook niet bij het instellingen-scherm (zie INSTELLINGEN). Toegang
+//   wordt afgedwongen via Row Level Security aan de databasekant.
+// - Deze app deelt een deel van zijn Supabase-tabellen (o.a.
+//   Startwerkbespreking, planning) rechtstreeks met WerfKompas Beheer —
+//   wijzig kolomnamen/structuur van die tabellen dus nooit hier alleen,
+//   controleer ook de impact in de Beheer-app.
+// - Ploegbazen gebruiken voorlopig hun eigen smartphone (klein scherm) —
+//   test nieuwe schermen op smartphone-breedte (~320-375px), niet enkel op
+//   desktop.
+// ═══════════════════════════════════════════════════════════
 // STATE & STORAGE
 // ═══════════════════════════════════════════════════════════
 let activeFilter = 'alle';
@@ -3472,18 +3517,6 @@ function docTerugNaarLijst() {
 }
 
 // ── WEEKNIEUWS ────────────────────────────────────────────
-function getISOWeekString(d = new Date()) {
-  const jan4 = new Date(d.getFullYear(), 0, 4);
-  const startOfWeek1 = new Date(jan4);
-  startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
-  const diff = d - startOfWeek1;
-  const week = Math.floor(diff / 604800000) + 1;
-  const yr = d >= new Date(d.getFullYear(), 11, 29)
-    ? d.getFullYear() + 1
-    : d < startOfWeek1 ? d.getFullYear() - 1 : d.getFullYear();
-  return `${yr}-W${String(week).padStart(2, '0')}`;
-}
-
 function fmtWnDatum(s) {
   if (!s) return '';
   const [y, m, d] = s.split('-');
@@ -4063,13 +4096,6 @@ function kiesIngelogdeTeamleader(json) {
   go('s-home');
   setTimeout(() => toonUpdateVensterIndienNieuw(), 300);
   setTimeout(() => checkWeeknieuwsPopup(), 900);
-}
-
-function wisselGebruiker() {
-  if (!confirm('Wisselen van gebruiker?')) return;
-  localStorage.removeItem('ingelogdeTeamleader');
-  renderLoginLijst();
-  go('s-login');
 }
 
 // Haalt een leesbare naam uit een e-mailadres, bv. "frederik.truyers@x.com"
@@ -5389,11 +5415,6 @@ async function syncPendingUren() {
     }
   }
   if (syncCount > 0) localStorage.setItem('uren', JSON.stringify(appData.uren));
-}
-
-function vulSysteemDropdown() {
-  // Backward compat — vult ook de hidden select
-  updateProductDropdowns();
 }
 
 // ── BEREKENING — PRODUCT ZOEK + FILTER ───────────────────
@@ -9046,9 +9067,6 @@ function lmraUpdateUitvoerderDropdown() {
   sel.innerHTML = '<option value="">Kies teamleader...</option>' + tls.map(t => `<option>${escapeHtml(t.weergave||t.naam||t)}</option>`).join('');
 }
 
-function lmraUpdateBezettingSelect() {
-  renderTeamledenKeuzelijst('lmra');
-}
 function lmraBezettingVerwijderen(naam) {
   lmraBezetting = lmraBezetting.filter(n => n !== naam);
   renderLmraBezettingTags();
