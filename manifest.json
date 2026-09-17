@@ -1,6 +1,6 @@
 ﻿{
-    "description":  "Vloerlegger assistent app van Group Suerickx",
-    "short_name":  "VloerAssistent",
+    "description":  "Van administratie tot uitvoering, alles in één kompas.",
+    "short_name":  "WerfKompas",
     "background_color":  "#1B2B7A",
     "icons":  [
                   {
@@ -19,7 +19,7 @@
     "orientation":  "portrait",
     "theme_color":  "#1B2B7A",
     "display":  "standalone",
-    "name":  "VloerAssistent",
+    "name":  "WerfKompas Assistent — Suerickx Flooring",
     "scope":  ".",
     "start_url":  "."
 }
