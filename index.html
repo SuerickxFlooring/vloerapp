@@ -2599,6 +2599,90 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<!-- ══ WERFOPLEVERING — laatste dag van de werf, samen met de klant ══ -->
+<div class="screen" id="s-werfoplevering-invullen">
+  <div class="topbar">
+    <button class="btn-back" onclick="terugVanWoInvullen()" aria-label="Terug">←</button>
+    <div class="topbar-title">🏁 Werfoplevering</div>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+
+    <div style="display:flex;gap:4px;padding:12px 16px 0">
+      <div id="wo-step-0" class="step-dot active" style="flex:1;height:4px;border-radius:2px;background:#3547C8"></div>
+      <div id="wo-step-1" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="wo-step-2" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="wo-step-3" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="wo-step-label">Stap 1 van 4 — Werkzaamheden</div>
+
+    <!-- STAP 0: Werkzaamheden-checklist — overlopen met de klant -->
+    <div id="wo-stap-0" style="padding:12px 16px">
+      <div style="background:#EEF0FC;border-radius:10px;padding:10px 12px;font-size:12px;color:#3547C8;margin-bottom:14px">ℹ️ Loop deze lijst samen met de klant over en duid aan welke werkzaamheden effectief zijn uitgevoerd.</div>
+      <div id="wo-werken-lijst"></div>
+    </div>
+
+    <!-- STAP 1: Tevredenheid, opmerkingen & foto's -->
+    <div id="wo-stap-1" style="padding:12px 16px;display:none">
+      <label style="display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #e4e6f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="wo-naar-wens" style="margin-top:2px;width:18px;height:18px;flex-shrink:0">
+        <span style="font-size:14px;font-weight:600">Alles is uitgevoerd naar wens van de klant</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #e4e6f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;cursor:pointer">
+        <input type="checkbox" id="wo-klant-tevreden" style="margin-top:2px;width:18px;height:18px;flex-shrink:0">
+        <span style="font-size:14px;font-weight:600">De klant is tevreden over het eindresultaat</span>
+      </label>
+      <div class="form-group">
+        <label class="form-label">Opmerkingen <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <textarea class="form-input" id="wo-opmerkingen" rows="3" placeholder="Bv. nog uit te voeren nawerk, afspraken met de klant, bijzonderheden..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Foto's <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <div id="wo-foto-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+        <label style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border:2px dashed #3547C8;border-radius:12px;background:#F7F8FF;cursor:pointer;font-size:14px;font-weight:600;color:#3547C8">
+          📷 Foto maken of kiezen
+          <input type="file" accept="image/*" multiple id="wo-foto-input" style="display:none" onchange="woVerwerkFotos(this)">
+        </label>
+        <div id="wo-foto-upload-status" style="font-size:12px;color:#888;margin-top:6px;text-align:center"></div>
+      </div>
+    </div>
+
+    <!-- STAP 2: Aftekenen -->
+    <div id="wo-stap-2" style="padding:12px 16px;display:none">
+      <div class="form-group">
+        <label class="form-label">Naam ploegbaas / uitvoerder</label>
+        <input type="text" class="form-input" id="wo-ploegbaas-naam" placeholder="Naam...">
+      </div>
+      <label class="form-label" style="margin-top:4px;display:block">Handtekening ploegbaas</label>
+      <div style="border:1.5px solid #ddd;border-radius:10px;overflow:hidden;background:#fff;margin-bottom:8px">
+        <canvas id="wo-canvas-ploegbaas" style="width:100%;height:140px;touch-action:none;display:block"></canvas>
+      </div>
+      <button type="button" onclick="woWisCanvas('ploegbaas')" style="margin-bottom:20px;padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f7f7f7;font-size:12.5px;cursor:pointer">✕ Wissen</button>
+
+      <div class="form-group">
+        <label class="form-label">Naam klant <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <input type="text" class="form-input" id="wo-klant-naam" placeholder="Naam...">
+      </div>
+      <label class="form-label" style="margin-top:4px;display:block">Handtekening klant <span style="font-weight:400;color:#999">(optioneel)</span></label>
+      <div style="border:1.5px solid #ddd;border-radius:10px;overflow:hidden;background:#fff;margin-bottom:8px">
+        <canvas id="wo-canvas-klant" style="width:100%;height:140px;touch-action:none;display:block"></canvas>
+      </div>
+      <button type="button" onclick="woWisCanvas('klant')" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f7f7f7;font-size:12.5px;cursor:pointer">✕ Wissen</button>
+    </div>
+
+    <!-- STAP 3: Overzicht & versturen -->
+    <div id="wo-stap-3" style="padding:12px 16px;display:none">
+      <div id="wo-samenvatting"></div>
+      <div id="wo-submit-status" style="margin-top:10px"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;padding:12px 16px 24px">
+      <button id="wo-vorige-btn" onclick="woStap(-1)" class="btn-secondary" style="flex:1;display:none">← Vorige</button>
+      <button id="wo-volgende-btn" onclick="woStap(1)" class="btn-primary" style="flex:1">Volgende →</button>
+      <button id="wo-submit-btn" onclick="submitWo()" class="btn-primary btn-green" style="flex:1;display:none">✅ Versturen</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ LMRA — Laatste Minuut RisicoAnalyse (elke ochtend, per project) ══ -->
 <div class="screen" id="s-lmra">
   <div class="topbar">
@@ -3198,9 +3282,24 @@ async function gaNaarStartwerk(werf) {
   }
 }
 
+async function gaNaarWerfoplevering(werf) {
+  go('s-documenten');
+  await initDocumenten();
+  const projs = docState.projecten || [];
+  const match = projs.find(p => tekstOverlap(werf, p.projectnummer || '') || tekstOverlap(werf, p.werfnaam || ''));
+  if (!match) return;
+  const bijlagen = await kiesDocProject(match.id);
+  const wo = (bijlagen || []).find(b => b.type === 'Werfoplevering');
+  if (wo) {
+    openWoInvullen(match.id, wo);
+  } else {
+    alert('Voor deze werf staat er nog geen werfoplevering klaar om in te vullen. Neem contact op met kantoor.');
+  }
+}
+
 // Compacte pillen (TRA/VGM/WMS/Offerte/Andere) zodat je in de werflijst al
 // ziet welke documenten er al zijn, zonder elk project apart te moeten openen.
-const BIJLAGE_PILL_LABEL = { TRA: 'TRA', VGM: 'VGM', WMS: 'WMS', Offerte: 'Offerte', Startwerkbespreking: 'Startwerk', Andere: 'Andere' };
+const BIJLAGE_PILL_LABEL = { TRA: 'TRA', VGM: 'VGM', WMS: 'WMS', Offerte: 'Offerte', Startwerkbespreking: 'Startwerk', Werfoplevering: 'Oplevering', Andere: 'Andere' };
 function bijlagenPillenVoorProject(projectId) {
   const vanProj = (docState.bijlagen || []).filter(b => b.project_id === projectId);
   return ['TRA', 'VGM', 'WMS', 'Offerte', 'Startwerkbespreking', 'Andere'].map(t => {
@@ -3269,8 +3368,8 @@ async function kiesDocProject(projectId) {
     bijlLijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px 14px">Nog geen documenten geüpload voor deze werf.</div>';
     return [];
   }
-  const TYPE_ICOON = { TRA: '⚠️', VGM: '🦺', WMS: '📋', Offerte: '💰', Startwerkbespreking: '🦺' };
-  const TYPE_BADGE = { TRA: 'badge-epoxy', VGM: 'badge-preventie', WMS: 'badge-preventie', Offerte: 'badge-pu', Startwerkbespreking: 'badge-preventie' };
+  const TYPE_ICOON = { TRA: '⚠️', VGM: '🦺', WMS: '📋', Offerte: '💰', Startwerkbespreking: '🦺', Werfoplevering: '🏁' };
+  const TYPE_BADGE = { TRA: 'badge-epoxy', VGM: 'badge-preventie', WMS: 'badge-preventie', Offerte: 'badge-pu', Startwerkbespreking: 'badge-preventie', Werfoplevering: 'badge-preventie' };
   // Offertes bevatten prijzen die ploegbazen nooit te zien mogen krijgen.
   // Toon daarom NOOIT de originele storage_path voor type Offerte — enkel de
   // automatisch prijs-geredigeerde storage_path_veilig. Ontbreekt die (bv.
@@ -3282,6 +3381,7 @@ async function kiesDocProject(projectId) {
     const linkPath = isOfferte ? b.storage_path_veilig : b.storage_path;
     const { data: pub } = linkPath ? client.storage.from('project-documenten').getPublicUrl(linkPath) : { data: null };
     const isSwb = b.type === 'Startwerkbespreking';
+    const isWo = b.type === 'Werfoplevering';
     const inhoud = `
         <span style="font-size:22px;flex-shrink:0">${TYPE_ICOON[b.type] || '📄'}</span>
         <div style="flex:1;min-width:0">
@@ -3294,6 +3394,7 @@ async function kiesDocProject(projectId) {
         ? `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;opacity:.55">${inhoud}</div>`
         : `<a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;flex:1;min-width:0">${inhoud}</a>`}
       ${isSwb ? `<button onclick="event.stopPropagation();openSwbInvullenVanuitLijst(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
+      ${isWo ? `<button onclick="event.stopPropagation();openWoInvullenVanuitLijst(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
     </div>`;
   }).join('');
   return data;
@@ -4272,7 +4373,7 @@ async function laadMijnDashboard() {
       return;
     }
 
-    const [{ data: regData }, { data: lmraData }, { data: swbData }, bestellingenVandaag, bevestigingenAlle] = await Promise.all([
+    const [{ data: regData }, { data: lmraData }, { data: swbData }, bestellingenVandaag, bevestigingenAlle, cockpitProjectenAlle, woBijlagenAlle, { data: woData }] = await Promise.all([
       sb.from('registraties').select('project,teamleader').eq('datum', vandaag),
       sb.from('lmra_invullingen').select('project,teamleader').eq('datum', vandaag),
       sb.from('swb_invullingen').select('project'),
@@ -4298,6 +4399,26 @@ async function laadMijnDashboard() {
           return data || [];
         } catch(e) { return []; }
       })(),
+      // Werfoplevering hoort enkel op/na de laatste dag van de werf te
+      // verschijnen (einddatum) — vandaar de projectenlijst (met einddatum)
+      // apart nodig, los van de reeds geladen bestellingen hierboven.
+      (async () => {
+        try {
+          const client = initSbCockpit();
+          if (!client) return [];
+          const { data } = await client.from('cockpit_projecten').select('id,projectnummer,werfnaam,einddatum').eq('gearchiveerd', false);
+          return data || [];
+        } catch(e) { console.warn('[Dashboard] projecten (einddatum) laden mislukt:', e.message); return []; }
+      })(),
+      (async () => {
+        try {
+          const client = initSbCockpit();
+          if (!client) return [];
+          const { data } = await client.from('cockpit_bijlagen').select('id,project_id,werfoplevering_werken_json').eq('type', 'Werfoplevering');
+          return data || [];
+        } catch(e) { console.warn('[Dashboard] werfoplevering-bijlagen laden mislukt:', e.message); return []; }
+      })(),
+      sb.from('werfoplevering_invullingen').select('project'),
     ]);
 
     // Vanaf 12u 's middags nog niet ingevuld? Trek extra aandacht met een rood
@@ -4324,6 +4445,16 @@ async function laadMijnDashboard() {
         { icon: '📋', bg: '#E7ECFA', label: 'Dagregistratie vandaag', done: regDone, actie: 'go("s-registratie")', urgent: !regDone && naTwaalfUur },
       ];
       if (!swbDone) rijen.push({ icon: '📅', bg: '#DCEBFB', label: 'Startwerkbespreking (eenmalig per project)', done: false, actie: `gaNaarStartwerk(${JSON.stringify(werf)})` });
+      // Werfoplevering: enkel tonen op/na de laatste dag van de werf
+      // (einddatum), enkel als kantoor er al een klaargezet heeft (bijlage
+      // van het type bestaat), en enkel zolang er nog geen ingevulde
+      // werfoplevering voor deze werf bestaat.
+      const cockpitProj = (cockpitProjectenAlle || []).find(p => tekstOverlap(werf, p.werfnaam || '') || tekstOverlap(werf, p.projectnummer || ''));
+      const woBijlage = cockpitProj ? (woBijlagenAlle || []).find(b => String(b.project_id) === String(cockpitProj.id)) : null;
+      const woDone = (woData || []).some(r => tekstOverlap(r.project, werf));
+      if (cockpitProj?.einddatum && cockpitProj.einddatum <= vandaag && woBijlage && !woDone) {
+        rijen.push({ icon: '🏁', bg: '#E7F3DC', label: 'Werfoplevering (laatste dag)', done: false, actie: `gaNaarWerfoplevering(${JSON.stringify(werf)})` });
+      }
       // Bestellingen met leverdatum vandaag voor déze werf — enkel bestellingen
       // die effectief bij de leverancier lopen ("Besteld bij leverancier" /
       // "Bevestigd door leverancier") zijn hier écht relevant; een bestelling
@@ -9199,6 +9330,273 @@ async function submitSwb() {
     if (error) throw error;
     statusEl.innerHTML = '<div class="ok-box">✅ Startwerkbespreking verstuurd! Beschikbaar in WerfKompas Beheer.</div>';
     setTimeout(() => { terugVanSwbInvullen(); }, 2200);
+  } catch(e) {
+    statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// WERFOPLEVERING — laatste dag van de werf, samen met de klant
+// ════════════════════════════════════════════════════════════
+// Zelfde architectuur als Startwerkbespreking hierboven (stappen, canvas-
+// handtekening, submit via RPC), maar met een vaste checklist "voorziene
+// werkzaamheden" (uit de offerte, zie werken_checklist_json op de bijlage),
+// tevredenheids-vinkjes, optionele foto's en 2 vaste ondertekenaars
+// (ploegbaas verplicht, klant optioneel) i.p.v. een dynamische deelnemerslijst.
+let woState = { projectId: null, bijlageId: null, werfnaam: '', werkenChecklist: [] };
+let woStapNr = 0;
+const woSigState = {};
+let woFotoData = [], woFotoUrls = [], woFotoPaths = [];
+
+function openWoInvullen(projectId, bijlage) {
+  const proj = (docState.projecten || []).find(p => p.id === projectId);
+  const bijlageId = bijlage && typeof bijlage === 'object' ? bijlage.id : bijlage;
+  const checklist = (bijlage && Array.isArray(bijlage.werfoplevering_werken_json)) ? bijlage.werfoplevering_werken_json : [];
+  woState = { projectId, bijlageId, werfnaam: proj?.werfnaam || '', werkenChecklist: JSON.parse(JSON.stringify(checklist)) };
+  document.getElementById('wo-naar-wens').checked = false;
+  document.getElementById('wo-klant-tevreden').checked = false;
+  document.getElementById('wo-opmerkingen').value = '';
+  document.getElementById('wo-ploegbaas-naam').value = '';
+  document.getElementById('wo-klant-naam').value = '';
+  woResetFotos();
+  Object.keys(woSigState).forEach(k => delete woSigState[k]);
+  woStapNr = 0;
+  renderWoWerkenLijst();
+  go('s-werfoplevering-invullen');
+  updateWoNav();
+}
+
+// Wordt gebruikt vanuit de bijlagenlijst (✏️ Invullen-knop) — zie
+// openSwbInvullenVanuitLijst hierboven voor hetzelfde principe.
+function openWoInvullenVanuitLijst(projectId, bijlageId) {
+  const bijlage = (docState.huidigeBijlagen || []).find(b => b.id === bijlageId);
+  openWoInvullen(projectId, bijlage);
+}
+
+function terugVanWoInvullen() {
+  const projectId = woState.projectId;
+  go('s-documenten');
+  if (projectId) kiesDocProject(projectId);
+}
+
+function renderWoWerkenLijst() {
+  const wrap = document.getElementById('wo-werken-lijst');
+  if (!woState.werkenChecklist.length) {
+    wrap.innerHTML = '<div style="font-size:12.5px;color:#888;font-style:italic;padding:8px 0">Geen werkzaamheden gekend uit de offerte voor dit project.</div>';
+    return;
+  }
+  wrap.innerHTML = woState.werkenChecklist.map((item, i) => item.kop
+    ? `<div style="font-weight:800;font-size:13.5px;margin:14px 0 6px">${escapeHtml(item.tekst)}</div>`
+    : `<label style="display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #eee;border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" ${item.uitgevoerd ? 'checked' : ''} onchange="woZetUitgevoerd(${i}, this.checked)" style="margin-top:2px;width:18px;height:18px;flex-shrink:0">
+        <span style="font-size:13.5px">${escapeHtml(item.tekst)}</span>
+      </label>`
+  ).join('');
+}
+function woZetUitgevoerd(i, waarde) {
+  if (woState.werkenChecklist[i]) woState.werkenChecklist[i].uitgevoerd = waarde;
+}
+
+// ── Foto's — zelfde compressie/upload-patroon als elders (Levering,
+// Dagregistratie), eigen array zodat schermen elkaar niet overschrijven. ──
+function woVerwerkFotos(input) {
+  const files = Array.from(input.files);
+  input.value = '';
+  if (!files.length) return;
+  const statusEl = document.getElementById('wo-foto-upload-status');
+  const huidigAantal = woFotoData.filter(Boolean).length;
+  const beschikbaar = 6 - huidigAantal;
+  if (beschikbaar <= 0) { statusEl.textContent = 'Maximum van 6 foto\'s bereikt.'; return; }
+  const toegestaan = files.slice(0, beschikbaar);
+  statusEl.textContent = toegestaan.length + ' foto(s) geselecteerd...';
+  toegestaan.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      verkleenFoto(e.target.result, 1200, b64 => {
+        const i = woFotoData.length;
+        woFotoData.push(b64);
+        const list = document.getElementById('wo-foto-preview-list');
+        list.insertAdjacentHTML('beforeend', `<div style="position:relative;display:inline-block" id="wo-foto-prev-${i}">
+          <img src="${b64}" style="width:70px;height:70px;object-fit:cover;border-radius:10px">
+          <button type="button" onclick="woVerwijderFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1">✕</button>
+        </div>`);
+        woUploadFoto(b64, i);
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+async function woUploadFoto(b64, i) {
+  const statusEl = document.getElementById('wo-foto-upload-status');
+  if (!sb) { woFotoUrls[i] = ''; if (statusEl) statusEl.textContent = 'Supabase niet geconfigureerd — foto niet opgeslagen'; return; }
+  try {
+    const blob = dataURLtoBlob(b64);
+    const path = 'werfoplevering/' + Date.now() + '-' + i + '.jpg';
+    const { error: upErr } = await sb.storage.from('fotos').upload(path, blob, { contentType: 'image/jpeg' });
+    if (upErr) throw upErr;
+    const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
+    woFotoUrls[i] = pub.publicUrl;
+    woFotoPaths[i] = path;
+    if (statusEl) statusEl.textContent = 'Foto ' + (i + 1) + ' opgeslagen';
+  } catch(e) {
+    woFotoUrls[i] = ''; woFotoPaths[i] = '';
+    if (statusEl) statusEl.textContent = 'Upload mislukt: ' + (e.message || 'onbekende fout');
+  }
+}
+function woVerwijderFoto(i) {
+  document.getElementById('wo-foto-prev-' + i)?.remove();
+  woFotoData[i] = null; woFotoUrls[i] = null; woFotoPaths[i] = null;
+}
+function woGetFotoUrls() { return woFotoUrls.filter(Boolean); }
+function woResetFotos() {
+  woFotoData = []; woFotoUrls = []; woFotoPaths = [];
+  const list = document.getElementById('wo-foto-preview-list');
+  if (list) list.innerHTML = '';
+  const status = document.getElementById('wo-foto-upload-status');
+  if (status) status.textContent = '';
+}
+
+// ── Handtekening — zelfde canvas-tekenmechanisme als swbSetupCanvas, maar
+// met een vaste string-id ('ploegbaas' / 'klant') i.p.v. een dynamisch
+// deelnemer-id, want hier zijn er altijd precies 2 vaste ondertekenaars. ──
+function woSetupCanvas(id) {
+  const canvas = document.getElementById(`wo-canvas-${id}`);
+  if (!canvas || woSigState[id]?.ready) return;
+  if (!canvas.offsetWidth || !canvas.offsetHeight) return;
+  woSigState[id] = { ready: true, drawing: false, lastX: 0, lastY: 0 };
+
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  const getPos = (e) => { const r = canvas.getBoundingClientRect(); const src = e.touches ? e.touches[0] : e; return { x: src.clientX - r.left, y: src.clientY - r.top }; };
+  const start = (e) => {
+    woSigState[id].drawing = true;
+    const p = getPos(e); woSigState[id].lastX = p.x; woSigState[id].lastY = p.y;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI * 2); ctx.fillStyle = '#1a1a2e'; ctx.fill();
+  };
+  const move = (e) => {
+    if (!woSigState[id].drawing) return;
+    const p = getPos(e);
+    ctx.beginPath(); ctx.moveTo(woSigState[id].lastX, woSigState[id].lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
+    woSigState[id].lastX = p.x; woSigState[id].lastY = p.y;
+  };
+  const end = () => { woSigState[id].drawing = false; };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+function woWisCanvas(id) {
+  const canvas = document.getElementById(`wo-canvas-${id}`);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+}
+function woGetCanvasData(id) {
+  const canvas = document.getElementById(`wo-canvas-${id}`);
+  if (!canvas || !woSigState[id]?.ready) return null;
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const hasContent = data.some((v, i) => i % 4 === 3 && v > 10);
+  if (!hasContent) return null;
+  return canvas.toDataURL('image/png');
+}
+
+function woStap(delta) {
+  if (delta > 0 && woStapNr === 2) {
+    const naam = document.getElementById('wo-ploegbaas-naam').value.trim();
+    if (!naam) { alert('Vul de naam van de ploegbaas/uitvoerder in.'); return; }
+    if (!woGetCanvasData('ploegbaas')) { alert('De ploegbaas moet aftekenen vóór het versturen.'); return; }
+  }
+  woStapNr = Math.max(0, Math.min(3, woStapNr + delta));
+  updateWoNav();
+  if (woStapNr === 3) renderWoSamenvatting();
+}
+
+function updateWoNav() {
+  [0, 1, 2, 3].forEach(n => {
+    document.getElementById(`wo-stap-${n}`).style.display = n === woStapNr ? 'block' : 'none';
+    document.getElementById(`wo-step-${n}`).style.background = n <= woStapNr ? '#3547C8' : '#ddd';
+  });
+  const labels = ['Stap 1 van 4 — Werkzaamheden', 'Stap 2 van 4 — Tevredenheid & foto\'s', 'Stap 3 van 4 — Aftekenen', 'Stap 4 van 4 — Overzicht & versturen'];
+  document.getElementById('wo-step-label').textContent = labels[woStapNr];
+  document.getElementById('wo-vorige-btn').style.display = woStapNr > 0 ? 'block' : 'none';
+  document.getElementById('wo-volgende-btn').style.display = woStapNr < 3 ? 'block' : 'none';
+  document.getElementById('wo-submit-btn').style.display = woStapNr === 3 ? 'block' : 'none';
+  document.getElementById('wo-submit-status').innerHTML = '';
+  if (woStapNr === 2) { setTimeout(() => { woSetupCanvas('ploegbaas'); woSetupCanvas('klant'); }, 50); }
+}
+
+function renderWoSamenvatting() {
+  const werkzaamheden = woState.werkenChecklist.filter(w => !w.kop);
+  const uitgevoerd = werkzaamheden.filter(w => w.uitgevoerd).length;
+  document.getElementById('wo-samenvatting').innerHTML = `
+    <div style="background:#f7f8fc;border-radius:12px;padding:14px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px">🏁 Overzicht</div>
+      <div style="font-size:14px;color:#333;display:flex;flex-direction:column;gap:4px">
+        <div><strong>Werf:</strong> ${escapeHtml(woState.werfnaam)}</div>
+        <div><strong>Werkzaamheden uitgevoerd:</strong> ${uitgevoerd}/${werkzaamheden.length}</div>
+        <div><strong>Naar wens van de klant:</strong> ${document.getElementById('wo-naar-wens').checked ? 'Ja' : 'Nee'}</div>
+        <div><strong>Klant tevreden:</strong> ${document.getElementById('wo-klant-tevreden').checked ? 'Ja' : 'Nee'}</div>
+        <div><strong>Ploegbaas:</strong> ${escapeHtml(document.getElementById('wo-ploegbaas-naam').value)}</div>
+        <div><strong>Klant (ondertekenaar):</strong> ${escapeHtml(document.getElementById('wo-klant-naam').value) || '—'}</div>
+        <div><strong>Foto's:</strong> ${woGetFotoUrls().length}</div>
+      </div>
+    </div>`;
+}
+
+async function submitWo() {
+  const statusEl = document.getElementById('wo-submit-status');
+  if (!sb && !initSupabase()) {
+    statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
+    return;
+  }
+  const ploegbaasNaam = document.getElementById('wo-ploegbaas-naam').value.trim();
+  const ploegbaasSig = woGetCanvasData('ploegbaas');
+  if (!ploegbaasNaam || !ploegbaasSig) {
+    statusEl.innerHTML = '<div class="err-box">❌ Naam en handtekening van de ploegbaas zijn verplicht.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen...</div>';
+
+  const gps = getGpsForSubmit();
+  const mij = huidigeGebruiker();
+  const payload = {
+    client_timestamp: new Date().toISOString(),
+    cockpit_project_id: woState.projectId,
+    cockpit_bijlage_id: woState.bijlageId,
+    project: woState.werfnaam,
+    datum: new Date().toISOString().split('T')[0],
+    uitgevoerd_door: ploegbaasNaam,
+    teamleader: mij ? (mij.weergave || mij.naam) : ploegbaasNaam,
+    werken_checklist: woState.werkenChecklist,
+    naar_wens: document.getElementById('wo-naar-wens').checked,
+    klant_tevreden: document.getElementById('wo-klant-tevreden').checked,
+    opmerkingen: document.getElementById('wo-opmerkingen').value.trim(),
+    fotos: woGetFotoUrls(),
+    ploegbaas_naam: ploegbaasNaam,
+    ploegbaas_handtekening_data: ploegbaasSig,
+    klant_naam: document.getElementById('wo-klant-naam').value.trim(),
+    klant_handtekening_data: woGetCanvasData('klant') || '',
+    gps_lat: gps.gps_lat != null ? String(gps.gps_lat) : '',
+    gps_lon: gps.gps_lon != null ? String(gps.gps_lon) : '',
+    gps_accuracy: gps.gps_accuracy != null ? String(gps.gps_accuracy) : '',
+  };
+
+  try {
+    const { error } = await sb.rpc('submit_werfoplevering', { p: payload });
+    if (error) throw error;
+    statusEl.innerHTML = '<div class="ok-box">✅ Werfoplevering verstuurd! Beschikbaar in WerfKompas Beheer.</div>';
+    setTimeout(() => { terugVanWoInvullen(); }, 2200);
   } catch(e) {
     statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
   }
