@@ -1191,12 +1191,12 @@ textarea.form-input{min-height:80px;resize:vertical}
         </div>
         <div class="input-row">
           <div class="form-group">
-            <label class="form-label">Uren per persoon <span style="font-weight:400;color:#c0392b">(niet de som van het team!)</span></label>
+            <label class="form-label">Uren per persoon</label>
             <input type="text" class="form-input" id="r-uren" placeholder="bv. 8" inputmode="decimal" onblur="controleerRegistratieUren()">
             <div style="font-size:11.5px;color:#999;margin-top:4px">Hoeveel uur werkte 1 persoon die dag — niet iedereen samengeteld.</div>
           </div>
           <div class="form-group">
-            <label class="form-label">Aantal personen <span style="font-weight:400;color:#999">(optioneel)</span></label>
+            <label class="form-label">Aantal personen</label>
             <input type="number" class="form-input" id="r-man" placeholder="bv. 2" inputmode="numeric" onblur="controleerRegistratieUren()">
           </div>
         </div>
@@ -2816,6 +2816,26 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<!-- ══ LEVERING BEVESTIGEN MODAL (vanuit dashboard-melding) ══ -->
+<div class="modal-overlay" id="lev-bevestig-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="sluitLevBevestigModal()">✕</button>
+    <div class="modal-title" style="margin-bottom:6px">📦 Levering bevestigen</div>
+    <div style="font-size:13px;color:#666;margin-bottom:16px" id="lev-bevestig-tekst"></div>
+    <div class="form-group">
+      <label class="form-label">Foto van de leveringbon <span style="font-weight:400;color:#999">(optioneel)</span></label>
+      <div id="lev-bevestig-foto-preview" style="margin-bottom:8px"></div>
+      <label style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border:2px dashed #3547C8;border-radius:12px;background:#F7F8FF;cursor:pointer;font-size:14px;font-weight:600;color:#3547C8">
+        📷 Foto maken of kiezen
+        <input type="file" accept="image/*" id="lev-bevestig-foto-input" style="display:none" onchange="levBevestigVerwerkFoto(this)">
+      </label>
+    </div>
+    <button class="btn-primary btn-green" onclick="levBevestigDoorsturen()" style="width:100%;margin-top:8px">✅ Bevestigen</button>
+    <div id="lev-bevestig-status" style="margin-top:10px"></div>
+  </div>
+</div>
+
 <!-- ══ SAMENVATTING MODAL ══════════════════════════════════ -->
 <div class="modal-overlay" id="samenvatting-modal">
   <div class="modal-sheet" style="max-height:90vh;overflow-y:auto">
@@ -3064,6 +3084,12 @@ function supabaseConfigured() {
 // ── WerfKompas Beheer-koppeling (read-only) — voor het raadplegen van TRA/offertes ──
 // Los van de "sb"-client hierboven: WerfKompas Beheer gebruikt een eigen,
 // apart Supabase-project waarin de actieve werven en hun bijlagen leven.
+// Ook gebruikt voor het uitlezen van cockpit_bestellingen (leverdatum
+// vandaag) t.b.v. de "Levering verwacht"-melding op het dashboard — nooit
+// om er rechtstreeks in te schrijven; een bevestigde ontvangst gaat naar de
+// eigen tabel bestelling_bevestigingen (in dít project), die Beheer op zijn
+// beurt terug uitleest via zijn eigen read-only sbVA-client (zelfde
+// principe in omgekeerde richting, zie loadAll() in cockpit/index.html).
 const COCKPIT_SUPABASE_URL = 'https://ppasfyufaifwufcvffnq.supabase.co';
 const COCKPIT_SUPABASE_KEY = 'sb_publishable_9TkUYSv4y_290Vo9n-VEfQ_jLYhJHW3';
 let sbCockpit = null;
@@ -4246,10 +4272,32 @@ async function laadMijnDashboard() {
       return;
     }
 
-    const [{ data: regData }, { data: lmraData }, { data: swbData }] = await Promise.all([
+    const [{ data: regData }, { data: lmraData }, { data: swbData }, bestellingenVandaag, bevestigingenAlle] = await Promise.all([
       sb.from('registraties').select('project,teamleader').eq('datum', vandaag),
       sb.from('lmra_invullingen').select('project,teamleader').eq('datum', vandaag),
       sb.from('swb_invullingen').select('project'),
+      // Bestellingen met leverdatum vandaag komen uit het ANDERE Supabase-
+      // project (WerfKompas Beheer) — apart afgeschermd zodat een probleem
+      // hiermee (bv. dat project tijdelijk onbereikbaar) de rest van het
+      // dashboard niet meeneemt.
+      (async () => {
+        try {
+          const client = initSbCockpit();
+          if (!client) return [];
+          const { data } = await client.from('cockpit_bestellingen')
+            .select('id,werfnaam,product,aantal,eenheid,leverdatum,status')
+            .eq('leverdatum', vandaag);
+          return data || [];
+        } catch(e) { console.warn('[Dashboard] bestellingen laden mislukt:', e.message); return []; }
+      })(),
+      // Alle bevestigingen (niet enkel vandaag): een levering die pas een dag
+      // later bevestigd wordt, moet ook dan nog als "Gedaan" tellen.
+      (async () => {
+        try {
+          const { data } = await sb.from('bestelling_bevestigingen').select('bestelling_id');
+          return data || [];
+        } catch(e) { return []; }
+      })(),
     ]);
 
     // Vanaf 12u 's middags nog niet ingevuld? Trek extra aandacht met een rood
@@ -4276,6 +4324,24 @@ async function laadMijnDashboard() {
         { icon: '📋', bg: '#E7ECFA', label: 'Dagregistratie vandaag', done: regDone, actie: 'go("s-registratie")', urgent: !regDone && naTwaalfUur },
       ];
       if (!swbDone) rijen.push({ icon: '📅', bg: '#DCEBFB', label: 'Startwerkbespreking (eenmalig per project)', done: false, actie: `gaNaarStartwerk(${JSON.stringify(werf)})` });
+      // Bestellingen met leverdatum vandaag voor déze werf — enkel bestellingen
+      // die effectief bij de leverancier lopen ("Besteld bij leverancier" /
+      // "Bevestigd door leverancier") zijn hier écht relevant; een bestelling
+      // die nog "Nog niet afroepen" of "Op stock" is, komt nooit vandaag op de
+      // werf toe en hoort dus niet in deze melding thuis.
+      const BESTELLING_MELDING_STATUSSEN = ['Besteld bij leverancier', 'Bevestigd door leverancier'];
+      (bestellingenVandaag || [])
+        .filter(b => tekstOverlap(b.werfnaam, werf) && BESTELLING_MELDING_STATUSSEN.includes(b.status))
+        .forEach(b => {
+          const bevestigd = (bevestigingenAlle || []).some(v => String(v.bestelling_id) === String(b.id));
+          const hoeveelheid = b.aantal ? ' (' + b.aantal + (b.eenheid ? ' ' + b.eenheid : '') + ')' : '';
+          rijen.push({
+            icon: '📦', bg: '#FFF3D6',
+            label: 'Levering verwacht: ' + escapeHtml(b.product || 'product') + hoeveelheid,
+            done: bevestigd,
+            actie: bevestigd ? '' : `openLevBevestigModal(${b.id}, ${JSON.stringify(werf)}, ${JSON.stringify(b.product || '')})`,
+          });
+        });
       const rijenHtml = rijen.map((r, i) => taakRij(r.icon, r.bg, r.label, r.done, r.actie, i === rijen.length - 1, r.urgent)).join('');
 
       // Eerste (of enige) werf: gecombineerd met de begroeting op één regel
@@ -4294,6 +4360,97 @@ async function laadMijnDashboard() {
     console.warn('[Dashboard] laden mislukt:', e.message);
     wrap.innerHTML = '<div style="text-align:center;padding:16px;color:#888;font-size:13px">Kon dashboard niet laden.</div>';
   }
+}
+
+// ── LEVERING BEVESTIGEN — vanuit de "Levering verwacht"-melding op het
+// dashboard, geschreven naar de eigen tabel bestelling_bevestigingen (dit
+// project), die WerfKompas Beheer op zijn beurt uitleest om de status van
+// de bestelling automatisch op "Geleverd op werf" te zetten. Een unieke
+// index op bestelling_id voorkomt dubbele bevestigingen (bv. als twee
+// ploegbazen op dezelfde werf tegelijk bevestigen). De foto van de
+// leveringbon is bewust optioneel (i.t.t. de losse "Levering"-functie, waar
+// een foto wél verplicht is) — dit is een bevestiging van een bestelling die
+// kantoor al kent, geen los, onaangekondigd leveringsrapport.
+let levBevestigContext = null;
+let levBevestigFotoData = null;
+
+function openLevBevestigModal(bestellingId, werf, productLabel) {
+  levBevestigContext = { bestellingId, werf, productLabel };
+  levBevestigFotoData = null;
+  document.getElementById('lev-bevestig-tekst').textContent =
+    'Bevestig dat "' + (productLabel || 'deze levering') + '" is toegekomen op de werf. Een foto van de leveringbon is optioneel.';
+  document.getElementById('lev-bevestig-foto-preview').innerHTML = '';
+  document.getElementById('lev-bevestig-status').innerHTML = '';
+  document.getElementById('lev-bevestig-modal').classList.add('open');
+}
+
+function sluitLevBevestigModal() {
+  document.getElementById('lev-bevestig-modal').classList.remove('open');
+  levBevestigContext = null;
+}
+
+function levBevestigVerwerkFoto(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    verkleenFoto(e.target.result, 1200, b64 => {
+      levBevestigFotoData = b64;
+      document.getElementById('lev-bevestig-foto-preview').innerHTML =
+        `<div style="position:relative;display:inline-block">
+          <img src="${b64}" style="width:90px;height:90px;object-fit:cover;border-radius:10px">
+          <button type="button" onclick="levBevestigVerwijderFoto()" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;line-height:1">✕</button>
+        </div>`;
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function levBevestigVerwijderFoto() {
+  levBevestigFotoData = null;
+  document.getElementById('lev-bevestig-foto-preview').innerHTML = '';
+}
+
+async function levBevestigDoorsturen() {
+  const statusEl = document.getElementById('lev-bevestig-status');
+  if (!levBevestigContext) return;
+  if (!sb && !initSupabase()) { statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding — probeer later opnieuw.</div>'; return; }
+  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Bezig met bevestigen...</div>';
+  const { bestellingId, werf, productLabel } = levBevestigContext;
+  const mij = huidigeGebruiker();
+
+  let fotoUrl = null;
+  if (levBevestigFotoData) {
+    try {
+      const blob = dataURLtoBlob(levBevestigFotoData);
+      const path = 'bestelling-bevestigingen/' + bestellingId + '-' + Date.now() + '.jpg';
+      const { error: upErr } = await sb.storage.from('fotos').upload(path, blob, { contentType: 'image/jpeg' });
+      if (upErr) throw upErr;
+      fotoUrl = sb.storage.from('fotos').getPublicUrl(path).data.publicUrl;
+    } catch(e) {
+      // Foto is optioneel — een mislukte upload blokkeert de bevestiging zelf niet.
+      console.warn('[Bevestiging] foto-upload mislukt:', e.message);
+    }
+  }
+
+  try {
+    const { error } = await sb.from('bestelling_bevestigingen').insert({
+      bestelling_id: bestellingId,
+      project: werf,
+      product: productLabel || '',
+      teamleader: mij ? (mij.weergave || mij.naam) : '',
+      datum: new Date().toISOString().split('T')[0],
+      foto_url: fotoUrl,
+    });
+    if (error && error.code !== '23505') throw error; // 23505 = al bevestigd door iemand anders, geen probleem
+  } catch(e) {
+    console.warn('[Bevestiging] mislukt:', e.message);
+    statusEl.innerHTML = '<div class="err-box">❌ Bevestigen mislukt — probeer opnieuw.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div class="ok-box">✅ Bevestigd!</div>';
+  setTimeout(() => { sluitLevBevestigModal(); laadMijnDashboard(); }, 900);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5097,7 +5254,23 @@ function resetRegStappen() {
   regProducten = [];
   updateRegProductenLijst();
   resetMeetstaatPicker();
+  regPrefillTeamleader();
   regGoToStep(1);
+}
+
+// Selecteert bij een verse dagregistratie automatisch de ingelogde
+// ploegbaas als teamleader — zelfde idee als de al bestaande auto-invulling
+// van datum en (bij één actief project) projectnaam. Enkel van toepassing
+// als die naam ook echt in de dropdown staat; een beheerder-login heeft geen
+// "ingelogde teamleader" en verandert dus niets.
+function regPrefillTeamleader() {
+  const sel = document.getElementById('r-teamleader');
+  if (!sel) return;
+  const mij = huidigeGebruiker();
+  const mijnNaam = mij ? (mij.weergave || mij.naam) : '';
+  if (mijnNaam && Array.from(sel.options).some(o => o.value === mijnNaam)) {
+    sel.value = mijnNaam;
+  }
 }
 
 // ── DAGREGISTRATIE — TIJDELIJK OPSLAAN & HERVATTEN ───────────
@@ -5602,8 +5775,8 @@ let regProducten = [];
 
 function addRegProduct() {
   const { id: prodId, naam: prodNaam, prodObj, manual: prodManual } = getGekozenProduct();
+  const fout = document.getElementById('reg-prod-fout');
   if (!prodNaam) {
-    const fout = document.getElementById('reg-prod-fout');
     fout.textContent = 'Selecteer eerst een product.';
     fout.style.display = 'block';
     return;
@@ -5615,6 +5788,22 @@ function addRegProduct() {
   const dikte = getRegDikteInMm();
   const ondervloer = document.getElementById('r-vloer')?.value || '';
   const productCode = prodObj ? (prodObj.code || prodObj.id || '') : '';
+
+  // Zonder verbruik en type ondergrond (en, waar van toepassing, dikte) is
+  // een product niet bruikbaar in de cockpit — dit wordt hier hard
+  // geblokkeerd i.p.v. enkel een vrijblijvende melding, want voordien kon
+  // een product zonder hoeveelheid toegevoegd worden.
+  const type = prodObj ? (prodObj.type || '').toLowerCase() : '';
+  const dikteVerplicht = type === 'mortel' || type === 'egaline';
+  const ontbrekendBijProduct = [];
+  if (kg <= 0) ontbrekendBijProduct.push('Verbruik');
+  if (!ondervloer) ontbrekendBijProduct.push('Type ondergrond');
+  if (dikteVerplicht && (!dikte || dikte <= 0)) ontbrekendBijProduct.push('Dikte aangebrachte laag');
+  if (ontbrekendBijProduct.length) {
+    fout.textContent = 'Vul eerst in: ' + ontbrekendBijProduct.join(', ') + '.';
+    fout.style.display = 'block';
+    return;
+  }
 
   let theo = 0, verschilKg = 0, verschilPerc = 0, statusCheck = '';
   if (prodObj && prodObj.verbruik && opp > 0 && kg > 0) {
@@ -5692,6 +5881,11 @@ function getRegDikteInMm() {
   return regDikteEenheid === 'cm' ? val * 10 : val;
 }
 
+// Producttypes die standaard als "sets" verbruikt worden i.p.v. kg — mag
+// nadien nog steeds manueel aangepast worden, dit is enkel het beginpunt bij
+// het kiezen van een product.
+const EENHEID_SETS_TYPES = ['epoxy', 'pu', 'ucrete', 'pmma', 'primer', 'coating', 'coatings'];
+
 function onProdChange() {
   checkVerbruik();
   const { prodObj } = getGekozenProduct();
@@ -5703,6 +5897,11 @@ function onProdChange() {
       const di = document.getElementById('r-dikte');
       if (di) di.value = '';
     }
+  }
+  const eenheidSel = document.getElementById('r-eenheid');
+  if (eenheidSel && prodObj) {
+    eenheidSel.value = EENHEID_SETS_TYPES.includes(type) ? 'sets' : 'kg';
+    updateRegEenheid();
   }
 }
 
@@ -6329,6 +6528,7 @@ function toonSamenvatting() {
   const ondergrond0 = document.getElementById('r-ondergrond').value;
   const vocht0   = document.getElementById('r-vocht').value;
   const uren0    = document.getElementById('r-uren').value;
+  const man0     = document.getElementById('r-man').value;
   const teamleden0 = document.getElementById('r-teamleden').value;
   const omschrijving0 = document.getElementById('r-omschrijving').value;
 
@@ -6336,7 +6536,6 @@ function toonSamenvatting() {
   if (!project0)        ontbrekend.push('Projectnaam');
   if (!datum0)           ontbrekend.push('Datum');
   if (!tl0)               ontbrekend.push('Teamleader');
-  if (!uren0)             ontbrekend.push('Aantal uren');
   if (!omschrijving0)     ontbrekend.push('Omschrijving van de werken');
   if (!vloer0)            ontbrekend.push('Type ondervloer');
   if (temp0 === '')        ontbrekend.push('Temp. lucht');
@@ -6345,6 +6544,14 @@ function toonSamenvatting() {
   if (vocht0 === '')       ontbrekend.push('Vocht ondergrond');
 
   const geenProducten = regProducten.length === 0;
+  // "Uren per persoon" en "Aantal personen" zijn verplicht (i.t.t. de overige
+  // velden hierboven, die enkel een vrijblijvende melding krijgen) — zonder
+  // die twee is de gerapporteerde hoeveelheid verbruik per product niet
+  // herleidbaar tot een realistisch verbruik per manuur. Zie ook de harde
+  // blokkering in bevestigEnVerstuur().
+  const urenOntbrekend = [];
+  if (!uren0) urenOntbrekend.push('Uren per persoon');
+  if (!man0)  urenOntbrekend.push('Aantal personen');
 
   const missingEl = document.getElementById('samenvatting-missing');
   if (missingEl) {
@@ -6353,16 +6560,23 @@ function toonSamenvatting() {
         '⚠️ <strong>Niet ingevuld:</strong> ' + ontbrekend.join(', ') +
         '<div style="font-size:12px;color:#8A6116;opacity:.85;margin-top:4px">Je kan toch versturen — dit is enkel een melding.</div></div>'
       : '';
-    // Zonder product is er geen echte dagregistratie (enkel uren) — dit apart en
-    // dwingend tonen (rood, i.p.v. tussen de andere optionele velden), want dit
-    // wordt anders makkelijk over het hoofd gezien en leek voordien "verstuurd"
-    // terwijl er niets bruikbaars in de cockpit terechtkwam.
+    // Zonder product/uren/aantal personen is er geen bruikbare dagregistratie
+    // — dit apart en dwingend tonen (rood, i.p.v. tussen de andere optionele
+    // velden), want dit wordt anders makkelijk over het hoofd gezien en leek
+    // voordien "verstuurd" terwijl er niets bruikbaars in de cockpit
+    // terechtkwam. Versturen wordt hiervoor ook echt geblokkeerd, zie
+    // bevestigEnVerstuur().
     const productenMelding = geenProducten
       ? '<div style="background:#FDECEA;border:1px solid #F5C6C0;border-radius:10px;padding:12px 14px;color:#A32D2D;font-size:13px;margin-bottom:10px">' +
         '🚫 <strong>Geen product toegevoegd</strong> — zonder product wordt enkel je uren opgeslagen, geen dagregistratie met verbruik. Ga terug naar stap 3 om een product toe te voegen, tenzij dit bewust is (bv. enkel voorbereiding vandaag).' +
         '</div>'
       : '';
-    missingEl.innerHTML = productenMelding + optioneleMelding;
+    const urenMelding = urenOntbrekend.length
+      ? '<div style="background:#FDECEA;border:1px solid #F5C6C0;border-radius:10px;padding:12px 14px;color:#A32D2D;font-size:13px;margin-bottom:10px">' +
+        '🚫 <strong>Verplicht:</strong> ' + urenOntbrekend.join(' en ') + ' moet' + (urenOntbrekend.length > 1 ? 'en' : '') + ' ingevuld zijn vóór je kan versturen.' +
+        '</div>'
+      : '';
+    missingEl.innerHTML = productenMelding + urenMelding + optioneleMelding;
   }
   const errEl = document.getElementById('r-form-error');
   if (errEl) errEl.innerHTML = '';
@@ -6429,6 +6643,18 @@ function closeSamenvatting() {
 }
 
 async function bevestigEnVerstuur() {
+  // Uren per persoon en aantal personen zijn, i.t.t. de andere velden
+  // hierboven, écht verplicht — hier hard geblokkeerd (geen confirm() om
+  // toch door te gaan) zodat elke dagregistratie een herleidbaar verbruik
+  // per manuur oplevert.
+  const urenWaarde = document.getElementById('r-uren').value;
+  const manWaarde = document.getElementById('r-man').value;
+  if (!urenWaarde || !manWaarde) {
+    const statusEl0 = document.getElementById('samenvatting-status');
+    const ontbrekendVerplicht = [!urenWaarde && 'Uren per persoon', !manWaarde && 'Aantal personen'].filter(Boolean).join(' en ');
+    if (statusEl0) statusEl0.innerHTML = '<span style="color:#A32D2D">🚫 ' + ontbrekendVerplicht + ' moet nog ingevuld worden.</span>';
+    return;
+  }
   const selProj = document.getElementById('r-project-select');
   const manProj = document.getElementById('r-project-manual');
   const projectWaarde = (manProj && manProj.style.display !== 'none' ? manProj.value : selProj ? selProj.value : '').trim();
