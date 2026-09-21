@@ -105,6 +105,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .menu-btn .ico{font-size:28px;line-height:1;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--lavender-soft),var(--lavender));border-radius:16px;margin-bottom:10px}
 .menu-btn .lbl{font-size:15px;font-weight:700;color:var(--text-navy)}
 .menu-btn .sub{font-size:12px;color:var(--text-muted)}
+.menu-section-lbl{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:10px 2px 0}
+.menu-section-lbl:first-child{margin-top:0}
 
 /* ── Bottom nav ──────────────────────────────────────── */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;display:flex;background:#fff;border-top:1px solid #e5e5e5;z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -311,6 +313,16 @@ textarea.form-input{min-height:80px;resize:vertical}
     color: white;
   }
 
+  #desktop-sidebar .sidebar-section-lbl {
+    margin: 14px 22px 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+  #desktop-sidebar .sidebar-section-lbl:first-of-type { margin-top: 4px; }
+
   #desktop-sidebar .sidebar-nav-item.active {
     background: rgba(255,255,255,0.09);
     color: white;
@@ -416,24 +428,44 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item active" id="snav-home" onclick="goDesktop('s-home')">
     <span class="s-icon">🏠</span> Home
   </div>
+
+  <div class="sidebar-section-lbl">🔵 Elke dag</div>
   <div class="sidebar-nav-item" id="snav-lmra" onclick="goDesktop('s-lmra')">
     <span class="s-icon">🦺</span> LMRA
   </div>
   <div class="sidebar-nav-item" id="snav-registratie" onclick="goDesktop('s-registratie')">
     <span class="s-icon">📋</span> Dagregistratie
   </div>
-  <div class="sidebar-nav-item" id="snav-documenten" onclick="goDesktop('s-documenten')">
-    <span class="s-icon">📎</span> Projectinfo
+
+  <div class="sidebar-section-lbl">🏗️ Op de werf</div>
+  <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
+    <span class="s-icon">🧾</span> Regiebon
   </div>
   <div class="sidebar-nav-item" id="snav-levering" onclick="goDesktop('s-levering')">
     <span class="s-icon">📦</span> Levering
   </div>
-  <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
-    <span class="s-icon">🧾</span> Regiebon
+  <div class="sidebar-nav-item" id="snav-documenten" onclick="goDesktop('s-documenten')">
+    <span class="s-icon">📎</span> Projectinfo
   </div>
   <div class="sidebar-nav-item" id="snav-planning" onclick="openPlanning()">
     <span class="s-icon">📅</span> Planning
   </div>
+  <div class="sidebar-nav-item" id="snav-onkostennota" onclick="goDesktop('s-onkostennota')">
+    <span class="s-icon">💶</span> Onkostennota
+  </div>
+
+  <div class="sidebar-section-lbl">🏁 Vaste werfmomenten</div>
+  <div class="sidebar-nav-item" id="snav-startwerk-kies" onclick="openStartwerkKiezerDesktop()">
+    <span class="s-icon">📅</span> Startwerk
+  </div>
+  <div class="sidebar-nav-item" id="snav-werfoplevering-kies" onclick="openWerfopleveringKiezerDesktop()">
+    <span class="s-icon">🏁</span> Werfoplevering
+  </div>
+  <div class="sidebar-nav-item" id="snav-aanrijding" onclick="goDesktop('s-aanrijding')">
+    <span class="s-icon">🚨</span> Aanrijding
+  </div>
+
+  <div class="sidebar-section-lbl">🧰 Hulpmiddelen</div>
   <div class="sidebar-nav-item" id="snav-producten" onclick="goDesktop('s-producten')">
     <span class="s-icon">📦</span> Producten
   </div>
@@ -443,18 +475,11 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item" id="snav-handleidingen" onclick="goDesktop('s-handleidingen')">
     <span class="s-icon">📖</span> Handleidingen
   </div>
+
+  <div class="sidebar-section-lbl">🏢 Kantoor</div>
   <div class="sidebar-nav-item" id="snav-weeknieuws" onclick="goDesktop('s-weeknieuws')">
     <span class="s-icon">📰</span> Weeknieuws
     <span id="snav-weeknieuws-badge" style="display:none;margin-left:auto;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px">Nieuw</span>
-  </div>
-  <div class="sidebar-nav-item" id="snav-aanrijding" onclick="goDesktop('s-aanrijding')">
-    <span class="s-icon">🚨</span> Aanrijding
-  </div>
-  <div class="sidebar-nav-item" id="snav-onkostennota" onclick="goDesktop('s-onkostennota')">
-    <span class="s-icon">💶</span> Onkostennota
-  </div>
-  <div class="sidebar-nav-item" id="snav-werfoplevering-kies" onclick="openWerfopleveringKiezerDesktop()">
-    <span class="s-icon">🏁</span> Werfoplevering
   </div>
 
   <div class="sidebar-footer">
@@ -539,19 +564,29 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="weather-desc" style="font-size:12px;color:#888;margin-top:8px;text-align:center"></div>
     </div>
     <div class="menu-grid">
+      <div class="menu-section-lbl">🔵 Elke dag</div>
       <button class="menu-btn" onclick="go('s-lmra')"><div class="ico">🦺</div><div class="lbl">LMRA</div><div class="sub">Dagelijkse risicoanalyse</div></button>
       <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
-      <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Projectinformatie</div><div class="sub">TRA & offertes</div></button>
-      <button class="menu-btn" onclick="go('s-levering')"><div class="ico">📦</div><div class="lbl">Levering</div><div class="sub">Foto's van bestelling</div></button>
+
+      <div class="menu-section-lbl">🏗️ Op de werf</div>
       <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
+      <button class="menu-btn" onclick="go('s-levering')"><div class="ico">📦</div><div class="lbl">Levering</div><div class="sub">Foto's van bestelling</div></button>
+      <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Projectinformatie</div><div class="sub">TRA & offertes</div></button>
       <button class="menu-btn" onclick="openPlanning()"><div class="ico">📅</div><div class="lbl">Planning</div><div class="sub">Wie staat waar</div></button>
+      <button class="menu-btn" onclick="go('s-onkostennota')"><div class="ico">💶</div><div class="lbl">Onkostennota</div><div class="sub">Bon indienen</div></button>
+
+      <div class="menu-section-lbl">🏁 Vaste werfmomenten</div>
+      <button class="menu-btn" onclick="openStartwerkKiezer()"><div class="ico">📅</div><div class="lbl">Startwerk</div><div class="sub">Bij opstart werf</div></button>
+      <button class="menu-btn" onclick="openWerfopleveringKiezer()"><div class="ico">🏁</div><div class="lbl">Werfoplevering</div><div class="sub">Werf afronden</div></button>
+      <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
+
+      <div class="menu-section-lbl">🧰 Hulpmiddelen</div>
       <button class="menu-btn" onclick="go('s-producten')"><div class="ico">📦</div><div class="lbl">Producten</div><div class="sub">Info & instructies</div></button>
       <button class="menu-btn" onclick="go('s-berekening')"><div class="ico">🔢</div><div class="lbl">Berekening</div><div class="sub">Hoeveelheden</div></button>
       <button class="menu-btn" onclick="go('s-handleidingen')"><div class="ico">📖</div><div class="lbl">Handleidingen</div><div class="sub">Toestellen & info</div></button>
+
+      <div class="menu-section-lbl">🏢 Kantoor</div>
       <button class="menu-btn" onclick="go('s-weeknieuws')"><div class="ico">📰</div><div class="lbl">Weeknieuws</div><div class="sub">Briefingen kantoor</div></button>
-      <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
-      <button class="menu-btn" onclick="go('s-onkostennota')"><div class="ico">💶</div><div class="lbl">Onkostennota</div><div class="sub">Bon indienen</div></button>
-      <button class="menu-btn" onclick="openWerfopleveringKiezer()"><div class="ico">🏁</div><div class="lbl">Werfoplevering</div><div class="sub">Werf afronden</div></button>
     </div>
     <div class="sync-badge" id="sync-status">🔄 Data laden...</div>
   </div>
@@ -2759,6 +2794,23 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<!-- ══ STARTWERKBESPREKING — werf kiezen (ten allen tijde bereikbaar, niet
+     enkel via de dashboardtaak bij projectopstart) ══ -->
+<div class="screen" id="s-startwerk-kies">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">📅 Startwerkbespreking</div>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+    <div style="padding:14px 14px 0">
+      <input type="text" class="search-input" id="swb-kies-zoek" placeholder="🔍 Zoek werf..." oninput="renderSwbKiesLijst()" autocomplete="off">
+    </div>
+    <div id="swb-kies-lijst" style="padding:14px;display:flex;flex-direction:column;gap:8px">
+      <div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ WERFOPLEVERING — werf kiezen (ten allen tijde bereikbaar, niet enkel
      op de laatste dag) ══ -->
 <div class="screen" id="s-werfoplevering-kies">
@@ -3358,6 +3410,7 @@ async function vulDocZoekMetMijnWerf() {
 // zelf springen — niet enkel naar de documentenlijst, want daar moest de
 // gebruiker dan nog eens apart op "✏️ Invullen" tikken.
 async function gaNaarStartwerk(werf) {
+  swbKiesActief = false;
   go('s-documenten');
   await initDocumenten();
   const projs = docState.projecten || [];
@@ -4696,17 +4749,24 @@ function goDesktop(id) {
                's-weeknieuws':'snav-weeknieuws',
                's-documenten':'snav-documenten',
                's-onkostennota':'snav-onkostennota',
+               's-startwerk-kies':'snav-startwerk-kies',
                's-werfoplevering-kies':'snav-werfoplevering-kies'};
   const active = document.getElementById(map[id]);
   if (active) active.classList.add('active');
 }
 
-// Zelfde openWerfopleveringKiezer() als de homepagina-tegel, maar met de
-// sidebar-highlight erbij (desktop-sidebar-item heeft geen go()-aanroep).
+// Zelfde openWerfopleveringKiezer()/openStartwerkKiezer() als de homepagina-
+// tegels, maar met de sidebar-highlight erbij (desktop-sidebar-item heeft
+// geen go()-aanroep).
 async function openWerfopleveringKiezerDesktop() {
   await openWerfopleveringKiezer();
   document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('snav-werfoplevering-kies')?.classList.add('active');
+}
+async function openStartwerkKiezerDesktop() {
+  await openStartwerkKiezer();
+  document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('snav-startwerk-kies')?.classList.add('active');
 }
 
 // Login-poort: zonder gekozen teamleader én zonder ingelogde beheerder mag
@@ -9129,14 +9189,58 @@ function openSwbInvullen(projectId, bijlage) {
 // project_id/bijlage-id in het onclick-attribuut passen — zoekt de volledige
 // bijlage-rij op uit de laatst geladen lijst i.p.v. een nieuwe query te doen.
 function openSwbInvullenVanuitLijst(projectId, bijlageId) {
+  swbKiesActief = false;
   const bijlage = (docState.huidigeBijlagen || []).find(b => b.id === bijlageId);
   openSwbInvullen(projectId, bijlage);
 }
 
 function terugVanSwbInvullen() {
   const projectId = swbState.projectId;
+  if (swbKiesActief) { swbKiesActief = false; go('s-startwerk-kies'); return; }
   go('s-documenten');
   if (projectId) kiesDocProject(projectId);
+}
+
+// ── Werf kiezen voor startwerkbespreking, ten allen tijde bereikbaar —
+// zelfde principe als openWerfopleveringKiezer(). ──
+let swbKiesActief = false;
+async function openStartwerkKiezer() {
+  swbKiesActief = true;
+  go('s-startwerk-kies');
+  document.getElementById('swb-kies-zoek').value = '';
+  document.getElementById('swb-kies-lijst').innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
+  await initDocumenten();
+  renderSwbKiesLijst();
+}
+function renderSwbKiesLijst() {
+  const q = (document.getElementById('swb-kies-zoek').value || '').toLowerCase();
+  const wrap = document.getElementById('swb-kies-lijst');
+  let items = (docState.projecten || []).filter(p =>
+    !q || (p.werfnaam || '').toLowerCase().includes(q) || (p.projectnummer || '').toLowerCase().includes(q)
+  );
+  if (!items.length) { wrap.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Geen werven gevonden.</div>'; return; }
+  wrap.innerHTML = items.map(p => {
+    const actief = isDocActief(p);
+    const badge = actief
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3B6D11;background:#EAF3DE;border-radius:6px;padding:2px 8px">🟢 Actief nu</span>`
+      : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3547C8;background:#EEF0FC;border-radius:6px;padding:2px 8px">🔵 Binnenkort</span>`;
+    return `<div class="prod-card" onclick="kiesStartwerkProject(${p.id})">
+      <div class="prod-card-top">
+        <div class="prod-name" style="font-size:15px">🏗️ ${escapeHtml(p.werfnaam || 'Onbekende werf')}</div>
+        ${badge}
+      </div>
+      <span class="prod-sub">${escapeHtml(p.projectnummer || '')}</span>
+    </div>`;
+  }).join('');
+}
+async function kiesStartwerkProject(projectId) {
+  const bijlagen = await kiesDocProject(projectId); // schrijft ook (onzichtbaar) naar het Documenten-scherm — onschadelijk, dat scherm is niet actief
+  const swb = (bijlagen || []).find(b => b.type === 'Startwerkbespreking');
+  if (swb) {
+    openSwbInvullen(projectId, swb); // swbKiesActief blijft true, zodat "Terug" naar deze kiezer terugkeert i.p.v. naar Documenten
+  } else {
+    alert('Voor deze werf staat er nog geen startwerkbespreking klaar om in te vullen. Neem contact op met kantoor.');
+  }
 }
 
 function swbNieuwDeelnemer() { return { id: swbNextId++, naam: '', bedrijf: '' }; }
