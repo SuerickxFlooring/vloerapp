@@ -453,6 +453,9 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item" id="snav-onkostennota" onclick="goDesktop('s-onkostennota')">
     <span class="s-icon">💶</span> Onkostennota
   </div>
+  <div class="sidebar-nav-item" id="snav-werfoplevering-kies" onclick="openWerfopleveringKiezerDesktop()">
+    <span class="s-icon">🏁</span> Werfoplevering
+  </div>
 
   <div class="sidebar-footer">
     <div id="sidebar-sync-status">Laden...</div>
@@ -548,6 +551,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="go('s-weeknieuws')"><div class="ico">📰</div><div class="lbl">Weeknieuws</div><div class="sub">Briefingen kantoor</div></button>
       <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
       <button class="menu-btn" onclick="go('s-onkostennota')"><div class="ico">💶</div><div class="lbl">Onkostennota</div><div class="sub">Bon indienen</div></button>
+      <button class="menu-btn" onclick="openWerfopleveringKiezer()"><div class="ico">🏁</div><div class="lbl">Werfoplevering</div><div class="sub">Werf afronden</div></button>
     </div>
     <div class="sync-badge" id="sync-status">🔄 Data laden...</div>
   </div>
@@ -2725,9 +2729,12 @@ textarea.form-input{min-height:80px;resize:vertical}
           <option>N.V.T.</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="position:relative">
         <label class="form-label">Projectnr. <span style="font-weight:400;color:#999">(optioneel, standaard voor de onkosten hieronder)</span></label>
-        <input type="text" class="form-input" id="ok-projectnr" placeholder="Bv. F26-00012.000">
+        <input type="text" class="form-input" id="ok-projectnr" placeholder="Typ of kies een werf..." autocomplete="off"
+          oninput="renderOkProjectSuggesties()" onfocus="renderOkProjectSuggesties()"
+          onblur="setTimeout(()=>{const s=document.getElementById('ok-project-suggesties'); if(s)s.style.display='none'},150)">
+        <div id="ok-project-suggesties" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:1px solid #e4e6f0;border-radius:10px;margin-top:4px;max-height:240px;overflow-y:auto;box-shadow:0 4px 14px rgba(0,0,0,.08)"></div>
       </div>
     </div>
 
@@ -2748,6 +2755,23 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button id="ok-vorige-btn" onclick="okStap(-1)" class="btn-secondary" style="flex:1;display:none">← Vorige</button>
       <button id="ok-volgende-btn" onclick="okStap(1)" class="btn-primary" style="flex:1">Volgende →</button>
       <button id="ok-submit-btn" onclick="submitOnkostennota()" class="btn-primary btn-green" style="flex:1;display:none">✅ Versturen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ WERFOPLEVERING — werf kiezen (ten allen tijde bereikbaar, niet enkel
+     op de laatste dag) ══ -->
+<div class="screen" id="s-werfoplevering-kies">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">🏁 Werfoplevering</div>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+    <div style="padding:14px 14px 0">
+      <input type="text" class="search-input" id="wo-kies-zoek" placeholder="🔍 Zoek werf..." oninput="renderWoKiesLijst()" autocomplete="off">
+    </div>
+    <div id="wo-kies-lijst" style="padding:14px;display:flex;flex-direction:column;gap:8px">
+      <div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>
     </div>
   </div>
 </div>
@@ -3352,6 +3376,7 @@ async function gaNaarStartwerk(werf) {
 }
 
 async function gaNaarWerfoplevering(werf) {
+  woKiesActief = false;
   go('s-documenten');
   await initDocumenten();
   const projs = docState.projecten || [];
@@ -4670,9 +4695,18 @@ function goDesktop(id) {
                's-handleidingen':'snav-handleidingen',
                's-weeknieuws':'snav-weeknieuws',
                's-documenten':'snav-documenten',
-               's-onkostennota':'snav-onkostennota'};
+               's-onkostennota':'snav-onkostennota',
+               's-werfoplevering-kies':'snav-werfoplevering-kies'};
   const active = document.getElementById(map[id]);
   if (active) active.classList.add('active');
+}
+
+// Zelfde openWerfopleveringKiezer() als de homepagina-tegel, maar met de
+// sidebar-highlight erbij (desktop-sidebar-item heeft geen go()-aanroep).
+async function openWerfopleveringKiezerDesktop() {
+  await openWerfopleveringKiezer();
+  document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('snav-werfoplevering-kies')?.classList.add('active');
 }
 
 // Login-poort: zonder gekozen teamleader én zonder ingelogde beheerder mag
@@ -9441,14 +9475,61 @@ function openWoInvullen(projectId, bijlage) {
 // Wordt gebruikt vanuit de bijlagenlijst (✏️ Invullen-knop) — zie
 // openSwbInvullenVanuitLijst hierboven voor hetzelfde principe.
 function openWoInvullenVanuitLijst(projectId, bijlageId) {
+  woKiesActief = false;
   const bijlage = (docState.huidigeBijlagen || []).find(b => b.id === bijlageId);
   openWoInvullen(projectId, bijlage);
 }
 
 function terugVanWoInvullen() {
   const projectId = woState.projectId;
+  if (woKiesActief) { woKiesActief = false; go('s-werfoplevering-kies'); return; }
   go('s-documenten');
   if (projectId) kiesDocProject(projectId);
+}
+
+// ── Werf kiezen voor werfoplevering, ten allen tijde bereikbaar — dit
+// gebeurt niet altijd exact op de laatste dag van de werf, dus niet
+// afhankelijk maken van de datum-gebonden dashboardtaak. Hergebruikt
+// docState/initDocumenten() voor de projectdata, maar met een eigen
+// eenvoudige lijst i.p.v. de volledige Documenten-stappen-UI. ──
+let woKiesActief = false;
+async function openWerfopleveringKiezer() {
+  woKiesActief = true;
+  go('s-werfoplevering-kies');
+  document.getElementById('wo-kies-zoek').value = '';
+  document.getElementById('wo-kies-lijst').innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
+  await initDocumenten();
+  renderWoKiesLijst();
+}
+function renderWoKiesLijst() {
+  const q = (document.getElementById('wo-kies-zoek').value || '').toLowerCase();
+  const wrap = document.getElementById('wo-kies-lijst');
+  let items = (docState.projecten || []).filter(p =>
+    !q || (p.werfnaam || '').toLowerCase().includes(q) || (p.projectnummer || '').toLowerCase().includes(q)
+  );
+  if (!items.length) { wrap.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Geen werven gevonden.</div>'; return; }
+  wrap.innerHTML = items.map(p => {
+    const actief = isDocActief(p);
+    const badge = actief
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3B6D11;background:#EAF3DE;border-radius:6px;padding:2px 8px">🟢 Actief nu</span>`
+      : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3547C8;background:#EEF0FC;border-radius:6px;padding:2px 8px">🔵 Binnenkort</span>`;
+    return `<div class="prod-card" onclick="kiesWerfopleveringProject(${p.id})">
+      <div class="prod-card-top">
+        <div class="prod-name" style="font-size:15px">🏗️ ${escapeHtml(p.werfnaam || 'Onbekende werf')}</div>
+        ${badge}
+      </div>
+      <span class="prod-sub">${escapeHtml(p.projectnummer || '')}</span>
+    </div>`;
+  }).join('');
+}
+async function kiesWerfopleveringProject(projectId) {
+  const bijlagen = await kiesDocProject(projectId); // schrijft ook (onzichtbaar) naar het Documenten-scherm — onschadelijk, dat scherm is niet actief
+  const wo = (bijlagen || []).find(b => b.type === 'Werfoplevering');
+  if (wo) {
+    openWoInvullen(projectId, wo); // woKiesActief blijft true, zodat "Terug" naar deze kiezer terugkeert i.p.v. naar Documenten
+  } else {
+    alert('Voor deze werf staat er nog geen werfoplevering klaar om in te vullen. Neem contact op met kantoor.');
+  }
 }
 
 function renderWoWerkenLijst() {
@@ -9692,6 +9773,10 @@ const OK_CATEGORIEEN = [
   '615010 Kleine relatiegeschenken',
 ];
 const OK_MAX_LIJNEN = 9; // zoveel data-rijen (16-24) voorziet de Excel-template
+// De boekhoudkundige code (bv. "600000") heeft geen betekenis voor wie dit
+// invult — enkel de naam tonen; de volledige string (met code) blijft wel
+// de eigenlijke waarde, want cockpit matcht daarop de juiste Excel-kolom.
+function okCategorieLabel(c) { return (c || '').replace(/^\d+\s*/, ''); }
 
 let okLijnen = [];
 let okStapNr = 0;
@@ -9721,13 +9806,55 @@ function initOnkostennota() {
   const { naam, statuut } = okBepaalNaamEnStatuut();
   document.getElementById('ok-naam').value = naam;
   document.getElementById('ok-datum').value = new Date().toISOString().split('T')[0];
-  document.getElementById('ok-silo').value = '';
+  document.getElementById('ok-silo').value = 'V&S';
   document.getElementById('ok-statuut').value = statuut;
   document.getElementById('ok-projectnr').value = '';
   document.getElementById('ok-lijnen-lijst').innerHTML = '';
   document.getElementById('ok-voeg-toe-btn').style.display = 'block';
   updateOkNav();
   okVoegLijnToe();
+  okLaadProjecten();
+}
+
+// ── Projectnr.-veld: typeahead met huidige, recent afgelopen (<30 dagen) en
+// kortelings opstartende (<30 dagen) werven — i.p.v. blind een projectnummer
+// uit het hoofd te moeten typen. ──
+let okProjecten = [];
+async function okLaadProjecten() {
+  const client = initSbCockpit();
+  if (!client) return;
+  const { data } = await client.from('cockpit_projecten')
+    .select('id,projectnummer,werfnaam,startdatum,einddatum')
+    .eq('gearchiveerd', false);
+  okProjecten = data || [];
+}
+function okProjectRelevant(p) {
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const in30 = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+  const terug30 = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  const start = p.startdatum || '0000-01-01';
+  const einde = p.einddatum || '9999-12-31';
+  const actiefNu = start <= vandaag && einde >= vandaag;
+  const recentAfgelopen = einde < vandaag && einde >= terug30;
+  const binnenkortOp = start > vandaag && start <= in30;
+  return actiefNu || recentAfgelopen || binnenkortOp;
+}
+function renderOkProjectSuggesties() {
+  const q = document.getElementById('ok-projectnr').value.trim().toLowerCase();
+  const wrap = document.getElementById('ok-project-suggesties');
+  let items = okProjecten.filter(okProjectRelevant);
+  if (q) items = items.filter(p => (p.projectnummer || '').toLowerCase().includes(q) || (p.werfnaam || '').toLowerCase().includes(q));
+  items = items.slice(0, 30);
+  if (!items.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.innerHTML = items.map(p => `<div onmousedown="okKiesProject('${escapeHtml(p.projectnummer || '').replace(/'/g,"\\'")}')" style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer">
+      <div style="font-weight:600;font-size:13.5px">${escapeHtml(p.projectnummer || '')}</div>
+      <div style="font-size:12px;color:#888">${escapeHtml(p.werfnaam || '')}</div>
+    </div>`).join('');
+  wrap.style.display = 'block';
+}
+function okKiesProject(projectnummer) {
+  document.getElementById('ok-projectnr').value = projectnummer;
+  document.getElementById('ok-project-suggesties').style.display = 'none';
 }
 
 function okVoegLijnToe() {
@@ -9748,7 +9875,7 @@ function okVoegLijnToe() {
 function renderOkLijn(i) {
   const lijst = document.getElementById('ok-lijnen-lijst');
   const l = okLijnen[i];
-  const catOpts = OK_CATEGORIEEN.map(c => `<option value="${escapeHtml(c)}"${c===l.categorie?' selected':''}>${escapeHtml(c)}</option>`).join('');
+  const catOpts = OK_CATEGORIEEN.map(c => `<option value="${escapeHtml(c)}"${c===l.categorie?' selected':''}>${escapeHtml(okCategorieLabel(c))}</option>`).join('');
   lijst.insertAdjacentHTML('beforeend', `
     <div id="ok-lijn-${i}" style="background:#fff;border:1px solid #e4e6f0;border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
