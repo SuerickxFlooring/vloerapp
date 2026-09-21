@@ -544,6 +544,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="go('s-handleidingen')"><div class="ico">📖</div><div class="lbl">Handleidingen</div><div class="sub">Toestellen & info</div></button>
       <button class="menu-btn" onclick="go('s-weeknieuws')"><div class="ico">📰</div><div class="lbl">Weeknieuws</div><div class="sub">Briefingen kantoor</div></button>
       <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
+      <button class="menu-btn" onclick="go('s-onkostennota')"><div class="ico">💶</div><div class="lbl">Onkostennota</div><div class="sub">Bon indienen</div></button>
     </div>
     <div class="sync-badge" id="sync-status">🔄 Data laden...</div>
   </div>
@@ -2683,6 +2684,71 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
+<!-- ══ ONKOSTENNOTA ═══════════════════════════════════════ -->
+<div class="screen" id="s-onkostennota">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">💶 Onkostennota</div>
+  </div>
+  <div class="scroll-area" style="padding-top:64px">
+
+    <div style="display:flex;gap:4px;padding:12px 16px 0">
+      <div id="ok-step-0" class="step-dot active" style="flex:1;height:4px;border-radius:2px;background:#3547C8"></div>
+      <div id="ok-step-1" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+      <div id="ok-step-2" class="step-dot" style="flex:1;height:4px;border-radius:2px;background:#ddd"></div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:#888;padding:6px 0 4px" id="ok-step-label">Stap 1 van 3 — Basisgegevens</div>
+
+    <!-- STAP 0: Basisgegevens -->
+    <div id="ok-stap-0" style="padding:12px 16px">
+      <div class="form-group">
+        <label class="form-label">Naam</label>
+        <input type="text" class="form-input" id="ok-naam" placeholder="Naam...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input type="date" class="form-input" id="ok-datum">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Silo <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <input type="text" class="form-input" id="ok-silo" placeholder="Bv. V&amp;S1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Statuut</label>
+        <select class="form-input" id="ok-statuut">
+          <option>Arbeider</option>
+          <option>Bedienden</option>
+          <option>Bedienden OPS</option>
+          <option>N.V.T.</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Projectnr. <span style="font-weight:400;color:#999">(optioneel, standaard voor de onkosten hieronder)</span></label>
+        <input type="text" class="form-input" id="ok-projectnr" placeholder="Bv. F26-00012.000">
+      </div>
+    </div>
+
+    <!-- STAP 1: Kostenlijnen -->
+    <div id="ok-stap-1" style="padding:12px 16px;display:none">
+      <div id="ok-lijnen-lijst"></div>
+      <button type="button" onclick="okVoegLijnToe()" id="ok-voeg-toe-btn" class="btn-secondary" style="width:100%;margin-top:6px">➕ Onkost toevoegen</button>
+      <div style="text-align:right;font-weight:700;font-size:16px;margin-top:14px" id="ok-totaal-label">Totaal: € 0,00</div>
+    </div>
+
+    <!-- STAP 2: Overzicht & versturen -->
+    <div id="ok-stap-2" style="padding:12px 16px;display:none">
+      <div id="ok-samenvatting"></div>
+      <div id="ok-submit-status" style="margin-top:10px"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;padding:12px 16px 24px">
+      <button id="ok-vorige-btn" onclick="okStap(-1)" class="btn-secondary" style="flex:1;display:none">← Vorige</button>
+      <button id="ok-volgende-btn" onclick="okStap(1)" class="btn-primary" style="flex:1">Volgende →</button>
+      <button id="ok-submit-btn" onclick="submitOnkostennota()" class="btn-primary btn-green" style="flex:1;display:none">✅ Versturen</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ LMRA — Laatste Minuut RisicoAnalyse (elke ochtend, per project) ══ -->
 <div class="screen" id="s-lmra">
   <div class="topbar">
@@ -4645,6 +4711,7 @@ function go(id) {
   if (id === 's-lmra') initLmra();
   if (id === 's-documenten') initDocumenten();
   if (id === 's-weeknieuws') initWeeknieuws();
+  if (id === 's-onkostennota') initOnkostennota();
   if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra' || id === 's-levering') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') regEnterScherm();
   if (id === 's-login') renderLoginLijst();
@@ -4828,6 +4895,7 @@ async function loadRemoteData() {
       naam:     (r.naam || '').trim(),
       weergave: (r.weergave || r.naam || '').trim(),
       actief:   (r.actief || 'JA').trim().toUpperCase(),
+      statuut:  (r.statuut || 'Arbeider').trim(),
     }));
     console.log('[Supabase] Teamleaders geladen:', appData.teamleaders.map(t=>t.weergave));
 
@@ -9597,6 +9665,258 @@ async function submitWo() {
     if (error) throw error;
     statusEl.innerHTML = '<div class="ok-box">✅ Werfoplevering verstuurd! Beschikbaar in WerfKompas Beheer.</div>';
     setTimeout(() => { terugVanWoInvullen(); }, 2200);
+  } catch(e) {
+    statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// ONKOSTENNOTA — digitale versie van het Excel-formulier dat kantoor
+// manueel invulde; kolomcategorieën komen exact overeen met de kolommen
+// D:L van "Onkostennota voorbeeld.xlsx" (accounting-codes inbegrepen),
+// zodat cockpit de ingevulde template 1-op-1 kan reproduceren.
+// ════════════════════════════════════════════════════════════
+const OK_CATEGORIEEN = [
+  '600000 Aankopen',
+  '612173 Brandstof',
+  '623200 Medische dienst arbeider',
+  '612190 Taxi-tol',
+  '612420 Diverse bureelbenodigdheden',
+  '612700 Postzegels',
+  '615000 Representatie (drank)',
+  '615020 Restaurant',
+  '615010 Kleine relatiegeschenken',
+];
+const OK_MAX_LIJNEN = 9; // zoveel data-rijen (16-24) voorziet de Excel-template
+
+let okLijnen = [];
+let okStapNr = 0;
+
+// Statuut automatisch vooraf invullen op basis van wie er aangemeld is —
+// een ploegbaas (huidigeGebruiker(), de "Wie ben jij?"-kiezer) krijgt het
+// statuut dat voor hem/haar in de teamleaders-lijst staat (standaard
+// "Arbeider"); wie via de Beheer-login (Supabase Auth) aangemeld is, is per
+// definitie kantoorpersoneel en krijgt "Bedienden". Altijd nog manueel aan
+// te passen in het dropdown-veld hieronder.
+function okBepaalNaamEnStatuut() {
+  const mij = huidigeGebruiker();
+  if (mij) {
+    const naam = mij.weergave || mij.naam;
+    const tl = (appData.teamleaders || []).find(t => t.naam === mij.naam);
+    return { naam, statuut: (tl && tl.statuut) || 'Arbeider' };
+  }
+  if (beheerIngelogd && beheerUser) {
+    return { naam: naamUitEmail(beheerUser.email), statuut: 'Bedienden' };
+  }
+  return { naam: '', statuut: 'Arbeider' };
+}
+
+function initOnkostennota() {
+  okLijnen = [];
+  okStapNr = 0;
+  const { naam, statuut } = okBepaalNaamEnStatuut();
+  document.getElementById('ok-naam').value = naam;
+  document.getElementById('ok-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ok-silo').value = '';
+  document.getElementById('ok-statuut').value = statuut;
+  document.getElementById('ok-projectnr').value = '';
+  document.getElementById('ok-lijnen-lijst').innerHTML = '';
+  document.getElementById('ok-voeg-toe-btn').style.display = 'block';
+  updateOkNav();
+  okVoegLijnToe();
+}
+
+function okVoegLijnToe() {
+  const actieveAantal = okLijnen.filter(Boolean).length;
+  if (actieveAantal >= OK_MAX_LIJNEN) { alert('Maximum van ' + OK_MAX_LIJNEN + ' onkosten per nota — dien voor de rest een tweede onkostennota in.'); return; }
+  const i = okLijnen.length;
+  okLijnen.push({
+    datum: document.getElementById('ok-datum').value || new Date().toISOString().split('T')[0],
+    omschrijving: '', categorie: OK_CATEGORIEEN[0],
+    project: document.getElementById('ok-projectnr').value.trim() || '',
+    bedrag: '', fotoData: null, fotoUrl: '', fotoPath: '',
+  });
+  renderOkLijn(i);
+  okUpdateTotaal();
+  if (actieveAantal + 1 >= OK_MAX_LIJNEN) document.getElementById('ok-voeg-toe-btn').style.display = 'none';
+}
+
+function renderOkLijn(i) {
+  const lijst = document.getElementById('ok-lijnen-lijst');
+  const l = okLijnen[i];
+  const catOpts = OK_CATEGORIEEN.map(c => `<option value="${escapeHtml(c)}"${c===l.categorie?' selected':''}>${escapeHtml(c)}</option>`).join('');
+  lijst.insertAdjacentHTML('beforeend', `
+    <div id="ok-lijn-${i}" style="background:#fff;border:1px solid #e4e6f0;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-weight:700;font-size:13px;color:#3547C8">Onkost ${i+1}</span>
+        <button type="button" onclick="okVerwijderLijn(${i})" style="background:none;border:none;color:#A32D2D;font-size:13px;cursor:pointer">✕ Verwijder</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input type="date" class="form-input" value="${l.datum}" onchange="okLijnVeld(${i},'datum',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Omschrijving</label>
+        <input type="text" class="form-input" placeholder="Bv. Parking Brussel" onchange="okLijnVeld(${i},'omschrijving',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categorie</label>
+        <select class="form-input" onchange="okLijnVeld(${i},'categorie',this.value)">${catOpts}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <input type="text" class="form-input" value="${escapeHtml(l.project)}" placeholder="Bv. F26-00012.000" onchange="okLijnVeld(${i},'project',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bedrag (€)</label>
+        <input type="number" step="0.01" min="0" class="form-input" placeholder="0.00" oninput="okLijnBedrag(${i},this.value)">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Bon / factuur <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <div id="ok-lijn-${i}-foto-preview"></div>
+        <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border:2px dashed #3547C8;border-radius:10px;background:#F7F8FF;cursor:pointer;font-size:13px;font-weight:600;color:#3547C8">
+          📷 Foto van bon
+          <input type="file" accept="image/*" style="display:none" onchange="okLijnFoto(${i},this)">
+        </label>
+        <div id="ok-lijn-${i}-foto-status" style="font-size:11px;color:#888;margin-top:4px"></div>
+      </div>
+    </div>
+  `);
+}
+
+function okLijnVeld(i, veld, waarde) { if (okLijnen[i]) okLijnen[i][veld] = waarde; }
+function okLijnBedrag(i, waarde) { if (okLijnen[i]) okLijnen[i].bedrag = waarde; okUpdateTotaal(); }
+
+function okVerwijderLijn(i) {
+  if (!okLijnen[i]) return;
+  okLijnen[i] = null; // index-posities intact houden zodat reeds gerenderde DOM-ids blijven kloppen
+  document.getElementById('ok-lijn-'+i)?.remove();
+  okUpdateTotaal();
+  document.getElementById('ok-voeg-toe-btn').style.display = okLijnen.filter(Boolean).length >= OK_MAX_LIJNEN ? 'none' : 'block';
+}
+
+function okUpdateTotaal() {
+  const totaal = okLijnen.filter(Boolean).reduce((s,l) => s + (parseFloat(l.bedrag)||0), 0);
+  const el = document.getElementById('ok-totaal-label');
+  if (el) el.textContent = 'Totaal: € ' + totaal.toFixed(2).replace('.', ',');
+}
+
+// Foto-upload per onkostlijn — zelfde verkleen/upload-patroon als elders
+// (Werfoplevering, Levering), maar in de 'fotos'-bucket onder 'onkostennota/'.
+function okLijnFoto(i, input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file || !okLijnen[i]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    verkleenFoto(e.target.result, 1200, b64 => {
+      if (!okLijnen[i]) return;
+      okLijnen[i].fotoData = b64;
+      const prev = document.getElementById('ok-lijn-'+i+'-foto-preview');
+      if (prev) prev.innerHTML = `<img src="${b64}" style="width:70px;height:70px;object-fit:cover;border-radius:10px;margin-bottom:6px">`;
+      okUploadLijnFoto(i, b64);
+    });
+  };
+  reader.readAsDataURL(file);
+}
+async function okUploadLijnFoto(i, b64) {
+  const statusEl = document.getElementById('ok-lijn-'+i+'-foto-status');
+  if (!sb) { if (statusEl) statusEl.textContent = 'Geen verbinding — foto niet opgeslagen'; return; }
+  try {
+    const blob = dataURLtoBlob(b64);
+    const path = 'onkostennota/' + Date.now() + '-' + i + '.jpg';
+    const { error: upErr } = await sb.storage.from('fotos').upload(path, blob, { contentType: 'image/jpeg' });
+    if (upErr) throw upErr;
+    const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
+    if (!okLijnen[i]) return;
+    okLijnen[i].fotoUrl = pub.publicUrl;
+    okLijnen[i].fotoPath = path;
+    if (statusEl) statusEl.textContent = 'Foto opgeslagen ✓';
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Upload mislukt: ' + (e.message || 'onbekende fout');
+  }
+}
+
+function okStap(delta) {
+  if (delta > 0 && okStapNr === 0) {
+    if (!document.getElementById('ok-naam').value.trim()) { alert('Vul je naam in.'); return; }
+    if (!document.getElementById('ok-datum').value) { alert('Vul de datum in.'); return; }
+  }
+  if (delta > 0 && okStapNr === 1) {
+    const actieveLijnen = okLijnen.filter(Boolean);
+    if (!actieveLijnen.length) { alert('Voeg minstens 1 onkost toe.'); return; }
+    for (const l of actieveLijnen) {
+      if (!l.omschrijving.trim() || !(parseFloat(l.bedrag) > 0)) { alert('Vul voor elke onkost een omschrijving en een bedrag groter dan 0 in.'); return; }
+    }
+  }
+  okStapNr = Math.max(0, Math.min(2, okStapNr + delta));
+  updateOkNav();
+  if (okStapNr === 2) renderOkSamenvatting();
+}
+
+function updateOkNav() {
+  [0,1,2].forEach(n => {
+    document.getElementById('ok-stap-'+n).style.display = n === okStapNr ? 'block' : 'none';
+    document.getElementById('ok-step-'+n).style.background = n <= okStapNr ? '#3547C8' : '#ddd';
+  });
+  const labels = ['Stap 1 van 3 — Basisgegevens', 'Stap 2 van 3 — Onkosten', 'Stap 3 van 3 — Overzicht & versturen'];
+  document.getElementById('ok-step-label').textContent = labels[okStapNr];
+  document.getElementById('ok-vorige-btn').style.display = okStapNr > 0 ? 'block' : 'none';
+  document.getElementById('ok-volgende-btn').style.display = okStapNr < 2 ? 'block' : 'none';
+  document.getElementById('ok-submit-btn').style.display = okStapNr === 2 ? 'block' : 'none';
+  document.getElementById('ok-submit-status').innerHTML = '';
+}
+
+function renderOkSamenvatting() {
+  const actieveLijnen = okLijnen.filter(Boolean);
+  const totaal = actieveLijnen.reduce((s,l) => s + (parseFloat(l.bedrag)||0), 0);
+  document.getElementById('ok-samenvatting').innerHTML = `
+    <div style="background:#f7f8fc;border-radius:12px;padding:14px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px">💶 Overzicht</div>
+      <div style="font-size:14px;color:#333;display:flex;flex-direction:column;gap:4px">
+        <div><strong>Naam:</strong> ${escapeHtml(document.getElementById('ok-naam').value)}</div>
+        <div><strong>Datum:</strong> ${document.getElementById('ok-datum').value}</div>
+        <div><strong>Aantal onkosten:</strong> ${actieveLijnen.length}</div>
+        <div><strong>Totaal:</strong> € ${totaal.toFixed(2).replace('.', ',')}</div>
+      </div>
+    </div>`;
+}
+
+async function submitOnkostennota() {
+  const statusEl = document.getElementById('ok-submit-status');
+  if (!sb && !initSupabase()) {
+    statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
+    return;
+  }
+  const naam = document.getElementById('ok-naam').value.trim();
+  const actieveLijnen = okLijnen.filter(Boolean);
+  if (!naam || !actieveLijnen.length) {
+    statusEl.innerHTML = '<div class="err-box">❌ Naam en minstens 1 onkost zijn verplicht.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen...</div>';
+
+  const totaal = actieveLijnen.reduce((s,l) => s + (parseFloat(l.bedrag)||0), 0);
+  const payload = {
+    client_timestamp: new Date().toISOString(),
+    teamleader: naam,
+    datum: document.getElementById('ok-datum').value,
+    silo: document.getElementById('ok-silo').value.trim(),
+    statuut: document.getElementById('ok-statuut').value,
+    projectnr: document.getElementById('ok-projectnr').value.trim(),
+    lijnen: actieveLijnen.map(l => ({
+      datum: l.datum, omschrijving: l.omschrijving.trim(), categorie: l.categorie,
+      project: (l.project||'').trim(), bedrag: parseFloat(l.bedrag)||0,
+      foto_url: l.fotoUrl || '', foto_path: l.fotoPath || '',
+    })),
+    totaal,
+  };
+
+  try {
+    const { error } = await sb.rpc('submit_onkostennota', { p: payload });
+    if (error) throw error;
+    statusEl.innerHTML = '<div class="ok-box">✅ Onkostennota verstuurd! Beschikbaar in WerfKompas Beheer.</div>';
+    setTimeout(() => { go('s-home'); }, 2200);
   } catch(e) {
     statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
   }
