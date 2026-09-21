@@ -450,6 +450,9 @@ textarea.form-input{min-height:80px;resize:vertical}
   <div class="sidebar-nav-item" id="snav-aanrijding" onclick="goDesktop('s-aanrijding')">
     <span class="s-icon">🚨</span> Aanrijding
   </div>
+  <div class="sidebar-nav-item" id="snav-onkostennota" onclick="goDesktop('s-onkostennota')">
+    <span class="s-icon">💶</span> Onkostennota
+  </div>
 
   <div class="sidebar-footer">
     <div id="sidebar-sync-status">Laden...</div>
@@ -4666,7 +4669,8 @@ function goDesktop(id) {
                's-levering':'snav-levering',
                's-handleidingen':'snav-handleidingen',
                's-weeknieuws':'snav-weeknieuws',
-               's-documenten':'snav-documenten'};
+               's-documenten':'snav-documenten',
+               's-onkostennota':'snav-onkostennota'};
   const active = document.getElementById(map[id]);
   if (active) active.classList.add('active');
 }
