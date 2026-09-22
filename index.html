@@ -3539,12 +3539,28 @@ async function kiesDocProject(projectId) {
           <div class="badge ${TYPE_BADGE[b.type] || ''}" style="display:inline-block;margin-top:4px">${escapeHtml(b.type)}</div>
           ${veiligOntbreekt ? `<div style="font-size:11.5px;color:#c0392b;margin-top:4px">Nog niet beschikbaar — wordt binnenkort verwerkt</div>` : ''}
         </div>`;
+    // Bij Startwerkbespreking/Werfoplevering is de digitale invulversie de
+    // belangrijkste actie — daarom opent de rij die meteen, en staat het
+    // origineel geüploade PDF-document als aparte, kleinere "PDF bekijken"-
+    // knop ernaast. Bij de overige types (TRA/VGM/WMS/Offerte) bestaat er
+    // geen invulversie, dus blijft de rij zelf gewoon het PDF openen.
+    const invulOnclick = isSwb ? `openSwbInvullenVanuitLijst(${b.project_id},${b.id})`
+                       : isWo  ? `openWoInvullenVanuitLijst(${b.project_id},${b.id})`
+                       : null;
+    let hoofd;
+    if(veiligOntbreekt){
+      hoofd = `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;opacity:.55">${inhoud}</div>`;
+    } else if(invulOnclick){
+      hoofd = `<div onclick="${invulOnclick}" style="cursor:pointer;text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;flex:1;min-width:0">${inhoud}</div>`;
+    } else {
+      hoofd = `<a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;flex:1;min-width:0">${inhoud}</a>`;
+    }
+    const pdfKnop = (invulOnclick && !veiligOntbreekt)
+      ? `<a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none">📄 PDF bekijken</a>`
+      : '';
     return `<div class="prod-card" style="display:flex;align-items:center;gap:10px">
-      ${veiligOntbreekt
-        ? `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;opacity:.55">${inhoud}</div>`
-        : `<a href="${escapeHtml(pub.publicUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;flex:1;min-width:0">${inhoud}</a>`}
-      ${isSwb ? `<button onclick="event.stopPropagation();openSwbInvullenVanuitLijst(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
-      ${isWo ? `<button onclick="event.stopPropagation();openWoInvullenVanuitLijst(${b.project_id},${b.id})" style="flex-shrink:0;background:#3547C8;color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Invullen</button>` : ''}
+      ${hoofd}
+      ${pdfKnop}
     </div>`;
   }).join('');
   return data;
