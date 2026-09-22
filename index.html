@@ -3496,7 +3496,10 @@ async function kiesDocProject(projectId) {
   const proj = (docState.projecten || []).find(p => p.id === projectId);
   document.getElementById('doc-topbar-title').textContent = proj?.werfnaam || 'Projectinformatie';
   document.getElementById('doc-stap-lijst').style.display = 'none';
-  document.getElementById('doc-stap-bijlagen').style.display = '';
+  // Expliciet 'flex' (niet ''): zonder flex-container valt de .scroll-area
+  // eronder terug op automatische hoogte en is de lijst op een klein scherm
+  // niet meer scrollbaar — alles onder de schermrand blijft dan onbereikbaar.
+  document.getElementById('doc-stap-bijlagen').style.display = 'flex';
 
   laadPlaatsbezoekenVoorProject(projectId, proj);
 
@@ -3783,7 +3786,7 @@ function docTerugNaarLijst() {
   const inBijlagenStap = document.getElementById('doc-stap-bijlagen').style.display !== 'none';
   if (inBijlagenStap) {
     document.getElementById('doc-stap-bijlagen').style.display = 'none';
-    document.getElementById('doc-stap-lijst').style.display = '';
+    document.getElementById('doc-stap-lijst').style.display = 'flex';
     document.getElementById('doc-topbar-title').textContent = 'Projectinformatie';
   } else {
     go('s-home');
