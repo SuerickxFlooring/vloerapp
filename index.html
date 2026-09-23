@@ -3345,6 +3345,23 @@ function isDocActief(p) {
   const einde = p.einddatum  || '9999-12-31';
   return start <= docMorgen() && einde >= docVandaag();
 }
+// Een werf die afgelopen is blijft nog 7 dagen opzoekbaar (zie
+// docZevenDagenGeleden() bij initDocumenten()) zodat een oplevering of
+// startwerkbespreking nog ingevuld kan worden — maar telt nergens nog als
+// actief of binnenkort mee.
+function isDocAfgelopen(p) {
+  return !!p.einddatum && p.einddatum < docVandaag();
+}
+function docZevenDagenGeleden() {
+  const d = new Date(); d.setDate(d.getDate()-7);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+// Gedeeld tussen de Projectinfo-lijst en de Werfoplevering-/Startwerk-kiezers.
+function docStatusBadge(p) {
+  if (isDocActief(p))    return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3B6D11;background:#EAF3DE;border-radius:6px;padding:2px 8px">🟢 Actief nu</span>`;
+  if (isDocAfgelopen(p)) return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#777;background:#f0f0f0;border-radius:6px;padding:2px 8px">🏁 Afgelopen</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3547C8;background:#EEF0FC;border-radius:6px;padding:2px 8px">🔵 Binnenkort</span>`;
+}
 function fmtDocDatum(s) {
   if (!s) return '';
   const [y,m,d] = s.split('-');
@@ -3375,10 +3392,14 @@ async function initDocumenten() {
     lijst.innerHTML = '<div style="color:#c0392b;text-align:center;padding:20px 0">Kon geen verbinding maken met WerfKompas Beheer.</div>';
     return;
   }
+  // Naast alle actieve/toekomstige werven ook werven die pas gearchiveerd
+  // zijn (afgerond, korter dan 7 dagen geleden) — zodat een oplevering of
+  // startwerkbespreking na afloop van de werf nog ingevuld kan worden i.p.v.
+  // meteen onvindbaar te zijn zodra WerfKompas Beheer het project archiveert.
   const [projRes, bijlRes] = await Promise.all([
     client.from('cockpit_projecten')
-      .select('id,projectnummer,werfnaam,startdatum,einddatum')
-      .eq('gearchiveerd', false)
+      .select('id,projectnummer,werfnaam,startdatum,einddatum,gearchiveerd')
+      .or(`gearchiveerd.eq.false,and(gearchiveerd.eq.true,einddatum.gte.${docZevenDagenGeleden()})`)
       .order('startdatum', { ascending: true }),
     client.from('cockpit_bijlagen').select('project_id,type')
   ]);
@@ -3464,16 +3485,13 @@ function renderDocProjecten() {
     !q || (p.werfnaam || '').toLowerCase().includes(q) || (p.projectnummer || '').toLowerCase().includes(q)
   );
   if (docState.filter === 'actief')     items = items.filter(p => isDocActief(p));
-  if (docState.filter === 'binnenkort') items = items.filter(p => !isDocActief(p));
+  if (docState.filter === 'binnenkort') items = items.filter(p => !isDocActief(p) && !isDocAfgelopen(p));
   if (!items.length) {
     lijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Geen werven gevonden.</div>';
     return;
   }
   lijst.innerHTML = items.map(p => {
-    const actief = isDocActief(p);
-    const badge = actief
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3B6D11;background:#EAF3DE;border-radius:6px;padding:2px 8px">🟢 Actief nu</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3547C8;background:#EEF0FC;border-radius:6px;padding:2px 8px">🔵 Binnenkort</span>`;
+    const badge = docStatusBadge(p);
     const datums = (p.startdatum || p.einddatum)
       ? `<span style="font-size:12px;color:#999">${fmtDocDatum(p.startdatum)} → ${fmtDocDatum(p.einddatum)}</span>`
       : '';
@@ -9239,10 +9257,7 @@ function renderSwbKiesLijst() {
   );
   if (!items.length) { wrap.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Geen werven gevonden.</div>'; return; }
   wrap.innerHTML = items.map(p => {
-    const actief = isDocActief(p);
-    const badge = actief
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3B6D11;background:#EAF3DE;border-radius:6px;padding:2px 8px">🟢 Actief nu</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3547C8;background:#EEF0FC;border-radius:6px;padding:2px 8px">🔵 Binnenkort</span>`;
+    const badge = docStatusBadge(p);
     return `<div class="prod-card" onclick="kiesStartwerkProject(${p.id})">
       <div class="prod-card-top">
         <div class="prod-name" style="font-size:15px">🏗️ ${escapeHtml(p.werfnaam || 'Onbekende werf')}</div>
@@ -9632,10 +9647,7 @@ function renderWoKiesLijst() {
   );
   if (!items.length) { wrap.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Geen werven gevonden.</div>'; return; }
   wrap.innerHTML = items.map(p => {
-    const actief = isDocActief(p);
-    const badge = actief
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3B6D11;background:#EAF3DE;border-radius:6px;padding:2px 8px">🟢 Actief nu</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3547C8;background:#EEF0FC;border-radius:6px;padding:2px 8px">🔵 Binnenkort</span>`;
+    const badge = docStatusBadge(p);
     return `<div class="prod-card" onclick="kiesWerfopleveringProject(${p.id})">
       <div class="prod-card-top">
         <div class="prod-name" style="font-size:15px">🏗️ ${escapeHtml(p.werfnaam || 'Onbekende werf')}</div>
