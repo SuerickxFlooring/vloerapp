@@ -168,6 +168,84 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .aandacht-box{background:#FFF8EC;border-radius:10px;padding:14px;margin-bottom:18px}
 .aandacht-lbl{font-size:11px;font-weight:700;color:#3547C8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .aandacht-txt{font-size:14px;line-height:1.5}
+/* ── Handleiding FloorJoint S: eigen vormgeving (marineblauw + Barlow), gebaseerd op het ontwerp van de werkinstructie ── */
+@font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;src:url(docs/handleidingen/floorjoint/fonts/barlow-400.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;src:url(docs/handleidingen/floorjoint/fonts/barlow-600.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:600;font-display:swap;src:url(docs/handleidingen/floorjoint/fonts/barlow-condensed-600.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(docs/handleidingen/floorjoint/fonts/barlow-condensed-700.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+.fj{max-width:1040px;margin:0 auto;background:#f2f3f7;color:#18215f;font-family:'Barlow',-apple-system,BlinkMacSystemFont,sans-serif;border:1px solid #d5d8e3;border-radius:12px;overflow:hidden;container-type:inline-size}
+.fj *{box-sizing:border-box}
+.fj p{margin:0 0 12px;font-size:15.5px;line-height:1.6}
+.fj h1,.fj h2{margin:0;font-family:'Barlow Condensed','Barlow',sans-serif;font-weight:700}
+.fj figure{margin:0}
+.fj-hero{background:#18215f;color:#f2f3f7}
+.fj-hero-txt{padding:28px 20px 26px}
+.fj-hero img{display:block;width:100%;height:230px;object-fit:cover;border-top:8px solid #aab6e8}
+.fj-kicker{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:3.5px;color:#aab6e8}
+.fj-title{font-size:46px;line-height:.95;margin:12px 0 14px!important}
+.fj-lead{font-size:16px!important;line-height:1.5!important;margin:0!important;opacity:.85}
+.fj-edition{margin-top:18px;font-size:12.5px;opacity:.6}
+.fj-intro{padding:28px 20px;border-bottom:1px solid #d5d8e3}
+.fj-intro .fj-h2{font-size:30px;margin-bottom:12px}
+.fj-intro-fig{background:#fff;padding:16px;margin-top:18px}
+.fj-intro-fig img{display:block;width:100%}
+.fj-intro-fig div{font-size:12.5px;margin-top:8px;opacity:.7}
+.fj-overview{padding:26px 20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 14px;border-bottom:1px solid #d5d8e3}
+.fj-ov{border-top:4px solid #243580;padding-top:10px}
+.fj-ov-big{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:32px;line-height:1}
+.fj-ov-lbl{font-size:13.5px;line-height:1.4;margin-top:6px}
+.fj-step{padding:28px 20px;border-bottom:1px solid #d5d8e3}
+.fj-step-head{display:flex;align-items:baseline;gap:14px;margin-bottom:16px}
+.fj-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:62px;line-height:.85;color:#243580;flex-shrink:0}
+.fj-step .fj-h2{font-size:30px;line-height:1;min-width:0;overflow-wrap:anywhere}
+.fj-step-body{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.fj-spec{display:flex;gap:12px;align-items:baseline;border-top:1px solid #d5d8e3;padding:9px 0}
+.fj-spec-v{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:24px;color:#18215f;min-width:96px;flex-shrink:0}
+.fj-spec-l{font-size:14.5px;line-height:1.4;min-width:0}
+.fj-note{background:#243580;color:#fff;padding:12px 14px;margin-top:12px;font-size:14.5px;line-height:1.45}
+.fj-note strong{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:14px}
+.fj-imgs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-content:start}
+.fj-fig{grid-column:span 1}
+.fj-fig.fj-span2{grid-column:span 2}
+.fj-fig img{display:block;width:100%;height:calc(var(--h) * .8);object-fit:cover;background:#fff}
+.fj-fig figcaption{font-size:12px;line-height:1.35;margin-top:5px;opacity:.7}
+.fj-safety{padding:28px 20px;background:#18215f;color:#f2f3f7}
+.fj-safety .fj-h2{font-size:34px;margin-bottom:20px}
+.fj-safety .fj-h2 span{color:#aab6e8}
+.fj-safe-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+.fj-safe-h{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;letter-spacing:2px;text-transform:uppercase;color:#aab6e8;margin-bottom:8px}
+.fj-safe-i{font-size:14.5px;line-height:1.5;padding:7px 0;border-top:1px solid rgba(244,241,234,.2)}
+.fj-foot{padding:22px 20px 28px;font-size:12px;line-height:1.55;opacity:.8}
+.fj-foot p{font-size:12px!important;line-height:1.55!important;margin:0 0 9px!important}
+@container (min-width:640px){
+  .fj p{font-size:17px}
+  .fj-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:end;padding:44px 44px 0}
+  .fj-hero-txt{padding:0 0 44px}
+  .fj-hero img{height:340px}
+  .fj-kicker{font-size:16px;letter-spacing:5px}
+  .fj-title{font-size:64px}
+  .fj-lead{font-size:19px!important}
+  .fj-edition{font-size:14px}
+  .fj-intro{padding:40px 44px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:36px}
+  .fj-intro .fj-h2{font-size:38px}
+  .fj-intro-fig{margin-top:0}
+  .fj-overview{padding:34px 44px;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .fj-ov-big{font-size:40px}
+  .fj-step{padding:40px 44px}
+  .fj-num{font-size:84px}
+  .fj-step .fj-h2{font-size:40px}
+  .fj-step-head{gap:20px;margin-bottom:22px}
+  .fj-step-body{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:34px;align-items:start}
+  .fj-spec-v{font-size:28px;min-width:124px}
+  .fj-spec-l,.fj-note{font-size:15.5px}
+  .fj-fig img{height:var(--h)}
+  .fj-fig figcaption{font-size:13px}
+  .fj-safety{padding:40px 44px}
+  .fj-safety .fj-h2{font-size:42px}
+  .fj-safe-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:30px}
+  .fj-safe-i{font-size:15.5px}
+  .fj-foot{padding:28px 44px 40px;font-size:13px}
+}
 
 /* ── Forms ───────────────────────────────────────────── */
 .form-pad{padding:16px}
@@ -2612,6 +2690,240 @@ textarea.form-input{min-height:80px;resize:vertical}
           <div class="det-sec" style="margin-bottom:0"><h3>📚 Bronnen</h3>
             <div style="font-size:12px;color:#777;line-height:1.6">• PBM-lijst Asbestwerken (bijlage): alle specificaties en referenties<br>• Codex over het welzijn op het werk, Boek VI, Titel 3 Asbest: volgelaatsmasker met P3-filter of persluchtsysteem bij de couveusezak, beschermende kledij, sanitaire voorzieningen en grenswaarde 0,1 vezel/cm³<br>• FOD WASO: Asbest en asbestverwijderaars</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Kaart: Sika FloorJoint S plaatsen (werkinstructie, eigen vormgeving) -->
+      <div class="prod-card h-card" data-cat="techniek" onclick="toggleHandleiding('h10')">
+        <div class="prod-card-top">
+          <div class="prod-name">🧱 Sika® FloorJoint S plaatsen</div>
+          <div class="badge badge-pu">TECHNIEK</div>
+        </div>
+        <div class="prod-sub">Voegpanelen plaatsen in betonvloeren — stap voor stap, van zaagsnede tot coating</div>
+      </div>
+      <div id="h10" style="display:none">
+        <div class="fj">
+          <header class="fj-hero">
+            <div class="fj-hero-txt">
+              <div class="fj-kicker">WERKINSTRUCTIE · VLOEREN</div>
+              <h1 class="fj-title">Sika® FloorJoint S plaatsen</h1>
+              <p class="fj-lead">Stap voor stap het plaatsen van voegpanelen in betonnen dekvloeren, van zaagsnede tot coating.</p>
+              <div class="fj-edition">Editie 1.0 · 07/11/2014 · Sika NZ Asia Pacific</div>
+            </div>
+            <img src="docs/handleidingen/floorjoint/header.jpg" alt="Sika FloorJoint S voegpaneel wordt uitgelegd naast de voeg" loading="lazy" decoding="async">
+          </header>
+
+          <section class="fj-intro">
+            <div>
+              <h2 class="fj-h2">Toepassing</h2>
+              <p>Deze werkinstructie beschrijft stap voor stap het plaatsen van de voegpanelen Sika® FloorJoint S.</p>
+              <p>Sika® FloorJoint S is een geprefabriceerd, met koolstofvezel versterkt kunststofcomposietpaneel met hoge fysieke eigenschappen. Door het golvende voegontwerp wordt de belasting beter verdeeld. Het is het standaardpaneel voor nieuwbouw en renovatie van voegen in cementdekvloeren met normale tot middelzware slijtage, zoals in magazijnen.</p>
+            </div>
+            <div class="fj-intro-fig">
+              <img src="docs/handleidingen/floorjoint/doorsnede.jpg" alt="Doorsnede van het paneel in de uitgefreesde voeg" loading="lazy" decoding="async">
+              <div>Doorsnede: paneel in de uitgefreesde voeg, met randstrook eronder.</div>
+            </div>
+          </section>
+
+          <section class="fj-overview">
+        <div class="fj-ov"><div class="fj-ov-big">25 mm</div><div class="fj-ov-lbl">Zaag- en uitbreekdiepte</div></div>
+        <div class="fj-ov"><div class="fj-ov-big">1200 × 250</div><div class="fj-ov-lbl">Afmeting paneel in mm</div></div>
+        <div class="fj-ov"><div class="fj-ov-big">20 mm</div><div class="fj-ov-lbl">Instelling van de verstelbare spaan</div></div>
+        <div class="fj-ov"><div class="fj-ov-big">Max. 2 mm</div><div class="fj-ov-lbl">Paneel mag zoveel boven de vloer uitsteken; daarna slijpen tot gelijk</div></div>
+          </section>
+
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">01</span><h2 class="fj-h2">Afbakenen en uitzetten</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Bepaal de positie van het paneel en teken de zaagsneden af met een krijtlijn of permanente stift, om de 20–30 mm.</p>
+          <div class="fj-spec"><span class="fj-spec-v">+5 mm</span><span class="fj-spec-l">extra aan begin én einde van het paneel (10 mm in totaal)</span></div>
+          <div class="fj-spec"><span class="fj-spec-v">+5 mm</span><span class="fj-spec-l">extra links en rechts: 130 mm vanaf het hart van de voeg (260 mm in totaal)</span></div>
+          <div class="fj-spec"><span class="fj-spec-v">1200 × 250</span><span class="fj-spec-l">afmeting van het voegpaneel in mm</span></div>
+          
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig fj-span2" style="--h:210px"><img src="docs/handleidingen/floorjoint/img127.jpg" alt="Voeg uitzetten" loading="lazy" decoding="async"><figcaption>Voeg uitzetten</figcaption></figure>
+          <figure class="fj-fig fj-span2" style="--h:170px"><img src="docs/handleidingen/floorjoint/img128.jpg" alt="Paneel als maatvoering" loading="lazy" decoding="async"><figcaption>Paneel als maatvoering</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">02</span><h2 class="fj-h2">Zaagsneden maken</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Zaag de voeg met een diamantzaag in combinatie met een geschikte stofzuiger om stof en vuil te beperken. Geschikt materiaal: Hilti DC SE 20 voegenzaag met VC 40 U stofzuiger.</p>
+          <p>Zaag in de hoeken 30–40 mm verder door, zodat de snede overal op diepte komt. Bij droog zagen altijd een stofzuiger gebruiken. Bij nat zagen het water zo snel mogelijk uit de zaagsneden verwijderen.</p>
+          <div class="fj-spec"><span class="fj-spec-v">25 mm</span><span class="fj-spec-l">zaagdiepte. Stel de voegenzaag hierop in.</span></div>
+          <div class="fj-note"><strong>Let op · </strong>Controleer de slijtage van de diamantschijf continu en stel de schijf zo nodig bij, zodat de snijdiepte gelijk blijft.</div>
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig fj-span2" style="--h:230px"><img src="docs/handleidingen/floorjoint/img13.jpg" alt="Zaagsneden in het beton" loading="lazy" decoding="async"><figcaption>Zaagsneden in het beton</figcaption></figure>
+          <figure class="fj-fig" style="--h:190px"><img src="docs/handleidingen/floorjoint/img12.jpg" alt="Hilti DC SE 20" loading="lazy" decoding="async"><figcaption>Hilti DC SE 20</figcaption></figure>
+          <figure class="fj-fig" style="--h:190px"><img src="docs/handleidingen/floorjoint/img11.jpg" alt="Hilti VC 40 U stofzuiger" loading="lazy" decoding="async"><figcaption>Hilti VC 40 U stofzuiger</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">03</span><h2 class="fj-h2">Beton uitbeitelen</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Beitel het beton na het zagen uit met een krachtige beitelhamer, bijvoorbeeld de Hilti TE 70 AVR.</p>
+          <p>Ingebouwde metalen profielen kunt u verwijderen met een slijptol of snijbrander. De diepte van de profielen moet overal ca. 25 mm zijn.</p>
+          <div class="fj-spec"><span class="fj-spec-v">25 mm</span><span class="fj-spec-l">diepte overal</span></div>
+          <div class="fj-note"><strong>Let op · </strong>Zorg dat vonken geen brand veroorzaken.</div>
+          <div class="fj-note"><strong>Let op · </strong>Zorg dat de buitenranden van het aangrenzende bestaande beton niet beschadigen.</div>
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig fj-span2" style="--h:260px"><img src="docs/handleidingen/floorjoint/img19.jpg" alt="Uitbeitelen van de voeg" loading="lazy" decoding="async"><figcaption>Uitbeitelen van de voeg</figcaption></figure>
+          <figure class="fj-fig" style="--h:190px"><img src="docs/handleidingen/floorjoint/img18.jpg" alt="Hilti TE 70 AVR" loading="lazy" decoding="async"><figcaption>Hilti TE 70 AVR</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">04</span><h2 class="fj-h2">Ondergrond reinigen en voorbereiden</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Verwijder alle stof en los of brokkelig materiaal volledig van alle oppervlakken vóór het aanbrengen van de lijm, bij voorkeur met borstel en/of stofzuiger.</p>
+          <p>De betonondergrond moet deugdelijk zijn en voldoende druksterkte hebben. De ondergrond moet schoon, droog en vrij van verontreinigingen zijn, zoals vuil, olie, vet, coatings en oppervlaktebehandelingen.</p>
+          <div class="fj-spec"><span class="fj-spec-v">25 N/mm²</span><span class="fj-spec-l">minimale druksterkte</span></div>
+          <div class="fj-spec"><span class="fj-spec-v">1,5 N/mm²</span><span class="fj-spec-l">minimale hechtsterkte (afpeltest)</span></div>
+          
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig fj-span2" style="--h:240px"><img src="docs/handleidingen/floorjoint/img17.jpg" alt="Stofvrij maken met stofzuiger" loading="lazy" decoding="async"><figcaption>Stofvrij maken met stofzuiger</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">05</span><h2 class="fj-h2">Panelen proefleggen</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Leg de panelen in de sparing. Laat bij het laatste paneel ca. 5 mm ruimte.</p>
+          <p>Markeer de plaats van het paneel. Zaag of slijp het paneel zo nodig op maat met een slijptol of diamantzaag. Leg alle delen in de uitgebeitelde sparing en controleer of ze goed passen. Haal alle delen daarna weer weg en leg ze naast de sparing klaar.</p>
+          
+          
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig fj-span2" style="--h:240px"><img src="docs/handleidingen/floorjoint/img23.jpg" alt="Paneel proefleggen" loading="lazy" decoding="async"><figcaption>Paneel proefleggen</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">06</span><h2 class="fj-h2">Randstrook in de constructievoeg</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Plaats in de constructievoeg een randstrook van schuimprofiel zoals hiernaast afgebeeld. Dit is essentieel om beweging tussen de twee platen van het voegpaneel mogelijk te maken.</p>
+          <p>Stel de hoogte van de randstrook af met een verstelbare spaan. De randstrook ligt in de hartlijn van de voeg.</p>
+          <div class="fj-spec"><span class="fj-spec-v">50 m</span><span class="fj-spec-l">randstrook geleverd op rollen</span></div>
+          <div class="fj-spec"><span class="fj-spec-v">80–100 mm</span><span class="fj-spec-l">hoogte, dikte 5 mm</span></div>
+          
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig" style="--h:250px"><img src="docs/handleidingen/floorjoint/img30.jpg" alt="Randstrook plaatsen" loading="lazy" decoding="async"><figcaption>Randstrook plaatsen</figcaption></figure>
+          <figure class="fj-fig" style="--h:250px"><img src="docs/handleidingen/floorjoint/img28.jpg" alt="Hoogte instellen" loading="lazy" decoding="async"><figcaption>Hoogte instellen</figcaption></figure>
+          <figure class="fj-fig" style="--h:150px"><img src="docs/handleidingen/floorjoint/img29.jpg" alt="Randstrook op rol" loading="lazy" decoding="async"><figcaption>Randstrook op rol</figcaption></figure>
+          <figure class="fj-fig" style="--h:150px"><img src="docs/handleidingen/floorjoint/img37.jpg" alt="Paneel met randstrook en Sikadur®-31 CF Normal" loading="lazy" decoding="async"><figcaption>Paneel met randstrook en Sikadur®-31 CF Normal</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">07</span><h2 class="fj-h2">Lijm aanbrengen in de sparing</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Meng de lijm Sikadur®-31 CF Normal volgens het productblad. Verdeel de lijm gelijkmatig in de sparing, zodat de al geplaatste randstrook niet door lijm wordt bedekt.</p>
+          <p>Om beweging van de voeg na het plaatsen mogelijk te maken, moeten beide kanten van het paneel gescheiden zijn. Daarvoor zit afplaktape aan de onderzijde van het paneel. Verwijder deze niet. De tape ligt tegen de schuimstrook en werkt als scheidingslaag.</p>
+          <div class="fj-spec"><span class="fj-spec-v">20 mm</span><span class="fj-spec-l">instelling van de verstelbare spaan</span></div>
+          <div class="fj-note"><strong>Let op · </strong>Afplaktape onder het paneel niet verwijderen.</div>
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig fj-span2" style="--h:210px"><img src="docs/handleidingen/floorjoint/img38.jpg" alt="Lijm verdelen in de sparing" loading="lazy" decoding="async"><figcaption>Lijm verdelen in de sparing</figcaption></figure>
+          <figure class="fj-fig" style="--h:190px"><img src="docs/handleidingen/floorjoint/img32.jpg" alt="Verstelbare spaan" loading="lazy" decoding="async"><figcaption>Verstelbare spaan</figcaption></figure>
+          <figure class="fj-fig" style="--h:190px"><img src="docs/handleidingen/floorjoint/img39.jpg" alt="Spaan instellen op 20 mm" loading="lazy" decoding="async"><figcaption>Spaan instellen op 20 mm</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">08</span><h2 class="fj-h2">Paneel plaatsen</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Breng de lijm ook aan op de onderkant van het paneel met een getande spaan, om ingesloten lucht te voorkomen.</p>
+          <p>Plaats het voegpaneel in het verse lijmbed. Druk of klop het paneel aan, zodat het profiel overal contact maakt met de lijm. Zorg dat er geen holtes onder het paneel ontstaan.</p>
+          <p>Afhankelijk van de oneffenheid van de aangrenzende vloer ligt het paneel iets hoger (max. 2 mm) of gelijk met het beton. Na uitharding van de lijm wordt het paneel gelijk met de aangrenzende vloer geslepen.</p>
+          <div class="fj-spec"><span class="fj-spec-v">≤ 2 mm</span><span class="fj-spec-l">hoger dan de aangrenzende vloer</span></div>
+          
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig" style="--h:210px"><img src="docs/handleidingen/floorjoint/img43.jpg" alt="Paneel plaatsen" loading="lazy" decoding="async"><figcaption>Paneel plaatsen</figcaption></figure>
+          <figure class="fj-fig" style="--h:210px"><img src="docs/handleidingen/floorjoint/img44.jpg" alt="Aandrukken" loading="lazy" decoding="async"><figcaption>Aandrukken</figcaption></figure>
+          <figure class="fj-fig" style="--h:190px"><img src="docs/handleidingen/floorjoint/img46.jpg" alt="Getande spaan" loading="lazy" decoding="async"><figcaption>Getande spaan</figcaption></figure>
+          <figure class="fj-fig" style="--h:190px"><img src="docs/handleidingen/floorjoint/img53.jpg" alt="Lijm op de onderkant" loading="lazy" decoding="async"><figcaption>Lijm op de onderkant</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">09</span><h2 class="fj-h2">Randen afwerken en slijpen</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Zet de randen met een spatel dicht, zodat er geen holtes overblijven. De voegen moeten vrij zijn van holle ruimtes. Verwijder zoveel mogelijk lijm, zodat minder geslepen hoeft te worden.</p>
+          <p>Begin pas met slijpen als de lijm volledig is uitgehard. Slijp het oppervlak met diamant glad en vlak. Werk met grote cirkelbewegingen om slijpsporen en gaten te voorkomen.</p>
+          <div class="fj-spec"><span class="fj-spec-v">2 mm</span><span class="fj-spec-l">maximaal wegslijpen</span></div>
+          <div class="fj-note"><strong>Let op · </strong>Controleer de vlakheid regelmatig met een waterpas.</div>
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig" style="--h:210px"><img src="docs/handleidingen/floorjoint/img58.jpg" alt="Randen dichtzetten" loading="lazy" decoding="async"><figcaption>Randen dichtzetten</figcaption></figure>
+          <figure class="fj-fig" style="--h:210px"><img src="docs/handleidingen/floorjoint/img59.jpg" alt="Diamantslijpen" loading="lazy" decoding="async"><figcaption>Diamantslijpen</figcaption></figure>
+          <figure class="fj-fig fj-span2" style="--h:170px"><img src="docs/handleidingen/floorjoint/img60.jpg" alt="Vlakheid controleren" loading="lazy" decoding="async"><figcaption>Vlakheid controleren</figcaption></figure>
+          </div>
+        </div>
+      </section>
+      <section class="fj-step">
+        <div class="fj-step-head"><span class="fj-num">10</span><h2 class="fj-h2">Paneel coaten</h2></div>
+        <div class="fj-step-body">
+          <div class="fj-step-txt">
+          <p>Coat het oppervlak na het slijpen met een transparante of gepigmenteerde vloercoating, zoals Sikafloor®-2540 W, Durseal W, Sikaglaze PU of Sikafloor®-315.</p>
+          
+          
+          </div>
+          <div class="fj-imgs">
+          <figure class="fj-fig fj-span2" style="--h:260px"><img src="docs/handleidingen/floorjoint/img64.jpg" alt="Coating aanbrengen" loading="lazy" decoding="async"><figcaption>Coating aanbrengen</figcaption></figure>
+          </div>
+        </div>
+      </section>
+
+          <section class="fj-safety">
+            <h2 class="fj-h2"><span>Veiligheid</span> en milieu</h2>
+            <div class="fj-safe-grid">
+        <div>
+          <div class="fj-safe-h">Persoonlijke bescherming</div>
+          <div class="fj-safe-i">Oogbescherming (veiligheidsbril), helm en gehoorbescherming</div>
+          <div class="fj-safe-i">Veiligheidsschoenen met stalen neus</div>
+          <div class="fj-safe-i">Handschoenen van butylrubber of nitrilrubber</div>
+          <div class="fj-safe-i">Handen wassen met geschikte zeep na gebruik en vóór het eten</div>
+          <div class="fj-safe-i">Drinkwater, oogspoeling en EHBO-set altijd beschikbaar</div>
+        </div>
+        <div>
+          <div class="fj-safe-h">Werkplek</div>
+          <div class="fj-safe-i">Zorg voor goede ventilatie</div>
+          <div class="fj-safe-i">Niet eten of drinken op de werkplek</div>
+          <div class="fj-safe-i">Werken met hars kan irritatie aan ogen, huid, neus en keel geven</div>
+          <div class="fj-safe-i">Raadpleeg het veiligheidsblad voor opslag en afvoer</div>
+        </div>
+        <div>
+          <div class="fj-safe-h">Milieu</div>
+          <div class="fj-safe-i">Gereedschap en mengapparatuur direct na gebruik reinigen met Sika Thinner C</div>
+          <div class="fj-safe-i">Uitgehard materiaal alleen mechanisch te verwijderen</div>
+          <div class="fj-safe-i">Restmateriaal niet in afvoeren lozen; laat afvoeren door een erkende afvalverwerker</div>
+          <div class="fj-safe-i">Voorkom afvloeien naar bodem, water of riool</div>
+        </div>
+            </div>
+          </section>
+
+          <footer class="fj-foot">
+            <p><strong>Beperkingen.</strong> Dit product mag alleen door ervaren vakmensen worden gebruikt. Raadpleeg vóór gebruik altijd de instructies van de fabrikant voor gereedschap en mengapparatuur. Producten mogen alleen volgens hun beoogd gebruik worden toegepast. Plaatselijke verschillen in producten kunnen tot prestatieverschillen leiden. De meest recente lokale productbladen (PDS) en veiligheidsbladen (SDS) zijn van toepassing. Let op condensatie: de ondergrond moet minimaal +3 °C boven het dauwpunt liggen.</p>
+            <p><strong>Juridische opmerkingen.</strong> Zie het originele Method Statement van Sika voor de volledige juridische tekst. Raadpleeg altijd het meest recente lokale productblad.</p>
+            <p>Sika (NZ) Ltd · Flooring · PO Box 19192, Auckland 1746, Nieuw-Zeeland · www.sika.co.nz · 0800 745269 · info@nz.sika.com</p>
+          </footer>
         </div>
       </div>
 
