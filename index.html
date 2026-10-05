@@ -3035,7 +3035,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <div id="ok-stap-0" style="padding:12px 16px">
       <div class="form-group">
         <label class="form-label">Naam</label>
-        <input type="text" class="form-input" id="ok-naam" placeholder="Naam...">
+        <select class="form-input" id="ok-naam" onchange="okNaamGekozen()"></select>
       </div>
       <div class="form-group">
         <label class="form-label">Datum</label>
@@ -3054,13 +3054,7 @@ textarea.form-input{min-height:80px;resize:vertical}
           <option>N.V.T.</option>
         </select>
       </div>
-      <div class="form-group" style="position:relative">
-        <label class="form-label">Projectnr. <span style="font-weight:400;color:#999">(optioneel, standaard voor de onkosten hieronder)</span></label>
-        <input type="text" class="form-input" id="ok-projectnr" placeholder="Typ of kies een werf..." autocomplete="off"
-          oninput="renderOkProjectSuggesties()" onfocus="renderOkProjectSuggesties()"
-          onblur="setTimeout(()=>{const s=document.getElementById('ok-project-suggesties'); if(s)s.style.display='none'},150)">
-        <div id="ok-project-suggesties" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:1px solid #e4e6f0;border-radius:10px;margin-top:4px;max-height:240px;overflow-y:auto;box-shadow:0 4px 14px rgba(0,0,0,.08)"></div>
-      </div>
+
     </div>
 
     <!-- STAP 1: Kostenlijnen -->
@@ -10215,9 +10209,8 @@ let okStapNr = 0;
 function okBepaalNaamEnStatuut() {
   const mij = huidigeGebruiker();
   if (mij) {
-    const naam = mij.weergave || mij.naam;
     const tl = (appData.teamleaders || []).find(t => t.naam === mij.naam);
-    return { naam, statuut: (tl && tl.statuut) || 'Arbeider' };
+    return { naam: mij.naam, statuut: (tl && tl.statuut) || 'Arbeider' };
   }
   if (beheerIngelogd && beheerUser) {
     return { naam: naamUitEmail(beheerUser.email), statuut: 'Bedienden' };
@@ -10225,15 +10218,40 @@ function okBepaalNaamEnStatuut() {
   return { naam: '', statuut: 'Arbeider' };
 }
 
+// Namen in het dropdown: het volledige team, plus de eigen naam van wie via de Beheer-login
+// (kantoor) aangemeld is — die staat niet in de ploegbazenlijst. De volledige naam is bewust
+// de waarde: Beheer koppelt de bankgegevens (IBAN/BIC) op exact dezelfde naam.
+function okNamenLijst(extraNaam) {
+  const lijst = (appData.teamleaders || []).map(t => ({ naam: t.naam, statuut: t.statuut || 'Arbeider' }));
+  if (beheerIngelogd && beheerUser) {
+    const eigen = naamUitEmail(beheerUser.email);
+    if (eigen && !lijst.some(t => t.naam === eigen)) lijst.push({ naam: eigen, statuut: 'Bedienden' });
+  }
+  if (extraNaam && !lijst.some(t => t.naam === extraNaam)) lijst.push({ naam: extraNaam, statuut: 'Arbeider' });
+  return lijst.sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+}
+function okVulNaamDropdown(gekozen) {
+  const sel = document.getElementById('ok-naam');
+  sel.innerHTML = '<option value="">— Kies je naam —</option>' +
+    okNamenLijst(gekozen).map(t => `<option value="${escapeHtml(t.naam)}">${escapeHtml(t.naam)}</option>`).join('');
+  sel.value = gekozen || '';
+}
+// Een andere naam gekozen: statuut meenemen zoals in de teamlijst (nog steeds manueel aan te passen).
+function okNaamGekozen() {
+  const naam = document.getElementById('ok-naam').value;
+  const t = okNamenLijst().find(x => x.naam === naam);
+  const statuutEl = document.getElementById('ok-statuut');
+  if (t && [...statuutEl.options].some(o => o.value === t.statuut)) statuutEl.value = t.statuut;
+}
+
 function initOnkostennota() {
   okLijnen = [];
   okStapNr = 0;
   const { naam, statuut } = okBepaalNaamEnStatuut();
-  document.getElementById('ok-naam').value = naam;
+  okVulNaamDropdown(naam);
   document.getElementById('ok-datum').value = new Date().toISOString().split('T')[0];
   document.getElementById('ok-silo').value = 'V&S';
   document.getElementById('ok-statuut').value = statuut;
-  document.getElementById('ok-projectnr').value = '';
   document.getElementById('ok-lijnen-lijst').innerHTML = '';
   document.getElementById('ok-voeg-toe-btn').style.display = 'block';
   updateOkNav();
@@ -10241,9 +10259,9 @@ function initOnkostennota() {
   okLaadProjecten();
 }
 
-// ── Projectnr.-veld: typeahead met huidige, recent afgelopen (<30 dagen) en
-// kortelings opstartende (<30 dagen) werven — i.p.v. blind een projectnummer
-// uit het hoofd te moeten typen. ──
+// ── Project per onkost: dropdown met zoekfunctie met huidige, recent afgelopen (<30 dagen) en
+// kortelings opstartende (<30 dagen) werven — i.p.v. blind een projectnummer uit het hoofd te
+// moeten typen. Een projectnummer dat niet in de lijst staat, kan manueel ingevuld worden. ──
 let okProjecten = [];
 async function okLaadProjecten() {
   const client = initSbCockpit();
@@ -10264,22 +10282,43 @@ function okProjectRelevant(p) {
   const binnenkortOp = start > vandaag && start <= in30;
   return actiefNu || recentAfgelopen || binnenkortOp;
 }
-function renderOkProjectSuggesties() {
-  const q = document.getElementById('ok-projectnr').value.trim().toLowerCase();
-  const wrap = document.getElementById('ok-project-suggesties');
+function renderOkLijnProjectSuggesties(i) {
+  const input = document.getElementById('ok-lijn-' + i + '-project');
+  const wrap = document.getElementById('ok-lijn-' + i + '-project-sug');
+  if (!input || !wrap) return;
+  const q = input.value.trim();
+  const ql = q.toLowerCase();
   let items = okProjecten.filter(okProjectRelevant);
-  if (q) items = items.filter(p => (p.projectnummer || '').toLowerCase().includes(q) || (p.werfnaam || '').toLowerCase().includes(q));
+  if (ql) items = items.filter(p => (p.projectnummer || '').toLowerCase().includes(ql) || (p.werfnaam || '').toLowerCase().includes(ql));
   items = items.slice(0, 30);
-  if (!items.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
-  wrap.innerHTML = items.map(p => `<div onmousedown="okKiesProject('${escapeHtml(p.projectnummer || '').replace(/'/g,"\\'")}')" style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer">
+  let inhoud = items.map(p => `<div onmousedown="okKiesLijnProject(${i},'${escapeHtml(p.projectnummer || '').replace(/'/g,"\\'")}')" style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer">
       <div style="font-weight:600;font-size:13.5px">${escapeHtml(p.projectnummer || '')}</div>
       <div style="font-size:12px;color:#888">${escapeHtml(p.werfnaam || '')}</div>
     </div>`).join('');
+  // Staat wat je typte niet als projectnummer in de lijst? Dan expliciet aanbieden om het manueel te gebruiken.
+  const bestaat = q && okProjecten.some(p => (p.projectnummer || '').toLowerCase() === ql);
+  if (q && !bestaat) {
+    inhoud += `<div onmousedown="okSluitLijnProjectLijst(${i})" style="padding:10px 12px;cursor:pointer;background:#F7F8FF;color:#3547C8;font-weight:600;font-size:13.5px">✏️ Manueel gebruiken: ${escapeHtml(q)}</div>`;
+  }
+  if (!inhoud) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.innerHTML = inhoud;
   wrap.style.display = 'block';
 }
-function okKiesProject(projectnummer) {
-  document.getElementById('ok-projectnr').value = projectnummer;
-  document.getElementById('ok-project-suggesties').style.display = 'none';
+// Elke toetsaanslag telt meteen mee (ook manueel ingetikte nummers), niet pas bij het verlaten van het veld.
+function okLijnProjectTik(i) {
+  const input = document.getElementById('ok-lijn-' + i + '-project');
+  if (input) okLijnVeld(i, 'project', input.value.trim());
+  renderOkLijnProjectSuggesties(i);
+}
+function okKiesLijnProject(i, projectnummer) {
+  const input = document.getElementById('ok-lijn-' + i + '-project');
+  if (input) input.value = projectnummer;
+  okLijnVeld(i, 'project', projectnummer);
+  okSluitLijnProjectLijst(i);
+}
+function okSluitLijnProjectLijst(i) {
+  const wrap = document.getElementById('ok-lijn-' + i + '-project-sug');
+  if (wrap) wrap.style.display = 'none';
 }
 
 function okVoegLijnToe() {
@@ -10289,7 +10328,8 @@ function okVoegLijnToe() {
   okLijnen.push({
     datum: document.getElementById('ok-datum').value || new Date().toISOString().split('T')[0],
     omschrijving: '', categorie: OK_CATEGORIEEN[0],
-    project: document.getElementById('ok-projectnr').value.trim() || '',
+    // Zelfde project als de vorige onkost vooraf invullen — meestal horen ze bij dezelfde werf.
+    project: (okLijnen.filter(Boolean).slice(-1)[0] || {}).project || '',
     bedrag: '', fotoData: null, fotoUrl: '', fotoPath: '',
   });
   renderOkLijn(i);
@@ -10319,9 +10359,12 @@ function renderOkLijn(i) {
         <label class="form-label">Categorie</label>
         <select class="form-input" onchange="okLijnVeld(${i},'categorie',this.value)">${catOpts}</select>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="position:relative">
         <label class="form-label">Project <span style="font-weight:400;color:#999">(optioneel)</span></label>
-        <input type="text" class="form-input" value="${escapeHtml(l.project)}" placeholder="Bv. F26-00012.000" onchange="okLijnVeld(${i},'project',this.value)">
+        <input type="text" class="form-input" id="ok-lijn-${i}-project" value="${escapeHtml(l.project)}" placeholder="Kies een werf of typ manueel..." autocomplete="off"
+          oninput="okLijnProjectTik(${i})" onfocus="renderOkLijnProjectSuggesties(${i})"
+          onblur="setTimeout(()=>okSluitLijnProjectLijst(${i}),150)">
+        <div id="ok-lijn-${i}-project-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:1px solid #e4e6f0;border-radius:10px;margin-top:4px;max-height:240px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,.12)"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Bedrag (€)</label>
@@ -10395,7 +10438,7 @@ async function okUploadLijnFoto(i, b64) {
 
 function okStap(delta) {
   if (delta > 0 && okStapNr === 0) {
-    if (!document.getElementById('ok-naam').value.trim()) { alert('Vul je naam in.'); return; }
+    if (!document.getElementById('ok-naam').value.trim()) { alert('Kies je naam.'); return; }
     if (!document.getElementById('ok-datum').value) { alert('Vul de datum in.'); return; }
   }
   if (delta > 0 && okStapNr === 1) {
@@ -10459,7 +10502,8 @@ async function submitOnkostennota() {
     datum: document.getElementById('ok-datum').value,
     silo: document.getElementById('ok-silo').value.trim(),
     statuut: document.getElementById('ok-statuut').value,
-    projectnr: document.getElementById('ok-projectnr').value.trim(),
+    // Beheer toont/zoekt/exporteert één projectnr per nota: afgeleid van de onkosten zelf.
+    projectnr: [...new Set(actieveLijnen.map(l => (l.project || '').trim()).filter(Boolean))].join(', '),
     lijnen: actieveLijnen.map(l => ({
       datum: l.datum, omschrijving: l.omschrijving.trim(), categorie: l.categorie,
       project: (l.project||'').trim(), bedrag: parseFloat(l.bedrag)||0,
