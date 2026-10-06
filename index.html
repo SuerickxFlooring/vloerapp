@@ -3046,8 +3046,8 @@ textarea.form-input{min-height:80px;resize:vertical}
         <input type="text" class="form-input" id="ok-silo" placeholder="Bv. V&amp;S1">
       </div>
       <div class="form-group">
-        <label class="form-label">Statuut</label>
-        <select class="form-input" id="ok-statuut">
+        <label class="form-label">Statuut <span style="font-weight:400;color:#999">(volgt uit je naam)</span></label>
+        <select class="form-input" id="ok-statuut" disabled>
           <option>Arbeider</option>
           <option>Bedienden</option>
           <option>Bedienden OPS</option>
@@ -10244,12 +10244,25 @@ function okBepaalNaamEnStatuut() {
 // vast in het dropdown, zodat ze er altijd bij staan (zie KANTOOR_NAMEN).
 const OK_KANTOOR = Object.values(KANTOOR_NAMEN);
 
+// Het statuut volgt uit de persoon en staat in Supabase: ploegbazen (teamleaders.statuut) zijn arbeiders,
+// het kantoor (kantoor_personen) bedienden. De server bepaalt het statuut bij het indienen zelf nog eens uit
+// de naam (submit_onkostennota), dus ook een vervalste waarde uit de browser verandert daar niets aan.
+let okKantoor = null;
+async function okLaadKantoor() {
+  try {
+    if (!sb && !initSupabase()) return;
+    const { data, error } = await sb.from('kantoor_personen').select('naam,statuut');
+    if (!error && data) okKantoor = data;
+  } catch (e) { /* geen verbinding: de vaste kantoorlijst hieronder dient als vangnet */ }
+}
+
 // Namen in het dropdown: het volledige team + het kantoor (+ de eigen naam van wie via de Beheer-login
 // aangemeld is, voor een eventuele nieuwe kantoorcollega). De volledige naam is bewust de waarde: de
 // nota is gekoppeld aan de persoon, de boekhouding koppelt zelf het rekeningnummer.
 function okNamenLijst(extraNaam) {
   const lijst = (appData.teamleaders || []).map(t => ({ naam: t.naam, statuut: t.statuut || 'Arbeider' }));
-  OK_KANTOOR.forEach(n => { if (!lijst.some(t => t.naam === n)) lijst.push({ naam: n, statuut: 'Bedienden' }); });
+  const kantoor = okKantoor || OK_KANTOOR.map(n => ({ naam: n, statuut: 'Bedienden' }));
+  kantoor.forEach(k => { if (!lijst.some(t => t.naam === k.naam)) lijst.push({ naam: k.naam, statuut: k.statuut || 'Bedienden' }); });
   if (beheerIngelogd && beheerUser) {
     const eigen = naamUitEmail(beheerUser.email);
     if (eigen && !lijst.some(t => t.naam === eigen)) lijst.push({ naam: eigen, statuut: 'Bedienden' });
@@ -10263,7 +10276,7 @@ function okVulNaamDropdown(gekozen) {
     okNamenLijst(gekozen).map(t => `<option value="${escapeHtml(t.naam)}">${escapeHtml(t.naam)}</option>`).join('');
   sel.value = gekozen || '';
 }
-// Een andere naam gekozen: statuut meenemen zoals in de teamlijst (nog steeds manueel aan te passen).
+// Naam gekozen: het statuut volgt uit de persoon (het veld is niet aanpasbaar).
 function okNaamGekozen() {
   const naam = document.getElementById('ok-naam').value;
   const t = okNamenLijst().find(x => x.naam === naam);
@@ -10284,6 +10297,8 @@ function initOnkostennota() {
   updateOkNav();
   okVoegLijnToe();
   okLaadProjecten();
+  okNaamGekozen();
+  okLaadKantoor().then(() => { okVulNaamDropdown(document.getElementById('ok-naam').value); okNaamGekozen(); });
 }
 
 // ── Project per onkost: dropdown met zoekfunctie met huidige, recent afgelopen (<30 dagen) en
