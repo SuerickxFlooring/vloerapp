@@ -4664,8 +4664,21 @@ const fallbackTeamleaders = [{naam:'Jan V.'},{naam:'Peter D.'},{naam:'Luc M.'}];
 // zodat we een persoonlijk dashboard + herinneringen kunnen tonen.
 // ═══════════════════════════════════════════════════════════
 function huidigeGebruiker() {
-  try { return JSON.parse(localStorage.getItem('ingelogdeTeamleader') || 'null'); }
+  let mij = null;
+  try { mij = JSON.parse(localStorage.getItem('ingelogdeTeamleader') || 'null'); }
   catch(e) { return null; }
+  if (!mij) return null;
+  // De opgeslagen aanmelding kan een verouderde weergavenaam bevatten (bv. de oude afkorting "Avni G."
+  // nadat de naam in de teamlijst aangepast is). Altijd de actuele waarde nemen, anders blijft dat toestel
+  // de oude naam wegschrijven en splitst één persoon zich in rapporten in twee namen.
+  try {
+    const vers = (appData.teamleaders || []).find(t => t.naam === mij.naam);
+    if (vers && vers.weergave && vers.weergave !== mij.weergave) {
+      mij = { ...mij, weergave: vers.weergave };
+      localStorage.setItem('ingelogdeTeamleader', JSON.stringify(mij));
+    }
+  } catch(e) { /* appData nog niet geladen: de opgeslagen waarde volstaat tot dan */ }
+  return mij;
 }
 
 // Los van huidigeGebruiker(): een kantoor/admin-login via Supabase Auth
@@ -4697,7 +4710,16 @@ function kiesIngelogdeTeamleader(json) {
 // → "Frederik Truyers". Enkel gebruikt als weergavenaam voor een beheerder
 // die inlogt met e-mail/wachtwoord (die heeft geen "weergave"-veld zoals
 // teamleaders).
+// Kantoor met de volledige naam zoals die overal moet verschijnen (een e-mailadres als "pablo@..." levert
+// anders enkel "Pablo" op). Ook de bron voor de vaste kantoornamen in de onkostennota-dropdown.
+const KANTOOR_NAMEN = {
+  'frederik.truyers@suerickxflooring.be': 'Frederik Truyers',
+  'pablo@suerickxflooring.be': 'Pablo Dumont',
+  'vicky.van.asten@suerickxflooring.be': 'Vicky Van Asten',
+};
 function naamUitEmail(email) {
+  const bekend = KANTOOR_NAMEN[(email || '').toLowerCase()];
+  if (bekend) return bekend;
   const lokaal = (email || '').split('@')[0] || '';
   return lokaal.split(/[.\-_]+/).filter(Boolean).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(' ') || email || '';
 }
@@ -10218,11 +10240,16 @@ function okBepaalNaamEnStatuut() {
   return { naam: '', statuut: 'Arbeider' };
 }
 
-// Namen in het dropdown: het volledige team, plus de eigen naam van wie via de Beheer-login
-// (kantoor) aangemeld is — die staat niet in de ploegbazenlijst. De volledige naam is bewust
-// de waarde: Beheer koppelt de bankgegevens (IBAN/BIC) op exact dezelfde naam.
+// Kantoor mag ook onkosten indienen (via de Beheer-login) maar staat niet in de ploegbazenlijst:
+// vast in het dropdown, zodat ze er altijd bij staan (zie KANTOOR_NAMEN).
+const OK_KANTOOR = Object.values(KANTOOR_NAMEN);
+
+// Namen in het dropdown: het volledige team + het kantoor (+ de eigen naam van wie via de Beheer-login
+// aangemeld is, voor een eventuele nieuwe kantoorcollega). De volledige naam is bewust de waarde: de
+// nota is gekoppeld aan de persoon, de boekhouding koppelt zelf het rekeningnummer.
 function okNamenLijst(extraNaam) {
   const lijst = (appData.teamleaders || []).map(t => ({ naam: t.naam, statuut: t.statuut || 'Arbeider' }));
+  OK_KANTOOR.forEach(n => { if (!lijst.some(t => t.naam === n)) lijst.push({ naam: n, statuut: 'Bedienden' }); });
   if (beheerIngelogd && beheerUser) {
     const eigen = naamUitEmail(beheerUser.email);
     if (eigen && !lijst.some(t => t.naam === eigen)) lijst.push({ naam: eigen, statuut: 'Bedienden' });
