@@ -6445,8 +6445,21 @@ function addRegProduct() {
     return;
   }
 
+  // De database kent geen eenheid: kg wordt altijd als kilo's opgeslagen. Wie in sets registreert, moet dus omgerekend
+  // worden met het verpakkingsgewicht van het product — anders leest het kantoor "100 sets" als "100 kg" en verschijnt er
+  // een onterechte "onderverbruik". Zonder bekend verpakkingsgewicht is omrekenen onmogelijk, dan eerst kg of liter kiezen.
+  const verpakkingKg = prodObj ? (parseFloat(String(prodObj.verpakking || '').replace(',', '.')) || 0) : 0;
+  if (eenheid === 'sets' && !verpakkingKg) {
+    fout.textContent = 'Geen verpakkingsgewicht bekend voor dit product. Kies kg of liter.';
+    fout.style.display = 'block';
+    return;
+  }
+  const kgOpslag   = eenheid === 'sets' ? Math.round(kg * verpakkingKg * 100) / 100 : kg;
+  const restOpslag = eenheid === 'sets' ? Math.round(rest * verpakkingKg * 100) / 100 : rest;
+
   let theo = 0, verschilKg = 0, verschilPerc = 0, statusCheck = '';
-  if (prodObj && prodObj.verbruik && opp > 0 && kg > 0) {
+  // Liters hebben geen theoretische vergelijking (het verbruik is berekend in kg)
+  if (prodObj && prodObj.verbruik && opp > 0 && kg > 0 && eenheid !== 'liter') {
     const vDef = prodObj.verbruik;
     const vGetal = parseFloat(String(vDef).replace(',','.')) || 0;
     if (dikte && dikte > 0) {
@@ -6454,13 +6467,13 @@ function addRegProduct() {
     } else {
       theo = Math.round(opp * vGetal * 10) / 10;
     }
-    verschilKg = Math.round((kg - theo) * 10) / 10;
-    verschilPerc = theo > 0 ? Math.round((kg / theo - 1) * 1000) / 10 : 0;
+    verschilKg = Math.round((kgOpslag - theo) * 10) / 10;
+    verschilPerc = theo > 0 ? Math.round((kgOpslag / theo - 1) * 1000) / 10 : 0;
     statusCheck = Math.abs(verschilPerc) <= 15 ? 'ok' : verschilPerc > 0 ? 'hoog' : 'laag';
   }
 
   document.getElementById('reg-prod-fout').style.display = 'none';
-  regProducten.push({ productCode, product: prodNaam, prodObj, prodManual, opp, kg, eenheid, resterend: rest, dikte, ondervloer, theoretisch: theo, verschilKg, verschilPerc, statusCheck });
+  regProducten.push({ productCode, product: prodNaam, prodObj, prodManual, opp, kg, kgOpslag, restOpslag, eenheid, resterend: rest, dikte, ondervloer, theoretisch: theo, verschilKg, verschilPerc, statusCheck });
   updateRegProductenLijst();
   clearRegProduct();
   regAutosave();
@@ -7328,8 +7341,8 @@ async function insertRegistratieInSupabase(reg) {
     opp: reg.opp,
     product_code: reg.productCode,
     product: reg.product,
-    kg: reg.kg,
-    resterend: reg.resterend,
+    kg: reg.kgOpslag != null ? reg.kgOpslag : reg.kg, // altijd in kilo's (sets zijn omgerekend); oudere wachtrij-items hebben nog enkel kg
+    resterend: reg.restOpslag != null ? reg.restOpslag : reg.resterend,
     theoretisch: reg.theoretisch,
     verschil_kg: reg.verschilKg,
     verschil_perc: reg.verschilPerc,
@@ -7441,6 +7454,8 @@ async function submitRegistratie() {
     product: p.product,
     kg: p.kg,
     eenheid: p.eenheid,
+    kgOpslag: p.kgOpslag,
+    restOpslag: p.restOpslag,
     resterend: p.resterend,
     theoretisch: p.theoretisch,
     verschilKg: p.verschilKg,
@@ -11167,7 +11182,7 @@ async function ververRapport() {
   const regs = regRes.data || [];
   const uren = urenRes.data || [];
 
-  const totaalKg = regs.reduce((s,r) => s + (parseFloat(r.kg)||0), 0);
+  const totaalKg = regs.reduce((s,r) => s + (parseFloat(r.kgOpslag != null ? r.kgOpslag : r.kg)||0), 0);
   const totaalUren = uren.reduce((s,r) => s + (parseFloat(r.aantal_uren)||0), 0);
   const afwijkend = regs.filter(r => Math.abs(parseFloat(r.verschil_perc)||0) > 15);
 
@@ -11176,7 +11191,7 @@ async function ververRapport() {
   regs.forEach(r => {
     const k = r.project || '(onbekend)';
     if (!perProject[k]) perProject[k] = { kg: 0, uren: 0, afwijkingen: 0, registraties: 0 };
-    perProject[k].kg += parseFloat(r.kg) || 0;
+    perProject[k].kg += parseFloat(r.kgOpslag != null ? r.kgOpslag : r.kg) || 0;
     perProject[k].registraties += 1;
     if (Math.abs(parseFloat(r.verschil_perc)||0) > 15) perProject[k].afwijkingen += 1;
   });
@@ -11191,7 +11206,7 @@ async function ververRapport() {
   regs.forEach(r => {
     const k = r.product || '(onbekend)';
     if (!perProduct[k]) perProduct[k] = { kg: 0, registraties: 0, afwijkingSom: 0 };
-    perProduct[k].kg += parseFloat(r.kg) || 0;
+    perProduct[k].kg += parseFloat(r.kgOpslag != null ? r.kgOpslag : r.kg) || 0;
     perProduct[k].registraties += 1;
     perProduct[k].afwijkingSom += parseFloat(r.verschil_perc) || 0;
   });
@@ -11227,7 +11242,7 @@ async function ververRapport() {
         <div style="font-weight:700">${escapeHtml(r.project||'')} — ${escapeHtml(r.product||'')}</div>
         <div style="font-size:12px;color:${kleur};font-weight:600">${perc >= 0 ? '+' : ''}${perc}%</div>
       </div>
-      <div style="font-size:13px;color:#666">${r.datum||''} · ${escapeHtml(r.teamleader||'')} · ${fmtKg(parseFloat(r.kg)||0)} (theor. ${fmtKg(parseFloat(r.theoretisch)||0)})</div>
+      <div style="font-size:13px;color:#666">${r.datum||''} · ${escapeHtml(r.teamleader||'')} · ${fmtKg(parseFloat(r.kgOpslag != null ? r.kgOpslag : r.kg)||0)} (theor. ${fmtKg(parseFloat(r.theoretisch)||0)})</div>
     </div>`;
   }).join('') || '<div style="text-align:center;color:#888;padding:14px">Geen afwijkingen >15% in deze periode. 👍</div>';
 
