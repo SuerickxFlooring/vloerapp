@@ -726,6 +726,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div class="menu-section-lbl">🔵 Elke dag</div>
       <button class="menu-btn" onclick="go('s-lmra')"><div class="ico">🦺</div><div class="lbl">LMRA</div><div class="sub">Dagelijkse risicoanalyse</div></button>
       <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
+      <button class="menu-btn" onclick="go('s-retour')"><div class="ico">↩️</div><div class="lbl">Retour melden</div><div class="sub">Materiaal terug naar magazijn</div></button>
 
       <div class="menu-section-lbl">🏗️ Op de werf</div>
       <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
@@ -762,6 +763,70 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
     <button class="nav-item" id="bnav-weeknieuws" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
     <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
+  </div>
+</div>
+
+<!-- ══ RETOUR MELDEN ═══════════════════════════════════════ -->
+<div class="screen" id="s-retour">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Retour melden</div>
+    <span class="topbar-icon">↩️</span>
+  </div>
+  <div class="scroll-area">
+    <div class="form-pad">
+      <div style="font-size:13px;color:#666;margin-bottom:14px;line-height:1.5">Komt er materiaal terug naar het magazijn? Meld het hier, ook nadat je je dagregistratie al verstuurd hebt.</div>
+
+      <div class="form-group">
+        <label class="form-label">Project</label>
+        <select class="form-select" id="rt-project" onchange="rtProjectGekozen()"></select>
+        <input type="text" class="form-input" id="rt-project-manueel" placeholder="Projectnummer en naam" style="display:none;margin-top:8px">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Product</label>
+        <select class="form-select" id="rt-product" onchange="rtProductGekozen()"></select>
+        <input type="text" class="form-input" id="rt-product-manueel" placeholder="Naam van het product" style="display:none;margin-top:8px">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Aantal</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" class="form-input" id="rt-aantal" placeholder="Aantal" inputmode="decimal" oninput="rtToonOmrekening()" style="flex:1">
+          <select id="rt-eenheid" onchange="rtToonOmrekening()" style="padding:10px 8px;border:1.5px solid #d1d5db;border-radius:10px;font-size:15px;background:#fff;color:#333;min-width:80px">
+            <option value="kg">kg</option>
+            <option value="liter">liter</option>
+            <option value="sets">sets</option>
+          </select>
+        </div>
+        <div id="rt-omrekening" style="font-size:12px;color:#888;margin-top:5px"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Reden</label>
+        <div id="rt-reden" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Was dit al als verbruikt geregistreerd?</label>
+        <div id="rt-verbruikt" style="display:flex;gap:6px"></div>
+        <div style="font-size:12px;color:#888;margin-top:5px">Kies "Ja" enkel als je dit materiaal in je dagregistratie al als verbruik had ingegeven: het wordt dan van je verbruik afgetrokken.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Opmerking (optioneel)</label>
+        <input type="text" class="form-input" id="rt-opmerking" placeholder="Bv. onaangebroken, nog in de verpakking">
+      </div>
+
+      <div id="rt-fout" style="display:none;color:#A32D2D;font-size:13px;margin-bottom:8px;font-weight:600"></div>
+      <button type="button" onclick="rtOpslaan()" style="width:100%;padding:13px;background:#3547C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">↩️ Retour opslaan</button>
+      <div id="rt-status" style="margin-top:10px"></div>
+
+      <div id="rt-lijst-wrap" style="margin-top:20px;display:none">
+        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Retours van vandaag (dit toestel)</div>
+        <div id="rt-lijst"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -806,7 +871,8 @@ textarea.form-input{min-height:80px;resize:vertical}
       </div>
       <div class="form-group">
         <label class="form-label">Ingediend door</label>
-        <input type="text" class="form-input" id="rb-naam" placeholder="Naam ploegbaas">
+        <select class="form-select" id="rb-naam" onchange="rbNaamGekozen()"></select>
+        <input type="text" class="form-input" id="rb-naam-manueel" placeholder="Naam ploegbaas" style="display:none;margin-top:8px">
       </div>
     </div>
 
@@ -1490,10 +1556,6 @@ textarea.form-input{min-height:80px;resize:vertical}
               </div>
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label" id="r-rest-label">Resterend stock (kg)</label>
-            <input type="text" class="form-input" id="r-rest" placeholder="kg" inputmode="decimal">
-          </div>
           <div class="form-group" id="r-dikte-wrap" style="display:none">
             <label class="form-label">Dikte aangebrachte laag
               <span style="float:right;display:flex;gap:0;border:1px solid #ddd;border-radius:8px;overflow:hidden">
@@ -1987,7 +2049,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <div class="wk-step"><span class="wk-n">1</span><span class="wk-t">Tik op Registratie in het menu onderaan. Kies het actieve project via de dropdown, of tik op Vrij om zelf een werfnaam in te typen.</span></div>
     <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Vul datum en teamleader in, en Uren per persoon. Dit is het aantal uur dat 1 individuele werknemer die dag werkte, niet de som van de hele ploeg. Vul je toch een onrealistisch hoog aantal in (bv. 32u), dan rekent de app dit, als &quot;Aantal personen&quot; is ingevuld, automatisch om naar uren per persoon, met een duidelijke melding.</span></div>
     <div class="wk-step"><span class="wk-n">3</span><span class="wk-t">Bij Namen andere teamleden zoek/typ je een naam, vink er meerdere tegelijk aan en tik op Toevoegen om ze allemaal in één keer bij te voegen, net als bij LMRA.</span></div>
-    <div class="wk-step"><span class="wk-n">4</span><span class="wk-t">Vul onder Uitvoering in: oppervlakte, type ondervloer, gebruikt product, verbruikte kg en resterend stock. De app berekent automatisch of het verbruik binnen de norm valt (groen = OK, rood = controleer).</span></div>
+    <div class="wk-step"><span class="wk-n">4</span><span class="wk-t">Vul onder Uitvoering in: oppervlakte, type ondervloer, gebruikt product, verbruikte hoeveelheid (met de eenheid: kg, sets of liter). Komt er op het einde van de dag materiaal terug naar het magazijn? Meld dat via de tegel Retour melden op het startscherm. De app berekent automatisch of het verbruik binnen de norm valt (groen = OK, rood = controleer).</span></div>
     <div class="wk-step"><span class="wk-n">5</span><span class="wk-t">Vul de omgevingscondities in: temperatuur, RV, temp. ondergrond en vochtgehalte. De app berekent automatisch het dauwpunt en geeft een waarschuwing indien nodig.</span></div>
     <div class="wk-step"><span class="wk-n">6</span><span class="wk-t">Voeg foto's en eventuele opmerkingen toe en tik op Bekijk samenvatting.</span></div>
     <div class="wk-step"><span class="wk-n">7</span><span class="wk-t">Controleer de samenvatting en tik op Bevestigen en Versturen. Je krijgt een bevestiging: Verstuurd, of Opgeslagen bij geen internet. Het wordt automatisch verstuurd zodra je terug verbinding hebt.</span></div>
@@ -5153,6 +5215,7 @@ function go(id) {
   if (id === 's-documenten') initDocumenten();
   if (id === 's-weeknieuws') initWeeknieuws();
   if (id === 's-onkostennota') initOnkostennota();
+  if (id === 's-retour') initRetour();
   if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra' || id === 's-levering') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') regEnterScherm();
   if (id === 's-login') renderLoginLijst();
@@ -5855,15 +5918,13 @@ function regGoToStep(n) {
 function updateRegEenheid() {
   const eenheid = document.getElementById('r-eenheid').value;
   document.getElementById('r-kg-label').textContent = 'Verbruikt (' + eenheid + ')';
-  document.getElementById('r-rest-label').textContent = 'Resterend stock (' + eenheid + ')';
   document.getElementById('r-kg').placeholder = eenheid;
-  document.getElementById('r-rest').placeholder = eenheid;
   checkVerbruik();
 }
 
 function resetRegStappen() {
   // Wis alle veldwaarden zodat een nieuwe registratie altijd blanco begint
-  ['r-opp','r-kg','r-rest','r-dikte'].forEach(id => {
+  ['r-opp','r-kg','r-dikte'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -6404,7 +6465,7 @@ function clearRegProduct() {
   document.getElementById('verbruik-check').innerHTML = '';
   document.getElementById('r-prod-form').style.display = 'none';
   // reset hoeveelheden velden
-  ['r-opp','r-kg','r-rest','r-dikte'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['r-opp','r-kg','r-dikte'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   const eenheid = document.getElementById('r-eenheid');
   if(eenheid) eenheid.value = 'kg';
   checkVerbruik();
@@ -6424,7 +6485,6 @@ function addRegProduct() {
   const opp = parseFloat((document.getElementById('r-opp').value||'').replace(',','.')) || 0;
   const kg = parseFloat((document.getElementById('r-kg').value||'').replace(',','.')) || 0;
   const eenheid = document.getElementById('r-eenheid').value || 'kg';
-  const rest = parseFloat((document.getElementById('r-rest').value||'').replace(',','.')) || 0;
   const dikte = getRegDikteInMm();
   const ondervloer = document.getElementById('r-vloer')?.value || '';
   const productCode = prodObj ? (prodObj.code || prodObj.id || '') : '';
@@ -6455,7 +6515,6 @@ function addRegProduct() {
     return;
   }
   const kgOpslag   = eenheid === 'sets' ? Math.round(kg * verpakkingKg * 100) / 100 : kg;
-  const restOpslag = eenheid === 'sets' ? Math.round(rest * verpakkingKg * 100) / 100 : rest;
 
   let theo = 0, verschilKg = 0, verschilPerc = 0, statusCheck = '';
   // Liters hebben geen theoretische vergelijking (het verbruik is berekend in kg)
@@ -6473,7 +6532,7 @@ function addRegProduct() {
   }
 
   document.getElementById('reg-prod-fout').style.display = 'none';
-  regProducten.push({ productCode, product: prodNaam, prodObj, prodManual, opp, kg, kgOpslag, restOpslag, eenheid, resterend: rest, dikte, ondervloer, theoretisch: theo, verschilKg, verschilPerc, statusCheck });
+  regProducten.push({ productCode, product: prodNaam, prodObj, prodManual, opp, kg, kgOpslag, eenheid, dikte, ondervloer, theoretisch: theo, verschilKg, verschilPerc, statusCheck });
   updateRegProductenLijst();
   clearRegProduct();
   regAutosave();
@@ -6493,7 +6552,7 @@ function updateRegProductenLijst() {
         <div>
           <div style="font-size:14px;font-weight:700;color:#1a1a2e">${escapeHtml(p.product)}</div>
           <div style="font-size:12px;color:#666;margin-top:2px">
-            ${p.opp ? p.opp+' m² · ' : ''}${p.kg} ${p.eenheid}${p.resterend ? ' · rest: '+p.resterend+' '+p.eenheid : ''}
+            ${p.opp ? p.opp+' m² · ' : ''}${p.kg} ${p.eenheid}
             ${p.statusCheck === 'ok' ? ' ✅' : p.statusCheck === 'hoog' ? ' ⚠️ hoog verbruik' : p.statusCheck === 'laag' ? ' ⬇️ laag verbruik' : ''}
           </div>
         </div>
@@ -7262,7 +7321,6 @@ function toonSamenvatting() {
       ${row('Verbruikt', p.kg + ' ' + p.eenheid)}
       ${p.theoretisch ? row('Theoretisch', p.theoretisch + ' kg') : ''}
       ${p.theoretisch && p.eenheid !== 'liter' ? row('Afwijking', (p.verschilPerc >= 0 ? '+' : '') + p.verschilPerc + '%', percCls) : ''}
-      ${row('Resterend stock', p.resterend ? p.resterend + ' ' + p.eenheid : '–')}
     </div>`;
   }).join('');
 
@@ -7553,6 +7611,7 @@ async function submitRegistratie() {
 
   syncPendingUren();
   syncPendingRegistraties();
+  syncPendingRetours();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -7617,6 +7676,200 @@ async function testConnection() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// RETOUR MELDEN — materiaal dat terug naar het magazijn gaat
+// Los van de dagregistratie: kan ook nadat de registratie al verstuurd is. De retour hangt aan project, datum en
+// product en gaat via de beveiligde functie submit_retour naar WerfKompas Beheer (cockpit_retours), waar kantoor ze bij
+// de registratie van dezelfde dag ziet. Zonder verbinding blijft ze op het toestel staan en wordt ze later verstuurd.
+// ═══════════════════════════════════════════════════════════
+const RT_REDENEN = ['Niet gebruikt', 'Verkeerd product', 'Beschadigd', 'Andere'];
+const RT_MANUEEL = '__manueel__';
+let rtReden = 'Niet gebruikt';
+let rtWasVerbruikt = false;
+let rtOpgeslagen = null; // retours op dit toestel (localStorage 'retours')
+
+function rtLaad() {
+  if (rtOpgeslagen) return rtOpgeslagen;
+  try { rtOpgeslagen = JSON.parse(localStorage.getItem('retours') || '[]'); } catch (e) { rtOpgeslagen = []; }
+  return rtOpgeslagen;
+}
+function rtBewaar() {
+  try { localStorage.setItem('retours', JSON.stringify(rtLaad().slice(-200))); } catch (e) { console.warn('[Retour] localStorage fout:', e); }
+}
+
+function rtProject() {
+  const sel = document.getElementById('rt-project');
+  if (sel.value === RT_MANUEEL) return document.getElementById('rt-project-manueel').value.trim();
+  return sel.value || '';
+}
+function rtProductNaam() {
+  const sel = document.getElementById('rt-product');
+  if (sel.value === RT_MANUEEL) return document.getElementById('rt-product-manueel').value.trim();
+  return sel.value || '';
+}
+function rtProductObj(naam) {
+  const prods = (appData.products && appData.products.length) ? appData.products : fallbackProducts;
+  return prods.find(p => p.naam === naam) || null;
+}
+
+function initRetour() {
+  const vandaag = docVandaag();
+  const bron = document.getElementById('r-project-select');
+  const opties = bron ? Array.from(bron.options).filter(o => o.value).map(o => ({ waarde: o.value, tekst: o.textContent })) : [];
+  const vandaagRegs = (appData.registraties || []).filter(r => r.datum === vandaag);
+  const laatste = vandaagRegs.length ? vandaagRegs[vandaagRegs.length - 1].project : '';
+  if (laatste && !opties.some(o => o.waarde === laatste)) opties.unshift({ waarde: laatste, tekst: laatste });
+  const sel = document.getElementById('rt-project');
+  sel.innerHTML = '<option value="">Kies werf...</option>'
+    + opties.map(o => `<option value="${escapeHtml(o.waarde)}">${escapeHtml(o.tekst)}</option>`).join('')
+    + `<option value="${RT_MANUEEL}">✏️ Andere werf (zelf invullen)…</option>`;
+  sel.value = laatste || '';
+  ['rt-project-manueel', 'rt-product-manueel', 'rt-aantal', 'rt-opmerking'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('rt-eenheid').value = 'kg';
+  rtReden = 'Niet gebruikt';
+  rtWasVerbruikt = false;
+  rtRenderKeuzes();
+  rtProjectGekozen();
+  document.getElementById('rt-fout').style.display = 'none';
+  document.getElementById('rt-status').innerHTML = '';
+  rtRenderLijst();
+}
+
+function rtRenderKeuzes() {
+  document.getElementById('rt-reden').innerHTML = RT_REDENEN.map(r =>
+    `<button type="button" class="chip${r === rtReden ? ' active' : ''}" onclick="rtKiesReden('${r}')">${r}</button>`).join('');
+  document.getElementById('rt-verbruikt').innerHTML = [['Nee', false], ['Ja', true]].map(([t, w]) =>
+    `<button type="button" class="chip${w === rtWasVerbruikt ? ' active' : ''}" onclick="rtKiesVerbruikt(${w})">${t}</button>`).join('');
+}
+function rtKiesReden(r) { rtReden = r; rtRenderKeuzes(); }
+function rtKiesVerbruikt(w) { rtWasVerbruikt = w; rtRenderKeuzes(); }
+
+// Producten van vandaag bij dit project staan bovenaan, daarna alle producten.
+function rtProjectGekozen() {
+  const manueel = document.getElementById('rt-project').value === RT_MANUEEL;
+  document.getElementById('rt-project-manueel').style.display = manueel ? '' : 'none';
+  const vandaag = docVandaag();
+  const proj = rtProject();
+  const regs = (appData.registraties || []).filter(r => r.datum === vandaag && r.project === proj);
+  const vandaagNamen = [...new Set(regs.map(r => r.product).filter(Boolean))];
+  const prods = (appData.products && appData.products.length) ? appData.products : fallbackProducts;
+  const overige = prods.map(p => p.naam).filter(n => n && !vandaagNamen.includes(n)).sort((a, b) => a.localeCompare(b, 'nl'));
+  const opt = n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`;
+  document.getElementById('rt-product').innerHTML = '<option value="">Kies product...</option>'
+    + (vandaagNamen.length ? `<optgroup label="Vandaag geregistreerd">${vandaagNamen.map(opt).join('')}</optgroup>` : '')
+    + `<optgroup label="Alle producten">${overige.map(opt).join('')}</optgroup>`
+    + `<option value="${RT_MANUEEL}">✏️ Ander product (zelf invullen)…</option>`;
+  if (vandaagNamen.length === 1) document.getElementById('rt-product').value = vandaagNamen[0];
+  rtProductGekozen();
+}
+
+// Standaardeenheid: dezelfde als bij de registratie van vandaag, anders sets voor ucrete/epoxy/PU en kg voor de rest.
+function rtProductGekozen() {
+  const sel = document.getElementById('rt-product');
+  document.getElementById('rt-product-manueel').style.display = sel.value === RT_MANUEEL ? '' : 'none';
+  const naam = rtProductNaam();
+  const vandaagReg = (appData.registraties || []).filter(r => r.datum === docVandaag() && r.project === rtProject() && r.product === naam).pop();
+  const obj = rtProductObj(naam);
+  const type = obj ? (obj.type || '').toLowerCase() : '';
+  const eenheid = vandaagReg && vandaagReg.eenheid ? vandaagReg.eenheid : (EENHEID_SETS_TYPES.includes(type) ? 'sets' : 'kg');
+  document.getElementById('rt-eenheid').value = ['kg', 'liter', 'sets'].includes(eenheid) ? eenheid : 'kg';
+  rtToonOmrekening();
+}
+
+function rtVerpakkingKg(naam) {
+  const obj = rtProductObj(naam);
+  return obj ? (parseFloat(String(obj.verpakking || '').replace(',', '.')) || 0) : 0;
+}
+function rtAantal() { return parseFloat((document.getElementById('rt-aantal').value || '').replace(',', '.')) || 0; }
+
+function rtToonOmrekening() {
+  const el = document.getElementById('rt-omrekening');
+  const aantal = rtAantal();
+  const eenheid = document.getElementById('rt-eenheid').value;
+  if (eenheid !== 'sets') { el.textContent = ''; return; }
+  const verp = rtVerpakkingKg(rtProductNaam());
+  if (!rtProductNaam()) { el.textContent = ''; return; }
+  if (!verp) { el.innerHTML = '⚠️ Geen verpakkingsgewicht bekend voor dit product. Kies kg of liter.'; return; }
+  el.textContent = aantal > 0 ? `${aantal} × ${verp} kg = ${Math.round(aantal * verp * 100) / 100} kg` : `1 set = ${verp} kg`;
+}
+
+async function rtVerstuur(rt) {
+  const client = initSbCockpit();
+  if (!client) throw new Error('Geen verbinding met WerfKompas Beheer');
+  const { error } = await client.rpc('submit_retour', { p: {
+    client_timestamp: rt.timestamp, datum: rt.datum, project: rt.project, teamleader: rt.teamleader,
+    product: rt.product, product_code: rt.productCode || '', aantal: String(rt.aantal), eenheid: rt.eenheid, kg: String(rt.kg),
+    reden: rt.reden, was_verbruikt: !!rt.wasVerbruikt, opmerking: rt.opmerking || '',
+  } });
+  if (error) throw error;
+}
+
+async function rtOpslaan() {
+  const fout = document.getElementById('rt-fout');
+  const toonFout = t => { fout.textContent = t; fout.style.display = 'block'; };
+  fout.style.display = 'none';
+  const project = rtProject(), product = rtProductNaam(), aantal = rtAantal();
+  const eenheid = document.getElementById('rt-eenheid').value;
+  if (!project) return toonFout('Kies eerst het project.');
+  if (!product) return toonFout('Kies eerst het product.');
+  if (!(aantal > 0)) return toonFout('Vul het aantal in.');
+  const verp = rtVerpakkingKg(product);
+  if (eenheid === 'sets' && !verp) return toonFout('Geen verpakkingsgewicht bekend voor dit product. Kies kg of liter.');
+  // Altijd in kilo's opgeslagen (bij liter: het aantal liter), net als bij de dagregistratie
+  const kg = eenheid === 'sets' ? Math.round(aantal * verp * 100) / 100 : aantal;
+  const mij = huidigeGebruiker();
+  const teamleader = mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : '');
+  const obj = rtProductObj(product);
+  const rt = {
+    id: 'rt_' + Date.now(), timestamp: localTimestamp(), datum: docVandaag(), project, teamleader, product,
+    productCode: obj ? String(obj.code || obj.id || '') : '', aantal, eenheid, kg, reden: rtReden, wasVerbruikt: rtWasVerbruikt,
+    opmerking: document.getElementById('rt-opmerking').value.trim(), _synced: false,
+  };
+  rtLaad().push(rt);
+  rtBewaar();
+  const status = document.getElementById('rt-status');
+  status.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen…</div>';
+  try {
+    await rtVerstuur(rt);
+    rt._synced = true;
+    status.innerHTML = '<div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;color:#3B6D11;font-weight:600">✅ Retour opgeslagen — ' + escapeHtml(rtTekst(rt)) + '</div>';
+  } catch (e) {
+    console.warn('[Retour] Versturen mislukt:', e.message);
+    status.innerHTML = '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt verstuurd zodra er verbinding is.</div>';
+  }
+  rtBewaar();
+  ['rt-aantal', 'rt-opmerking', 'rt-product-manueel'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('rt-product').value = '';
+  rtProductGekozen();
+  rtRenderLijst();
+}
+
+function rtTekst(rt) {
+  return rt.aantal + ' ' + rt.eenheid + ' ' + rt.product + (rt.eenheid === 'sets' ? ' (' + rt.kg + ' kg)' : '');
+}
+
+function rtRenderLijst() {
+  const lijst = rtLaad().filter(r => r.datum === docVandaag());
+  document.getElementById('rt-lijst-wrap').style.display = lijst.length ? 'block' : 'none';
+  document.getElementById('rt-lijst').innerHTML = lijst.slice().reverse().map(r =>
+    `<div style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;gap:8px"><strong>${escapeHtml(r.product)}</strong><span style="white-space:nowrap">${r.aantal} ${escapeHtml(r.eenheid)}</span></div>
+      <div style="color:#888;font-size:12px;margin-top:2px">${escapeHtml(r.reden || '')}${r.wasVerbruikt ? ' · was al verbruikt' : ''} · ${r._synced ? '✅ verstuurd' : '📴 wacht op verbinding'}</div>
+    </div>`).join('');
+}
+
+// Verstuurt retours die nog niet aankwamen (offline gemeld)
+async function syncPendingRetours() {
+  if (!navigator.onLine) return;
+  const wacht = rtLaad().filter(r => r._synced === false);
+  if (!wacht.length) return;
+  for (const rt of wacht) {
+    try { await rtVerstuur(rt); rt._synced = true; }
+    catch (e) { console.warn('[Sync] Retour mislukt:', rt.datum, e.message); break; }
+  }
+  rtBewaar();
+}
+
+// ═══════════════════════════════════════════════════════════
 // OFFLINE SYNC — verstuur wachtende registraties
 // ═══════════════════════════════════════════════════════════
 async function syncPendingRegistraties() {
@@ -7647,6 +7900,7 @@ window.addEventListener('online', () => {
   document.getElementById('sync-status').innerHTML = '🔄 Verbinding hersteld — synchroniseren...';
   syncPendingRegistraties();
   syncPendingUren();
+  syncPendingRetours();
   loadRemoteData();
 });
 
@@ -8034,7 +8288,10 @@ function getRbArtikelen() {
     naam: p.naam,
     eenheid: 'kg',
   }));
-  return [...RB_ARTIKELEN, ...prodArtikelen];
+  // Ucrete, epoxy en PU worden in sets verbruikt: dat is de standaardeenheid bij het toevoegen. De ploegbaas kan de
+  // eenheid per item nog steeds aanpassen in de lijst met toegevoegde items.
+  const SETS_CATEGORIEEN = ['Ucrete', 'Epoxy', 'PU'];
+  return [...RB_ARTIKELEN, ...prodArtikelen].map(a => SETS_CATEGORIEEN.includes(a.cat) ? { ...a, eenheid: 'sets' } : a);
 }
 
 // Unieke categorieën (vast + dynamisch)
@@ -8047,8 +8304,39 @@ let rbStapNr    = 1;
 let rbItems     = []; // { cat, naam, eenheid, aantal, opmerking }
 let rbCatFilter = null; // wordt gezet in initRegiebon
 
+// "Ingediend door": keuzelijst met de ploegbazen (en het kantoor), met een optie om de naam zelf in te vullen. De
+// aangemelde ploegbaas staat vooraf gekozen. Gebruikt dezelfde namenlijst als de onkostennota (volledige namen).
+const RB_NAAM_MANUEEL = '__manueel__';
+function rbVulNaamDropdown(gekozen) {
+  const sel = document.getElementById('rb-naam');
+  if (!sel) return;
+  const extra = gekozen && gekozen !== RB_NAAM_MANUEEL ? gekozen : '';
+  const namen = okNamenLijst(extra).map(t => t.naam);
+  sel.innerHTML = '<option value="">— Kies je naam —</option>'
+    + namen.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
+    + `<option value="${RB_NAAM_MANUEEL}">✏️ Andere naam invullen…</option>`;
+  sel.value = gekozen || '';
+  rbNaamGekozen();
+}
+function rbNaamGekozen() {
+  const manueel = document.getElementById('rb-naam').value === RB_NAAM_MANUEEL;
+  const inp = document.getElementById('rb-naam-manueel');
+  inp.style.display = manueel ? '' : 'none';
+  if (manueel) inp.focus();
+}
+// De naam zoals die op de regiebon komt: de gekozen naam, of de zelf ingetypte naam.
+function getRbNaam() {
+  const sel = document.getElementById('rb-naam');
+  if (!sel) return '';
+  if (sel.value === RB_NAAM_MANUEEL) return document.getElementById('rb-naam-manueel').value.trim();
+  return (sel.value || '').trim();
+}
+
 async function initRegiebon() {
   document.getElementById('rb-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('rb-naam-manueel').value = '';
+  const mij = huidigeGebruiker();
+  rbVulNaamDropdown(mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''));
 
   // Toon laadindicator
   const sel = document.getElementById('rb-project');
@@ -8240,7 +8528,7 @@ function rbStap(delta) {
   if (delta > 0 && rbStapNr === 1) {
     const projectId   = getRbProjectId();
     const projectNaam = getRbProjectNaam();
-    const naam        = document.getElementById('rb-naam').value.trim();
+    const naam        = getRbNaam();
     if (!projectId && !projectNaam && !naam) {
       alert('Vul minstens het project of je naam in.'); return;
     }
@@ -8278,7 +8566,7 @@ function renderRbSamenvatting() {
   const projectNaam = getRbProjectNaam() || '—';
   const datum  = document.getElementById('rb-datum').value;
   const omschr = document.getElementById('rb-omschrijving').value.trim();
-  const naam   = document.getElementById('rb-naam').value.trim();
+  const naam   = getRbNaam();
 
   // Groepeer per categorie
   const perCat = {};
@@ -8321,7 +8609,7 @@ let rbSigState = {
 
 function rbInitSig() {
   // Naam ploegbaas tonen
-  const naam = document.getElementById('rb-naam').value.trim();
+  const naam = getRbNaam();
   const lbl  = document.getElementById('rb-sig-pb-naam-lbl');
   lbl.textContent = naam || '';
   lbl.style.display = naam ? 'block' : 'none';
@@ -8449,7 +8737,7 @@ async function submitRegiebon() {
     project_naam:    getRbProjectNaam(),
     datum:           document.getElementById('rb-datum').value,
     omschrijving:    document.getElementById('rb-omschrijving').value.trim(),
-    ingediend_door:  document.getElementById('rb-naam').value.trim(),
+    ingediend_door:  getRbNaam(),
     klant_naam:      klantNaam,
     handtekening_pb:    sigPb    || '',
     handtekening_klant: sigKlant || '',
@@ -11461,6 +11749,7 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshWeather();
   syncPendingRegistraties();
   syncPendingUren();
+  syncPendingRetours();
   // Update-venster en weeknieuws-popup — pas checken nadat een eventuele
   // bestaande sessie (teamleader via localStorage, of beheerder via
   // checkBeheerSession) zeker hersteld is, anders kunnen ze foutief over
