@@ -7342,6 +7342,10 @@ async function insertRegistratieInSupabase(reg) {
     product_code: reg.productCode,
     product: reg.product,
     kg: reg.kgOpslag != null ? reg.kgOpslag : reg.kg, // altijd in kilo's (sets zijn omgerekend); oudere wachtrij-items hebben nog enkel kg
+    // Eenheid en het getal zoals de ploegbaas het ingaf, zodat de cockpit "125 sets" kan tonen i.p.v. enkel de kilo's.
+    // Enkel voor nieuwe items: oudere wachtrij-items hebben geen omgerekende kg en worden zoals vroeger verstuurd.
+    eenheid: reg.kgOpslag != null ? (reg.eenheid || 'kg') : null,
+    hoeveelheid: reg.kgOpslag != null ? reg.kg : null,
     resterend: reg.restOpslag != null ? reg.restOpslag : reg.resterend,
     theoretisch: reg.theoretisch,
     verschil_kg: reg.verschilKg,
