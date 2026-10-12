@@ -10612,6 +10612,23 @@ function initOnkostennota() {
 // kortelings opstartende (<30 dagen) werven — i.p.v. blind een projectnummer uit het hoofd te
 // moeten typen. Een projectnummer dat niet in de lijst staat, kan manueel ingevuld worden. ──
 let okProjecten = [];
+// Vaste "projecten" die geen werf zijn maar wel een projectnummer hebben (bv. uren in het magazijn). Ze staan niet in
+// de projectenlijst van de apps, maar zijn bij onkosten altijd te kiezen, bovenaan de lijst.
+const OK_ALGEMENE_PROJECTEN = [
+  { projectnummer: 'F26-00012.000', werfnaam: 'Suerickx Flooring - Uren magazijn + bestellingen' },
+];
+function okAlgemeneItems(ql) {
+  return OK_ALGEMENE_PROJECTEN.filter(p => !ql || p.projectnummer.toLowerCase().includes(ql) || p.werfnaam.toLowerCase().includes(ql));
+}
+function okAlgemeneHtml(i, ql) {
+  const items = okAlgemeneItems(ql);
+  if (!items.length) return '';
+  return '<div style="padding:6px 12px;font-size:11px;font-weight:700;color:#3547C8;background:#F7F8FF;letter-spacing:.04em">ALGEMEEN (GEEN WERF)</div>' +
+    items.map(p => `<div onmousedown="okKiesLijnProject(${i},'${escapeHtml(p.projectnummer).replace(/'/g,"\\'")}')" style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer">
+      <div style="font-weight:600;font-size:13.5px">${escapeHtml(p.projectnummer)}</div>
+      <div style="font-size:12px;color:#888">${escapeHtml(p.werfnaam)}</div>
+    </div>`).join('');
+}
 async function okLaadProjecten() {
   const client = initSbCockpit();
   if (!client) return;
@@ -10637,15 +10654,15 @@ function renderOkLijnProjectSuggesties(i) {
   if (!input || !wrap) return;
   const q = input.value.trim();
   const ql = q.toLowerCase();
-  let items = okProjecten.filter(okProjectRelevant);
+  let items = okProjecten.filter(okProjectRelevant).filter(p => !OK_ALGEMENE_PROJECTEN.some(a => a.projectnummer === p.projectnummer));
   if (ql) items = items.filter(p => (p.projectnummer || '').toLowerCase().includes(ql) || (p.werfnaam || '').toLowerCase().includes(ql));
   items = items.slice(0, 30);
-  let inhoud = items.map(p => `<div onmousedown="okKiesLijnProject(${i},'${escapeHtml(p.projectnummer || '').replace(/'/g,"\\'")}')" style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer">
+  let inhoud = okAlgemeneHtml(i, ql) + items.map(p => `<div onmousedown="okKiesLijnProject(${i},'${escapeHtml(p.projectnummer || '').replace(/'/g,"\\'")}')" style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer">
       <div style="font-weight:600;font-size:13.5px">${escapeHtml(p.projectnummer || '')}</div>
       <div style="font-size:12px;color:#888">${escapeHtml(p.werfnaam || '')}</div>
     </div>`).join('');
   // Staat wat je typte niet als projectnummer in de lijst? Dan expliciet aanbieden om het manueel te gebruiken.
-  const bestaat = q && okProjecten.some(p => (p.projectnummer || '').toLowerCase() === ql);
+  const bestaat = q && (okProjecten.some(p => (p.projectnummer || '').toLowerCase() === ql) || OK_ALGEMENE_PROJECTEN.some(p => p.projectnummer.toLowerCase() === ql));
   if (q && !bestaat) {
     inhoud += `<div onmousedown="okSluitLijnProjectLijst(${i})" style="padding:10px 12px;cursor:pointer;background:#F7F8FF;color:#3547C8;font-weight:600;font-size:13.5px">✏️ Manueel gebruiken: ${escapeHtml(q)}</div>`;
   }
@@ -10723,8 +10740,8 @@ function renderOkLijn(i) {
         <label class="form-label">Bon / factuur <span style="font-weight:400;color:#999">(optioneel)</span></label>
         <div id="ok-lijn-${i}-foto-preview"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border:2px dashed #3547C8;border-radius:10px;background:#F7F8FF;cursor:pointer;font-size:13px;font-weight:600;color:#3547C8">
-          📷 Foto van bon
-          <input type="file" accept="image/*" style="display:none" onchange="okLijnFoto(${i},this)">
+          📎 Foto of PDF van bon
+          <input type="file" accept="image/*,application/pdf" style="display:none" onchange="okLijnFoto(${i},this)">
         </label>
         <div id="ok-lijn-${i}-foto-status" style="font-size:11px;color:#888;margin-top:4px"></div>
       </div>
@@ -10755,6 +10772,7 @@ function okLijnFoto(i, input) {
   const file = input.files[0];
   input.value = '';
   if (!file || !okLijnen[i]) return;
+  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { okLijnPdf(i, file); return; }
   const reader = new FileReader();
   reader.onload = e => {
     verkleenFoto(e.target.result, 1200, b64 => {
@@ -10766,6 +10784,31 @@ function okLijnFoto(i, input) {
     });
   };
   reader.readAsDataURL(file);
+}
+// Een PDF-bon gaat ongewijzigd naar de opslag (geen verkleining zoals bij foto's). De opslag weigert bestanden boven 10 MB.
+async function okLijnPdf(i, file) {
+  const statusEl = document.getElementById('ok-lijn-'+i+'-foto-status');
+  const prev = document.getElementById('ok-lijn-'+i+'-foto-preview');
+  if (file.size > 10 * 1024 * 1024) {
+    if (statusEl) statusEl.textContent = 'PDF is te groot (max. 10 MB). Neem een foto of verklein de PDF.';
+    return;
+  }
+  okLijnen[i].fotoData = null; okLijnen[i].fotoUrl = ''; okLijnen[i].fotoPath = '';
+  if (prev) prev.innerHTML = `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e4e6f0;border-radius:10px;margin-bottom:6px;font-size:13px;max-width:100%"><span style="font-size:22px">📄</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(file.name)}</span></div>`;
+  if (!sb) { if (statusEl) statusEl.textContent = 'Geen verbinding — PDF niet opgeslagen'; return; }
+  if (statusEl) statusEl.textContent = 'PDF uploaden…';
+  try {
+    const path = 'onkostennota/' + Date.now() + '-' + i + '.pdf';
+    const { error: upErr } = await sb.storage.from('fotos').upload(path, file, { contentType: 'application/pdf' });
+    if (upErr) throw upErr;
+    const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
+    if (!okLijnen[i]) return;
+    okLijnen[i].fotoUrl = pub.publicUrl;
+    okLijnen[i].fotoPath = path;
+    if (statusEl) statusEl.textContent = 'PDF opgeslagen ✓';
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Upload mislukt: ' + (e.message || 'onbekende fout');
+  }
 }
 async function okUploadLijnFoto(i, b64) {
   const statusEl = document.getElementById('ok-lijn-'+i+'-foto-status');
