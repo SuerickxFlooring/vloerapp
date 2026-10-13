@@ -833,11 +833,25 @@ textarea.form-input{min-height:80px;resize:vertical}
 <!-- ══ REGIEBON ═══════════════════════════════════════════ -->
 <div class="screen" id="s-regiebon">
   <div class="topbar">
-    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
-    <div class="topbar-title">🧾 Regiebon</div>
+    <button class="btn-back" onclick="rbTerug()" aria-label="Terug">←</button>
+    <div class="topbar-title" id="rb-titel">🧾 Regiebon</div>
   </div>
   <div class="scroll-area" style="padding-top:64px">
 
+    <!-- Keuze: volledige regiebon of enkel wachturen -->
+    <div id="rb-keuze" style="padding:16px">
+      <div style="font-size:14px;color:#666;margin-bottom:12px">Wat wil je indienen?</div>
+      <button type="button" onclick="rbKies('volledig')" style="display:block;width:100%;text-align:left;background:#fff;border:2px solid #e4e6f0;border-radius:14px;padding:16px;margin-bottom:12px;cursor:pointer">
+        <div style="font-size:16px;font-weight:700;color:#1a1a1a">🧾 Volledige regiebon</div>
+        <div style="font-size:13px;color:#777;margin-top:4px">Materiaal, uren en handtekeningen</div>
+      </button>
+      <button type="button" onclick="rbKies('wacht')" style="display:block;width:100%;text-align:left;background:#fff;border:2px solid #e4e6f0;border-radius:14px;padding:16px;cursor:pointer">
+        <div style="font-size:16px;font-weight:700;color:#1a1a1a">⏱ Wachturen</div>
+        <div style="font-size:13px;color:#777;margin-top:4px">Project, datum en aantal uur</div>
+      </button>
+    </div>
+
+    <div id="rb-flow" style="display:none">
     <!-- Progress bar -->
     <div style="display:flex;gap:4px;padding:12px 16px 0">
       <div id="rb-step-1" class="step-dot active" style="flex:1;height:4px;border-radius:2px;background:#3547C8"></div>
@@ -865,7 +879,7 @@ textarea.form-input{min-height:80px;resize:vertical}
         <label class="form-label">Datum</label>
         <input type="date" class="form-input" id="rb-datum">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="rb-omschrijving-groep">
         <label class="form-label">Omschrijving werkzaamheden</label>
         <textarea class="form-input" id="rb-omschrijving" rows="3" placeholder="Beschrijf de uitgevoerde werken..."></textarea>
       </div>
@@ -873,6 +887,10 @@ textarea.form-input{min-height:80px;resize:vertical}
         <label class="form-label">Ingediend door</label>
         <select class="form-select" id="rb-naam" onchange="rbNaamGekozen()"></select>
         <input type="text" class="form-input" id="rb-naam-manueel" placeholder="Naam ploegbaas" style="display:none;margin-top:8px">
+      </div>
+      <div class="form-group" id="rb-wacht-groep" style="display:none">
+        <label class="form-label">Aantal wachtuur</label>
+        <input type="text" inputmode="decimal" class="form-input" id="rb-wacht-uren" placeholder="Bv. 2,5" autocomplete="off">
       </div>
     </div>
 
@@ -923,6 +941,7 @@ textarea.form-input{min-height:80px;resize:vertical}
 
     <!-- STAP 4: Handtekeningen -->
     <div id="rb-stap-4" style="padding:12px 16px;display:none">
+      <div id="rb-wacht-samenvatting" style="display:none"></div>
 
       <div class="form-group">
         <label class="form-label">✍️ Handtekening ploegbaas <span style="font-weight:400;color:#aaa">(optioneel)</span></label>
@@ -954,6 +973,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button id="rb-volgende-btn" onclick="rbStap(1)" class="btn-primary" style="flex:1">Volgende →</button>
       <button id="rb-submit-btn" onclick="submitRegiebon()" class="btn-primary btn-green" style="flex:1;display:none">✅ Indienen</button>
     </div>
+    </div><!-- /rb-flow -->
   </div>
 </div>
 
@@ -2071,6 +2091,11 @@ textarea.form-input{min-height:80px;resize:vertical}
     <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Stap 2, Artikelen: schuif door de categorieën (Arbeid, Verf, Betonafwerking, ...) of zoek een artikel, en tik op + om het toe te voegen. Niet in de lijst? Typ het zelf in bij &quot;Vrij artikel invoeren&quot;. Pas per item aantal en eenheid aan in &quot;Toegevoegde items&quot;.</span></div>
     <div class="wk-step"><span class="wk-n">3</span><span class="wk-t">Stap 3, Overzicht: controleer alles in één oogopslag.</span></div>
     <div class="wk-step"><span class="wk-n">4</span><span class="wk-t">Stap 4, Handtekeningen: jouw handtekening en, optioneel, naam + handtekening van de klantvertegenwoordiger. Tik op Indienen.</span></div>
+  </section>
+  <section class="wk-sec"><h2 class="wk-h2">Wachturen melden</h2>
+    <div class="wk-step"><span class="wk-n">1</span><span class="wk-t">Tik op Regiebon en kies Wachturen.</span></div>
+    <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Kies het project, de datum en je naam, en vul het aantal wachtuur in (bv. 2,5).</span></div>
+    <div class="wk-step"><span class="wk-n">3</span><span class="wk-t">Laat eventueel de klant tekenen en tik op Indienen.</span></div>
   </section>
   <section class="wk-sec"><h2 class="wk-h2">Planning</h2>
     <div class="wk-step"><span class="wk-n">1</span><span class="wk-t">Tik op Planning om te zien wie waar wordt ingepland, per week, per ploegbaas en per werf.</span></div>
@@ -8333,6 +8358,8 @@ function getRbNaam() {
 }
 
 async function initRegiebon() {
+  rbToonKeuze();
+  document.getElementById('rb-wacht-uren').value = '';
   document.getElementById('rb-datum').value = new Date().toISOString().split('T')[0];
   document.getElementById('rb-naam-manueel').value = '';
   const mij = huidigeGebruiker();
@@ -8388,6 +8415,74 @@ async function initRegiebon() {
   filterRbArtikelen();
   updateRbNav();
   updateRbItemsLijst();
+}
+
+// ── Soort regiebon: volledig of enkel wachturen ──────────────────────────────────────────────────────────
+// Bij het openen van Regiebon kiest de ploegbaas eerst wat hij indient. "Wachturen" is een korte versie met enkel
+// project, datum, ingediend door en aantal wachtuur, gevolgd door de (optionele) handtekeningen. Achter de schermen
+// wordt het een gewone regiebon met één regel "Wachturen" in UUR, zodat kantoor het in dezelfde lijst terugvindt.
+let rbModus = null; // null = keuzescherm, 'volledig' of 'wacht'
+const RB_WACHT_MAX_UREN = 24;
+
+function rbToonKeuze() {
+  rbModus = null;
+  document.getElementById('rb-keuze').style.display = 'block';
+  document.getElementById('rb-flow').style.display = 'none';
+  document.getElementById('rb-titel').textContent = '🧾 Regiebon';
+}
+
+function rbKies(modus) {
+  rbModus = modus;
+  const wacht = modus === 'wacht';
+  document.getElementById('rb-keuze').style.display = 'none';
+  document.getElementById('rb-flow').style.display = 'block';
+  document.getElementById('rb-titel').textContent = wacht ? '⏱ Wachturen' : '🧾 Regiebon';
+  document.getElementById('rb-omschrijving-groep').style.display = wacht ? 'none' : '';
+  document.getElementById('rb-wacht-groep').style.display = wacht ? '' : 'none';
+  rbStapNr = 1;
+  updateRbNav();
+  const scroll = document.querySelector('#s-regiebon .scroll-area');
+  if (scroll) scroll.scrollTop = 0;
+}
+
+// De pijl linksboven brengt je vanuit een regiebon terug naar de keuze, vanuit de keuze naar het startscherm.
+function rbTerug() {
+  if (rbModus) rbToonKeuze();
+  else go('s-home');
+}
+
+// "2,5" en "2.5" geven allebei 2.5; leeg of onzin geeft NaN
+function rbWachtUren() {
+  const tekst = (document.getElementById('rb-wacht-uren').value || '').trim().replace(',', '.');
+  const n = /^\d+(\.\d+)?$/.test(tekst) ? parseFloat(tekst) : NaN;
+  return isNaN(n) ? NaN : Math.round(n * 100) / 100;
+}
+
+// Geeft een foutmelding terug, of '' als alles klopt
+function rbControleerWacht() {
+  if (!document.getElementById('rb-datum').value) return 'Vul de datum in.';
+  if (!getRbProjectId() && !getRbProjectNaam()) return 'Kies het project.';
+  if (!getRbNaam()) return 'Kies je naam.';
+  const uren = rbWachtUren();
+  if (isNaN(uren) || uren <= 0) return 'Vul het aantal wachtuur in (bv. 2,5).';
+  if (uren > RB_WACHT_MAX_UREN) return 'Dat zijn meer dan ' + RB_WACHT_MAX_UREN + ' uur. Controleer het aantal wachtuur.';
+  return '';
+}
+
+function rbRenderWachtSamenvatting() {
+  const el = document.getElementById('rb-wacht-samenvatting');
+  if (rbModus !== 'wacht') { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const uren = rbWachtUren();
+  el.style.display = 'block';
+  el.innerHTML = `<div style="background:#f7f8fc;border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px">⏱ Wachturen</div>
+      <div style="font-size:14px;color:#333;display:flex;flex-direction:column;gap:4px">
+        <div><strong>Aantal wachtuur:</strong> ${isNaN(uren) ? '—' : String(uren).replace('.', ',')} uur</div>
+        <div><strong>Project:</strong> ${escapeHtml(getRbProjectNaam() || '—')}</div>
+        <div><strong>Datum:</strong> ${escapeHtml(document.getElementById('rb-datum').value)}</div>
+        <div><strong>Ingediend door:</strong> ${escapeHtml(getRbNaam())}</div>
+      </div>
+    </div>`;
 }
 
 function setRbCat(btn, idx) {
@@ -8526,38 +8621,46 @@ function getRbProjectId() {
 
 function rbStap(delta) {
   if (delta > 0 && rbStapNr === 1) {
-    const projectId   = getRbProjectId();
-    const projectNaam = getRbProjectNaam();
-    const naam        = getRbNaam();
-    if (!projectId && !projectNaam && !naam) {
-      alert('Vul minstens het project of je naam in.'); return;
+    if (rbModus === 'wacht') {
+      const fout = rbControleerWacht();
+      if (fout) { alert(fout); return; }
+    } else {
+      const projectId   = getRbProjectId();
+      const projectNaam = getRbProjectNaam();
+      const naam        = getRbNaam();
+      if (!projectId && !projectNaam && !naam) {
+        alert('Vul minstens het project of je naam in.'); return;
+      }
     }
   }
   if (delta > 0 && rbStapNr === 2 && rbItems.length === 0) {
     if (!confirm('Geen items toegevoegd. Toch verder?')) return;
   }
-  rbStapNr = Math.max(1, Math.min(4, rbStapNr + delta));
+  // Wachturen: enkel de gegevens (stap 1) en de handtekeningen (stap 4)
+  const volgorde = rbModus === 'wacht' ? [1, 4] : [1, 2, 3, 4];
+  const pos = Math.max(0, volgorde.indexOf(rbStapNr));
+  rbStapNr = volgorde[Math.max(0, Math.min(volgorde.length - 1, pos + delta))];
   updateRbNav();
   if (rbStapNr === 3) renderRbSamenvatting();
 }
 
 function updateRbNav() {
+  const wacht = rbModus === 'wacht';
   [1,2,3,4].forEach(n => {
     document.getElementById(`rb-stap-${n}`).style.display = n === rbStapNr ? 'block' : 'none';
     const dot = document.getElementById(`rb-step-${n}`);
     dot.style.background = n <= rbStapNr ? '#3547C8' : '#ddd';
+    dot.style.display = wacht && (n === 2 || n === 3) ? 'none' : '';
   });
-  const labels = [
-    'Stap 1 van 4 — Project & datum',
-    'Stap 2 van 4 — Artikelen',
-    'Stap 3 van 4 — Overzicht',
-    'Stap 4 van 4 — Handtekeningen',
-  ];
-  document.getElementById('rb-step-label').textContent = labels[rbStapNr - 1];
+  const labels = wacht
+    ? { 1: 'Stap 1 van 2 — Gegevens', 4: 'Stap 2 van 2 — Handtekeningen (optioneel)' }
+    : { 1: 'Stap 1 van 4 — Project & datum', 2: 'Stap 2 van 4 — Artikelen', 3: 'Stap 3 van 4 — Overzicht', 4: 'Stap 4 van 4 — Handtekeningen' };
+  document.getElementById('rb-step-label').textContent = labels[rbStapNr];
   document.getElementById('rb-vorige-btn').style.display  = rbStapNr > 1 ? 'block' : 'none';
   document.getElementById('rb-volgende-btn').style.display = rbStapNr < 4 ? 'block' : 'none';
   document.getElementById('rb-submit-btn').style.display  = rbStapNr === 4 ? 'block' : 'none';
   document.getElementById('rb-submit-status').innerHTML   = '';
+  rbRenderWachtSamenvatting();
   // Bij stap 4: initialiseer canvassen en toon naam ploegbaas
   if (rbStapNr === 4) rbInitSig();
 }
@@ -8725,6 +8828,10 @@ async function submitRegiebon() {
     statusEl.innerHTML = '<div class="err-box">❌ Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.</div>';
     return;
   }
+  if (rbModus === 'wacht') {
+    const fout = rbControleerWacht();
+    if (fout) { statusEl.innerHTML = `<div class="err-box">❌ ${escapeHtml(fout)}</div>`; return; }
+  }
   statusEl.innerHTML = '<div style="color:#888;font-size:14px">⏳ Indienen...</div>';
 
   const gps = getGpsForSubmit();
@@ -8736,7 +8843,7 @@ async function submitRegiebon() {
     project_id:      getRbProjectId() || null,
     project_naam:    getRbProjectNaam(),
     datum:           document.getElementById('rb-datum').value,
-    omschrijving:    document.getElementById('rb-omschrijving').value.trim(),
+    omschrijving:    rbModus === 'wacht' ? 'Wachturen' : document.getElementById('rb-omschrijving').value.trim(),
     ingediend_door:  getRbNaam(),
     klant_naam:      klantNaam,
     handtekening_pb:    sigPb    || '',
@@ -8745,7 +8852,8 @@ async function submitRegiebon() {
     gps_lon:         gps.gps_lon != null ? String(gps.gps_lon) : '',
   };
 
-  const items = rbItems.map(item => ({
+  // Wachturen = één regel "Wachturen" in uren; kantoor herkent de bon aan de categorie
+  const items = rbModus === 'wacht' ? [{ categorie: 'Wachturen', omschrijving: 'Wachturen', aantal: String(rbWachtUren()), eenheid: 'UUR', opmerking: '' }] : rbItems.map(item => ({
     categorie:   item.cat,
     omschrijving: item.naam,
     aantal:      String(item.aantal),
@@ -8759,7 +8867,7 @@ async function submitRegiebon() {
       p_items: items,
     });
     if (error) throw error;
-    statusEl.innerHTML = '<div class="ok-box">✅ Regiebon succesvol ingediend!</div>';
+    statusEl.innerHTML = '<div class="ok-box">✅ ' + (rbModus === 'wacht' ? 'Wachturen' : 'Regiebon') + ' succesvol ingediend!</div>';
     setTimeout(() => {
       go('s-home');
       initRegiebon();
