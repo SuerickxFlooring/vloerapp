@@ -445,7 +445,13 @@ textarea.form-input{min-height:80px;resize:vertical}
     height: 100vh;
     z-index: 100;
     box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+    /* Past niet alles op het scherm? Dan scrolt de zijbalk i.p.v. onderaan af te kappen */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.25) transparent;
   }
+  #desktop-sidebar > * { flex-shrink: 0; }
 
   #desktop-sidebar .sidebar-logo {
     padding: 26px 22px 18px;
@@ -496,6 +502,13 @@ textarea.form-input{min-height:80px;resize:vertical}
     border-top: 1px solid rgba(255,255,255,0.08);
     font-size: 11px;
     color: rgba(255,255,255,0.4);
+  }
+
+  /* Lagere schermen: compactere regels, zodat er minder gescrold moet worden */
+  @media (max-height: 1300px) {
+    #desktop-sidebar .sidebar-logo { padding: 16px 22px 12px; }
+    #desktop-sidebar .sidebar-nav-item { padding: 9px 14px; margin: 1px 12px; }
+    #desktop-sidebar .sidebar-section-lbl { margin: 10px 22px 3px; }
   }
 
   /* Main content verschuift rechts van sidebar */
@@ -624,6 +637,14 @@ textarea.form-input{min-height:80px;resize:vertical}
     <span class="s-icon">🚨</span> Aanrijding
   </div>
 
+  <div class="sidebar-section-lbl">🔚 Na de werf</div>
+  <div class="sidebar-nav-item" id="snav-retour" onclick="goDesktop('s-retour')">
+    <span class="s-icon">↩️</span> Retour melden
+  </div>
+  <div class="sidebar-nav-item" id="snav-herstelling" onclick="goDesktop('s-herstelling')">
+    <span class="s-icon">🔧</span> Machine herstel
+  </div>
+
   <div class="sidebar-section-lbl">🧰 Hulpmiddelen</div>
   <div class="sidebar-nav-item" id="snav-producten" onclick="goDesktop('s-producten')">
     <span class="s-icon">📦</span> Producten
@@ -726,7 +747,6 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div class="menu-section-lbl">🔵 Elke dag</div>
       <button class="menu-btn" onclick="go('s-lmra')"><div class="ico">🦺</div><div class="lbl">LMRA</div><div class="sub">Dagelijkse risicoanalyse</div></button>
       <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
-      <button class="menu-btn" onclick="go('s-retour')"><div class="ico">↩️</div><div class="lbl">Retour melden</div><div class="sub">Materiaal terug naar magazijn</div></button>
 
       <div class="menu-section-lbl">🏗️ Op de werf</div>
       <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
@@ -739,6 +759,10 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="openStartwerkKiezer()"><div class="ico">📅</div><div class="lbl">Startwerk</div><div class="sub">Bij opstart werf</div></button>
       <button class="menu-btn" onclick="openWerfopleveringKiezer()"><div class="ico">🏁</div><div class="lbl">Werfoplevering</div><div class="sub">Werf afronden</div></button>
       <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
+
+      <div class="menu-section-lbl">🔚 Na de werf</div>
+      <button class="menu-btn" onclick="go('s-retour')"><div class="ico">↩️</div><div class="lbl">Retour melden</div><div class="sub">Materiaal terug naar magazijn</div></button>
+      <button class="menu-btn" onclick="go('s-herstelling')"><div class="ico">🔧</div><div class="lbl">Machine herstel</div><div class="sub">Defect toestel melden</div></button>
 
       <div class="menu-section-lbl">🧰 Hulpmiddelen</div>
       <button class="menu-btn" onclick="go('s-producten')"><div class="ico">📦</div><div class="lbl">Producten</div><div class="sub">Info & instructies</div></button>
@@ -2097,6 +2121,11 @@ textarea.form-input{min-height:80px;resize:vertical}
     <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Kies het project, de datum en je naam, en vul het aantal wachtuur in (bv. 2,5).</span></div>
     <div class="wk-step"><span class="wk-n">3</span><span class="wk-t">Laat eventueel de klant tekenen en tik op Indienen.</span></div>
   </section>
+  <section class="wk-sec"><h2 class="wk-h2">Machine herstel melden</h2>
+    <div class="wk-step"><span class="wk-n">1</span><span class="wk-t">Tik op Machine herstel (onder Na de werf).</span></div>
+    <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Vul in welk toestel het is en van wie het is: Decovan, Hilti of eigen toestel. Zo weet het kantoor waar het naartoe moet.</span></div>
+    <div class="wk-step"><span class="wk-n">3</span><span class="wk-t">Omschrijf wat er mee aan de hand is, voeg eventueel foto's toe en tik op Defect melden.</span></div>
+  </section>
   <section class="wk-sec"><h2 class="wk-h2">Planning</h2>
     <div class="wk-step"><span class="wk-n">1</span><span class="wk-t">Tik op Planning om te zien wie waar wordt ingepland, per week, per ploegbaas en per werf.</span></div>
   </section>
@@ -3303,6 +3332,60 @@ textarea.form-input{min-height:80px;resize:vertical}
     <button class="nav-item" onclick="go('s-handleidingen')"><div class="ni">📖</div><span class="nl">Handleidingen</span></button>
     <button class="nav-item" onclick="go('s-weeknieuws')"><div class="ni">📰</div><span class="nl">Weeknieuws</span></button>
     <button class="nav-item" onclick="go('s-aanrijding')"><div class="ni">🚨</div><span class="nl">Aanrijding</span></button>
+  </div>
+</div>
+
+<!-- ══ MACHINE HERSTEL ═════════════════════════════════════ -->
+<div class="screen" id="s-herstelling">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Machine herstel</div>
+    <span class="topbar-icon">🔧</span>
+  </div>
+  <div class="scroll-area">
+    <div class="form-pad">
+      <div style="font-size:13px;color:#666;margin-bottom:14px;line-height:1.5">Is er een toestel defect? Meld het hier. Het kantoor ziet meteen of het naar Decovan of Hilti moet, of zelf hersteld wordt.</div>
+
+      <div class="form-group">
+        <label class="form-label">Welk toestel?</label>
+        <input type="text" class="form-input" id="hs-toestel" placeholder="Bv. boorhamer, schuurmachine, stofzuiger" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Van wie is het toestel?</label>
+        <div id="hs-eigenaar" style="display:flex;gap:8px"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Wat is er mee aan de hand?</label>
+        <textarea class="form-input" id="hs-omschrijving" rows="4" placeholder="Beschrijf het defect: wat doet het toestel niet meer, sinds wanneer..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Foto's <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <div id="hs-foto-preview-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+        <label style="display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border:2px dashed #3547C8;border-radius:12px;background:#F7F8FF;cursor:pointer;font-size:14px;font-weight:600;color:#3547C8">
+          📷 Foto maken of kiezen
+          <input type="file" accept="image/*" multiple style="display:none" onchange="hsVerwerkFotos(this)">
+        </label>
+        <div id="hs-foto-status" style="font-size:12px;color:#888;margin-top:6px;text-align:center"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Op welke werf? <span style="font-weight:400;color:#999">(optioneel)</span></label>
+        <select class="form-select" id="hs-project" onchange="hsProjectGekozen()"></select>
+        <input type="text" class="form-input" id="hs-project-manueel" placeholder="Projectnummer en naam" style="display:none;margin-top:8px">
+      </div>
+
+      <div id="hs-fout" style="display:none;color:#A32D2D;font-size:13px;margin-bottom:8px;font-weight:600"></div>
+      <button type="button" id="hs-knop" onclick="hsOpslaan()" style="width:100%;padding:13px;background:#3547C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🔧 Defect melden</button>
+      <div id="hs-status" style="margin-top:10px"></div>
+
+      <div id="hs-lijst-wrap" style="margin-top:20px;display:none">
+        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Gemeld vandaag (dit toestel)</div>
+        <div id="hs-lijst"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -5179,6 +5262,8 @@ function goDesktop(id) {
                's-weeknieuws':'snav-weeknieuws',
                's-documenten':'snav-documenten',
                's-onkostennota':'snav-onkostennota',
+               's-retour':'snav-retour',
+               's-herstelling':'snav-herstelling',
                's-startwerk-kies':'snav-startwerk-kies',
                's-werfoplevering-kies':'snav-werfoplevering-kies'};
   const active = document.getElementById(map[id]);
@@ -5241,6 +5326,7 @@ function go(id) {
   if (id === 's-weeknieuws') initWeeknieuws();
   if (id === 's-onkostennota') initOnkostennota();
   if (id === 's-retour') initRetour();
+  if (id === 's-herstelling') initHerstelling();
   if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra' || id === 's-levering') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') regEnterScherm();
   if (id === 's-login') renderLoginLijst();
@@ -7637,6 +7723,7 @@ async function submitRegistratie() {
   syncPendingUren();
   syncPendingRegistraties();
   syncPendingRetours();
+  syncPendingHerstellingen();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -7882,6 +7969,213 @@ function rtRenderLijst() {
     </div>`).join('');
 }
 
+// ═══════════════════════════════════════════════════════════
+// MACHINE HERSTEL — defect toestel melden
+// De ploegbaas omschrijft het defect en kiest van wie het toestel is (Decovan, Hilti of eigen toestel), zodat het kantoor weet
+// waar het naartoe moet. De melding gaat via de beveiligde functie submit_herstelling naar WerfKompas Beheer
+// (cockpit_herstellingen). Zonder verbinding blijft ze op het toestel staan en wordt ze later verstuurd.
+// ═══════════════════════════════════════════════════════════
+const HS_EIGENAARS = [['Decovan', 'Decovan'], ['Hilti', 'Hilti'], ['Eigen', 'Eigen toestel']];
+const HS_MANUEEL = '__manueel__';
+const HS_MAX_FOTOS = 4;
+let hsEigenaar = '';
+let hsFotoData = [], hsFotoUrls = [], hsFotoPaths = [];
+let hsUploadsBezig = 0;
+let hsMaxMelding = ''; // blijft zichtbaar naast de uploadmeldingen
+let hsBezig = false;
+let hsOpgeslagen = null; // meldingen op dit toestel (localStorage 'herstellingen')
+
+function hsLaad() {
+  if (hsOpgeslagen) return hsOpgeslagen;
+  try { hsOpgeslagen = JSON.parse(localStorage.getItem('herstellingen') || '[]'); } catch (e) { hsOpgeslagen = []; }
+  return hsOpgeslagen;
+}
+function hsBewaar() {
+  try { localStorage.setItem('herstellingen', JSON.stringify(hsLaad().slice(-100))); } catch (e) { console.warn('[Herstelling] localStorage fout:', e); }
+}
+
+function hsProject() {
+  const sel = document.getElementById('hs-project');
+  if (sel.value === HS_MANUEEL) return document.getElementById('hs-project-manueel').value.trim();
+  return sel.value || '';
+}
+
+function initHerstelling() {
+  const vandaag = docVandaag();
+  const bron = document.getElementById('r-project-select');
+  const opties = bron ? Array.from(bron.options).filter(o => o.value).map(o => ({ waarde: o.value, tekst: o.textContent })) : [];
+  const vandaagRegs = (appData.registraties || []).filter(r => r.datum === vandaag);
+  const laatste = vandaagRegs.length ? vandaagRegs[vandaagRegs.length - 1].project : '';
+  if (laatste && !opties.some(o => o.waarde === laatste)) opties.unshift({ waarde: laatste, tekst: laatste });
+  const sel = document.getElementById('hs-project');
+  sel.innerHTML = '<option value="">Geen werf / niet van toepassing</option>'
+    + opties.map(o => `<option value="${escapeHtml(o.waarde)}">${escapeHtml(o.tekst)}</option>`).join('')
+    + `<option value="${HS_MANUEEL}">✏️ Andere werf (zelf invullen)…</option>`;
+  sel.value = laatste || '';
+  ['hs-toestel', 'hs-omschrijving', 'hs-project-manueel'].forEach(id => { document.getElementById(id).value = ''; });
+  hsEigenaar = '';
+  hsRenderEigenaar();
+  hsResetFotos();
+  hsProjectGekozen();
+  document.getElementById('hs-fout').style.display = 'none';
+  document.getElementById('hs-status').innerHTML = '';
+  hsRenderLijst();
+}
+
+function hsRenderEigenaar() {
+  document.getElementById('hs-eigenaar').innerHTML = HS_EIGENAARS.map(([waarde, label]) => {
+    const aan = waarde === hsEigenaar;
+    return `<button type="button" onclick="hsKiesEigenaar('${waarde}')" style="flex:1;padding:12px 6px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:2px solid ${aan ? '#3547C8' : '#d1d5db'};background:${aan ? '#3547C8' : '#fff'};color:${aan ? '#fff' : '#333'}">${escapeHtml(label)}</button>`;
+  }).join('');
+}
+function hsKiesEigenaar(w) { hsEigenaar = w; hsRenderEigenaar(); }
+
+function hsProjectGekozen() {
+  const manueel = document.getElementById('hs-project').value === HS_MANUEEL;
+  document.getElementById('hs-project-manueel').style.display = manueel ? '' : 'none';
+}
+
+// ── Foto's: verkleind en meteen naar de opslag geüpload (zelfde aanpak als bij Levering) ──
+function hsVerwerkFotos(input) {
+  const files = Array.from(input.files || []);
+  input.value = '';
+  if (!files.length) return;
+  const statusEl = document.getElementById('hs-foto-status');
+  const beschikbaar = HS_MAX_FOTOS - hsFotoData.filter(Boolean).length;
+  if (beschikbaar <= 0) { statusEl.textContent = 'Maximum van ' + HS_MAX_FOTOS + ' foto\'s bereikt.'; return; }
+  hsMaxMelding = files.length > beschikbaar ? 'Max. ' + HS_MAX_FOTOS + ' foto\'s: enkel de eerste ' + beschikbaar + ' worden toegevoegd. ' : '';
+  if (hsMaxMelding) statusEl.textContent = hsMaxMelding;
+  files.slice(0, beschikbaar).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      verkleenFoto(e.target.result, 1200, b64 => {
+        const i = hsFotoData.length;
+        hsFotoData.push(b64);
+        const w = document.createElement('div');
+        w.id = 'hs-foto-prev-' + i;
+        w.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0';
+        w.innerHTML = '<img src="' + b64 + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #D0D5F0">'
+          + '<button type="button" onclick="hsVerwijderFoto(' + i + ')" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">X</button>';
+        document.getElementById('hs-foto-preview-list').appendChild(w);
+        hsUploadFoto(b64, i);
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function hsUploadFoto(b64, i) {
+  const statusEl = document.getElementById('hs-foto-status');
+  if (!sb && !initSupabase()) { hsFotoUrls[i] = ''; statusEl.textContent = 'Geen verbinding: foto niet opgeslagen'; return; }
+  hsUploadsBezig++;
+  try {
+    const path = 'herstellingen/' + Date.now() + '-' + i + '.jpg';
+    const { error: upErr } = await sb.storage.from('fotos').upload(path, dataURLtoBlob(b64), { contentType: 'image/jpeg' });
+    if (upErr) throw upErr;
+    const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
+    if (hsFotoData[i]) { hsFotoUrls[i] = pub.publicUrl; hsFotoPaths[i] = path; }
+    statusEl.textContent = hsMaxMelding + 'Foto ' + (i + 1) + ' opgeslagen';
+  } catch (e) {
+    hsFotoUrls[i] = '';
+    statusEl.textContent = hsMaxMelding + 'Upload mislukt: ' + (e.message || 'onbekende fout');
+  } finally { hsUploadsBezig--; }
+}
+
+function hsVerwijderFoto(i) {
+  const el = document.getElementById('hs-foto-prev-' + i);
+  if (el) el.remove();
+  hsFotoData[i] = null; hsFotoUrls[i] = null; hsFotoPaths[i] = null;
+}
+function hsGetFotos() {
+  return hsFotoUrls.map((url, i) => url ? { url, path: hsFotoPaths[i] || '' } : null).filter(Boolean);
+}
+function hsResetFotos() {
+  hsFotoData = []; hsFotoUrls = []; hsFotoPaths = []; hsMaxMelding = '';
+  document.getElementById('hs-foto-preview-list').innerHTML = '';
+  document.getElementById('hs-foto-status').textContent = '';
+}
+
+async function hsVerstuur(h) {
+  const client = initSbCockpit();
+  if (!client) throw new Error('Geen verbinding met WerfKompas Beheer');
+  const { error } = await client.rpc('submit_herstelling', { p: {
+    client_timestamp: h.timestamp, datum: h.datum, project: h.project, teamleader: h.teamleader,
+    toestel: h.toestel, eigenaar: h.eigenaar, omschrijving: h.omschrijving, fotos: h.fotos || [],
+  } });
+  if (error) throw error;
+}
+
+async function hsOpslaan() {
+  if (hsBezig) return;
+  const fout = document.getElementById('hs-fout');
+  const toonFout = t => { fout.textContent = t; fout.style.display = 'block'; };
+  fout.style.display = 'none';
+  const toestel = document.getElementById('hs-toestel').value.trim();
+  const omschrijving = document.getElementById('hs-omschrijving').value.trim();
+  if (!toestel) return toonFout('Vul in welk toestel het is.');
+  if (!hsEigenaar) return toonFout('Kies van wie het toestel is: Decovan, Hilti of eigen toestel.');
+  if (!omschrijving) return toonFout('Omschrijf wat er mee aan de hand is.');
+  if (hsUploadsBezig > 0) return toonFout('De foto\'s worden nog geüpload. Probeer zo meteen opnieuw.');
+  const mij = huidigeGebruiker();
+  const h = {
+    id: 'hs_' + Date.now(), timestamp: localTimestamp(), datum: docVandaag(), project: hsProject(),
+    teamleader: mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''),
+    toestel, eigenaar: hsEigenaar, omschrijving, fotos: hsGetFotos(), _synced: false,
+  };
+  hsBezig = true;
+  const status = document.getElementById('hs-status');
+  status.innerHTML = '<div style="color:#888;font-size:14px">⏳ Versturen…</div>';
+  try {
+    await hsVerstuur(h);
+    h._synced = true;
+    status.innerHTML = '<div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;color:#3B6D11;font-weight:600">✅ Gemeld: ' + escapeHtml(h.toestel) + '. Het kantoor ziet het meteen.</div>';
+  } catch (e) {
+    if (e && e.code === 'P0001') {
+      // De server weigert de melding zelf (bv. een ongeldig veld): niet bewaren om later opnieuw te proberen
+      status.innerHTML = '<div style="background:#FCEBEB;border-radius:8px;padding:10px 12px;color:#A32D2D;font-weight:600">❌ ' + escapeHtml(e.message || 'Melding geweigerd') + '</div>';
+      hsBezig = false;
+      return;
+    }
+    console.warn('[Herstelling] Versturen mislukt:', e && e.message);
+    status.innerHTML = '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt verstuurd zodra er verbinding is.</div>';
+  }
+  hsLaad().push(h);
+  hsBewaar();
+  ['hs-toestel', 'hs-omschrijving'].forEach(id => { document.getElementById(id).value = ''; });
+  hsEigenaar = '';
+  hsRenderEigenaar();
+  hsResetFotos();
+  hsRenderLijst();
+  hsBezig = false;
+}
+
+function hsEigenaarLabel(w) { const g = HS_EIGENAARS.find(x => x[0] === w); return g ? g[1] : w; }
+
+function hsRenderLijst() {
+  const lijst = hsLaad().filter(r => r.datum === docVandaag());
+  document.getElementById('hs-lijst-wrap').style.display = lijst.length ? 'block' : 'none';
+  document.getElementById('hs-lijst').innerHTML = lijst.slice().reverse().map(r =>
+    `<div style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;gap:8px"><strong>${escapeHtml(r.toestel)}</strong><span style="white-space:nowrap">${escapeHtml(hsEigenaarLabel(r.eigenaar))}</span></div>
+      <div style="color:#888;font-size:12px;margin-top:2px">${escapeHtml(r.omschrijving.length > 90 ? r.omschrijving.slice(0, 90) + '…' : r.omschrijving)} · ${r._synced === true ? '✅ verstuurd' : r._synced === false ? '📴 wacht op verbinding' : '⚠️ geweigerd'}</div>
+    </div>`).join('');
+}
+
+// Verstuurt meldingen die nog niet aankwamen (offline gemeld)
+async function syncPendingHerstellingen() {
+  if (!navigator.onLine) return;
+  const wacht = hsLaad().filter(r => r._synced === false);
+  if (!wacht.length) return;
+  for (const h of wacht) {
+    try { await hsVerstuur(h); h._synced = true; }
+    catch (e) {
+      if (e && e.code === 'P0001') { h._synced = 'geweigerd'; continue; }
+      console.warn('[Sync] Herstelling mislukt:', h.datum, e && e.message); break;
+    }
+  }
+  hsBewaar();
+}
+
 // Verstuurt retours die nog niet aankwamen (offline gemeld)
 async function syncPendingRetours() {
   if (!navigator.onLine) return;
@@ -7926,6 +8220,7 @@ window.addEventListener('online', () => {
   syncPendingRegistraties();
   syncPendingUren();
   syncPendingRetours();
+  syncPendingHerstellingen();
   loadRemoteData();
 });
 
@@ -11901,6 +12196,7 @@ document.addEventListener('DOMContentLoaded', () => {
   syncPendingRegistraties();
   syncPendingUren();
   syncPendingRetours();
+  syncPendingHerstellingen();
   // Update-venster en weeknieuws-popup — pas checken nadat een eventuele
   // bestaande sessie (teamleader via localStorage, of beheerder via
   // checkBeheerSession) zeker hersteld is, anders kunnen ze foutief over
