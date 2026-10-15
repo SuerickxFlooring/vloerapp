@@ -3742,7 +3742,7 @@ function initSupabase() {
   const key = localStorage.getItem('supabaseKey') || DEFAULT_SUPABASE_KEY;
   if (url && key && window.supabase) {
     try {
-      sb = window.supabase.createClient(url, key);
+      sb = metToestelId(window.supabase.createClient(url, key));
       // Supabase parseert een "wachtwoord vergeten"-link automatisch en logt
       // meteen in — zonder dit zou de gebruiker gewoon in de gewone app
       // belanden i.p.v. een nieuw wachtwoord te kunnen instellen.
@@ -3758,6 +3758,129 @@ function initSupabase() {
   }
   sb = null;
   return false;
+}
+
+// ── Toestelcontrole ──────────────────────────────────────────────────────────────────────────────────────────────────
+// Elk toestel krijgt één keer een eigen toestel-id (opgeslagen op het toestel). Bij het opstarten en bij het kiezen van een naam
+// meldt de app het toestel aan bij kantoor: het wordt gekoppeld aan de naam van de ploegbaas die het gebruikt en (zolang kantoor
+// geen goedkeuring verplicht stelt) meteen goedgekeurd. Kantoor kan in Beheer → Toestellen een toestel of een persoon pauzeren;
+// dan toont de app een melding i.p.v. de gewone schermen. Veiligheidsformulieren (LMRA, startwerkbespreking, aanrijding)
+// blijven bereikbaar als kantoor die uitzondering niet uitzet. Zonder verbinding wordt nooit geweigerd; de server controleert
+// bij elke verzending opnieuw (de app is dus nooit de enige beveiliging).
+const TOESTEL_ID_SLEUTEL = 'wk_toestel_id';
+const TOESTEL_STAAT_SLEUTEL = 'wk_toestel_staat';
+const TOESTEL_RPC = {
+  submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p',
+  submit_regiebon: 'p_bon', update_aanrijding: 'p', submit_aanrijding: 'p', submit_swb: 'p', submit_werfoplevering: 'p',
+  submit_onkostennota: 'p', submit_lmra: 'p',
+};
+const VEILIGHEIDS_SCHERMEN = ['s-lmra', 's-swb-invullen', 's-aanrijding'];
+let toegangStaat = { toegang: 'ok', veiligheid_ok: true };
+
+function nieuwToestelId() {
+  try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* oudere browser */ }
+  return 'wk-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 8);
+}
+// Bewaard in localStorage en als back-up in een cookie (blijft soms behouden als de opslag van de site gewist wordt)
+function toestelId() {
+  let id = null;
+  try { id = localStorage.getItem(TOESTEL_ID_SLEUTEL); } catch (e) { /* opslag niet beschikbaar */ }
+  if (!id) {
+    const m = (document.cookie || '').match(new RegExp('(?:^|; )' + TOESTEL_ID_SLEUTEL + '=([^;]+)'));
+    if (m) id = m[1];
+  }
+  if (!id || !/^[A-Za-z0-9_-]{8,64}$/.test(id)) id = nieuwToestelId();
+  try { localStorage.setItem(TOESTEL_ID_SLEUTEL, id); } catch (e) { /* idem */ }
+  try { document.cookie = TOESTEL_ID_SLEUTEL + '=' + id + '; max-age=63072000; path=/; SameSite=Lax'; } catch (e) { /* idem */ }
+  return id;
+}
+
+// Voegt aan elke verzending het toestel-id toe en reageert op een weigering van de server
+function metToestelId(client) {
+  if (!client || client.__toestel) return client;
+  const orig = client.rpc.bind(client);
+  client.rpc = (naam, args, opts) => {
+    const sleutel = TOESTEL_RPC[naam];
+    if (!sleutel) return orig(naam, args, opts);
+    if (args && args[sleutel] && typeof args[sleutel] === 'object') args = { ...args, [sleutel]: { ...args[sleutel], toestel_id: toestelId() } };
+    return Promise.resolve(orig(naam, args, opts)).then(res => {
+      if (res && res.error && /TOEGANG_/.test(res.error.message || '')) {
+        toegangStaat = { ...toegangStaat, toegang: /TOEGANG_WACHT/.test(res.error.message) ? 'wacht' : 'geblokkeerd' };
+        toonToegangScherm();
+      }
+      return res;
+    });
+  };
+  client.__toestel = true;
+  return client;
+}
+
+function toegangGeweigerd() { return toegangStaat.toegang === 'geblokkeerd' || toegangStaat.toegang === 'wacht'; }
+
+function toegangTekst() {
+  if (toegangStaat.toegang === 'wacht') return { titel: 'Toestel wacht op goedkeuring', tekst: 'Dit toestel is nog niet goedgekeurd door kantoor. Neem contact op met kantoor en probeer daarna opnieuw.' };
+  const tot = toegangStaat.tot ? new Date(toegangStaat.tot) : null;
+  const tekst = tot && !isNaN(tot) ? 'Je toegang is gepauzeerd tot ' + tot.toLocaleString('nl-BE', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + '.' : 'Je toegang is gepauzeerd.';
+  return { titel: 'Toegang gepauzeerd', tekst: tekst + ' Neem contact op met kantoor.' };
+}
+
+function verbergToegangScherm() {
+  const el = document.getElementById('toegang-overlay');
+  if (el) el.style.display = 'none';
+}
+
+function toonToegangScherm() {
+  if (beheerIngelogd || !toegangGeweigerd()) { verbergToegangScherm(); return; }
+  let el = document.getElementById('toegang-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toegang-overlay';
+    el.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#f5f6fa;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto';
+    document.body.appendChild(el);
+  }
+  const t = toegangTekst();
+  const veilig = toegangStaat.veiligheid_ok;
+  el.innerHTML = `<div style="box-sizing:border-box;max-width:420px;width:100%;background:#fff;border-radius:16px;padding:22px 18px;box-shadow:0 6px 28px rgba(0,0,0,.15);text-align:center">
+    <div style="font-size:44px;line-height:1">🔒</div>
+    <div style="font-size:19px;font-weight:800;color:#1a1a2e;margin:10px 0 6px">${escapeHtml(t.titel)}</div>
+    <div style="font-size:14.5px;color:#4b5563;line-height:1.45">${escapeHtml(t.tekst)}</div>
+    ${veilig ? `<div style="margin-top:16px;padding:12px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;text-align:left">
+      <div style="font-size:13px;font-weight:700;color:#9a3412;margin-bottom:8px">⚠️ Veiligheid blijft altijd mogelijk</div>
+      <button type="button" onclick="openVeiligheidsScherm('s-lmra')" style="width:100%;padding:13px;border:none;border-radius:10px;background:#ea580c;color:#fff;font-size:15px;font-weight:700;margin-bottom:8px">LMRA invullen</button>
+      <button type="button" onclick="openVeiligheidsScherm('s-swb-invullen')" style="width:100%;padding:13px;border:none;border-radius:10px;background:#ea580c;color:#fff;font-size:15px;font-weight:700">Startwerkbespreking invullen</button>
+    </div>` : ''}
+    <button type="button" id="toegang-opnieuw" onclick="controleerToegang(true)" style="width:100%;margin-top:14px;padding:13px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;color:#1a1a2e;font-size:15px;font-weight:700">Opnieuw controleren</button>
+    ${huidigeGebruiker() ? `<button type="button" onclick="verbergToegangScherm();algemeenUitloggen()" style="margin-top:10px;background:none;border:none;color:#6b7280;font-size:13px;text-decoration:underline">Andere naam kiezen</button>` : ''}
+  </div>`;
+  el.style.display = 'flex';
+}
+
+function openVeiligheidsScherm(id) {
+  verbergToegangScherm();
+  go(id);
+}
+
+// Meldt het toestel aan en onthoudt het resultaat. Zonder verbinding wordt een eerder bekende pauze behouden, maar nooit nieuw geweigerd.
+async function controleerToegang(toon) {
+  if (!sb || beheerIngelogd) { toegangStaat = { toegang: 'ok', veiligheid_ok: true }; verbergToegangScherm(); return toegangStaat; }
+  const mij = huidigeGebruiker();
+  try {
+    const { data, error } = await sb.rpc('toestel_controle', { p: { toestel_id: toestelId(), naam: mij ? mij.naam : null, user_agent: (navigator.userAgent || '').slice(0, 300) } });
+    if (error) throw error;
+    if (data && data.toegang) {
+      toegangStaat = { toegang: data.toegang, tot: data.tot || null, veiligheid_ok: data.veiligheid_ok !== false };
+      try { localStorage.setItem(TOESTEL_STAAT_SLEUTEL, JSON.stringify(toegangStaat)); } catch (e) { /* opslag niet beschikbaar */ }
+    }
+  } catch (e) {
+    try {
+      const oud = JSON.parse(localStorage.getItem(TOESTEL_STAAT_SLEUTEL) || 'null');
+      const verlopen = oud && oud.tot && new Date(oud.tot) <= new Date();
+      if (oud && !verlopen && (oud.toegang === 'geblokkeerd' || oud.toegang === 'wacht')) toegangStaat = oud;
+    } catch (e2) { /* geen bruikbare vorige toestand */ }
+  }
+  if (toegangGeweigerd() && !(toegangStaat.veiligheid_ok && VEILIGHEIDS_SCHERMEN.some(id => { const s = document.getElementById(id); return s && s.classList.contains('active'); }))) toonToegangScherm();
+  else verbergToegangScherm();
+  return toegangStaat;
 }
 
 function supabaseConfigured() {
@@ -3778,7 +3901,7 @@ const COCKPIT_SUPABASE_KEY = 'sb_publishable_9TkUYSv4y_290Vo9n-VEfQ_jLYhJHW3';
 let sbCockpit = null;
 function initSbCockpit() {
   if (sbCockpit || !window.supabase) return sbCockpit;
-  try { sbCockpit = window.supabase.createClient(COCKPIT_SUPABASE_URL, COCKPIT_SUPABASE_KEY); }
+  try { sbCockpit = metToestelId(window.supabase.createClient(COCKPIT_SUPABASE_URL, COCKPIT_SUPABASE_KEY)); }
   catch (e) { console.warn('[WerfKompas Beheer-koppeling] init mislukt:', e.message); }
   return sbCockpit;
 }
@@ -4872,6 +4995,7 @@ function kiesIngelogdeTeamleader(json) {
   const mij = JSON.parse(json);
   localStorage.setItem('ingelogdeTeamleader', JSON.stringify(mij));
   go('s-home');
+  controleerToegang();
   setTimeout(() => toonUpdateVensterIndienNieuw(), 300);
   setTimeout(() => checkWeeknieuwsPopup(), 900);
 }
@@ -5331,6 +5455,10 @@ function go(id) {
   if (id === 's-registratie') regEnterScherm();
   if (id === 's-login') renderLoginLijst();
   if (id === 's-home') { updateHomeHeaderVoorGebruiker(); laadMijnDashboard(); }
+  // Gepauzeerd toestel of gepauzeerde ploegbaas: alleen de veiligheidsformulieren blijven vrij
+  if (toegangGeweigerd()) {
+    if (toegangStaat.veiligheid_ok && VEILIGHEIDS_SCHERMEN.includes(id)) verbergToegangScherm(); else toonToegangScherm();
+  }
 }
 
 // SDS/TDS worden nu gelezen uit Google Sheets (kolommen T-Y)
@@ -8222,7 +8350,10 @@ window.addEventListener('online', () => {
   syncPendingRetours();
   syncPendingHerstellingen();
   loadRemoteData();
+  controleerToegang();
 });
+// Terug in de app na een tijd op de achtergrond: een pauze of heropening door kantoor meteen oppikken
+document.addEventListener('visibilitychange', () => { if (!document.hidden) controleerToegang(); });
 
 window.addEventListener('offline', () => {
   document.getElementById('sync-status').innerHTML = '📴 Offline — app werkt verder op gecachte data.';
@@ -12193,6 +12324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     regScherm.addEventListener('change', regAutosave);
   }
   initSupabase();
+  controleerToegang();
   // Laad eerst fallback zodat app altijd bruikbaar is, dan remote data
   useFallback('');
   if (!supabaseConfigured()) {
