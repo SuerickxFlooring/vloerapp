@@ -642,7 +642,7 @@ textarea.form-input{min-height:80px;resize:vertical}
     <span class="s-icon">↩️</span> Retour melden
   </div>
   <div class="sidebar-nav-item" id="snav-herstelling" onclick="goDesktop('s-herstelling')">
-    <span class="s-icon">🔧</span> Machine herstel
+    <span class="s-icon">🔧</span> Tools herstel
   </div>
 
   <div class="sidebar-section-lbl">🧰 Hulpmiddelen</div>
@@ -762,7 +762,7 @@ textarea.form-input{min-height:80px;resize:vertical}
 
       <div class="menu-section-lbl">🔚 Na de werf</div>
       <button class="menu-btn" onclick="go('s-retour')"><div class="ico">↩️</div><div class="lbl">Retour melden</div><div class="sub">Materiaal terug naar magazijn</div></button>
-      <button class="menu-btn" onclick="go('s-herstelling')"><div class="ico">🔧</div><div class="lbl">Machine herstel</div><div class="sub">Defect toestel melden</div></button>
+      <button class="menu-btn" onclick="go('s-herstelling')"><div class="ico">🔧</div><div class="lbl">Tools herstel</div><div class="sub">Defecte tool of voertuig melden</div></button>
 
       <div class="menu-section-lbl">🧰 Hulpmiddelen</div>
       <button class="menu-btn" onclick="go('s-producten')"><div class="ico">📦</div><div class="lbl">Producten</div><div class="sub">Info & instructies</div></button>
@@ -2121,9 +2121,9 @@ textarea.form-input{min-height:80px;resize:vertical}
     <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Kies het project, de datum en je naam, en vul het aantal wachtuur in (bv. 2,5).</span></div>
     <div class="wk-step"><span class="wk-n">3</span><span class="wk-t">Laat eventueel de klant tekenen en tik op Indienen.</span></div>
   </section>
-  <section class="wk-sec"><h2 class="wk-h2">Machine herstel melden</h2>
-    <div class="wk-step"><span class="wk-n">1</span><span class="wk-t">Tik op Machine herstel (onder Na de werf).</span></div>
-    <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Vul in welk toestel het is en van wie het is: Decovan, Hilti of eigen toestel. Zo weet het kantoor waar het naartoe moet.</span></div>
+  <section class="wk-sec"><h2 class="wk-h2">Tools herstel: een tool of voertuig melden</h2>
+    <div class="wk-step"><span class="wk-n">1</span><span class="wk-t">Tik op Tools herstel (onder Na de werf) en kies Tool of Voertuig.</span></div>
+    <div class="wk-step"><span class="wk-n">2</span><span class="wk-t">Bij een tool vul je in welke tool het is en van wie ze is: Decovan, Hilti of eigen toestel. Zo weet het kantoor waar ze naartoe moet. Bij een voertuig vul je de nummerplaat in.</span></div>
     <div class="wk-step"><span class="wk-n">3</span><span class="wk-t">Omschrijf wat er mee aan de hand is, voeg eventueel foto's toe en tik op Defect melden.</span></div>
   </section>
   <section class="wk-sec"><h2 class="wk-h2">Planning</h2>
@@ -3335,30 +3335,40 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 </div>
 
-<!-- ══ MACHINE HERSTEL ═════════════════════════════════════ -->
+<!-- ══ TOOLS HERSTEL (tools en voertuigen) ═════════════════════════════════════ -->
 <div class="screen" id="s-herstelling">
   <div class="topbar">
     <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
-    <div class="topbar-title">Machine herstel</div>
+    <div class="topbar-title">Tools herstel</div>
     <span class="topbar-icon">🔧</span>
   </div>
   <div class="scroll-area">
     <div class="form-pad">
-      <div style="font-size:13px;color:#666;margin-bottom:14px;line-height:1.5">Is er een toestel defect? Meld het hier. Het kantoor ziet meteen of het naar Decovan of Hilti moet, of zelf hersteld wordt.</div>
+      <div style="font-size:13px;color:#666;margin-bottom:14px;line-height:1.5">Is er een tool of voertuig defect? Meld het hier. Het kantoor ziet het meteen.</div>
 
       <div class="form-group">
-        <label class="form-label">Welk toestel?</label>
+        <label class="form-label">Wat wil je melden?</label>
+        <div id="hs-soort" style="display:flex;gap:8px"></div>
+      </div>
+
+      <div class="form-group" id="hs-toestel-groep">
+        <label class="form-label">Welke tool?</label>
         <input type="text" class="form-input" id="hs-toestel" placeholder="Bv. boorhamer, schuurmachine, stofzuiger" autocomplete="off">
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Van wie is het toestel?</label>
+      <div class="form-group" id="hs-voertuig-groep" style="display:none">
+        <label class="form-label">Nummerplaat van het voertuig</label>
+        <input type="text" class="form-input" id="hs-nummerplaat" placeholder="Bv. 1-ABC-123" autocomplete="off" autocapitalize="characters" maxlength="15" style="text-transform:uppercase;font-weight:700;letter-spacing:.06em" oninput="this.value=this.value.toUpperCase()">
+      </div>
+
+      <div class="form-group" id="hs-eigenaar-groep">
+        <label class="form-label">Van wie is de tool?</label>
         <div id="hs-eigenaar" style="display:flex;gap:8px"></div>
       </div>
 
       <div class="form-group">
         <label class="form-label">Wat is er mee aan de hand?</label>
-        <textarea class="form-input" id="hs-omschrijving" rows="4" placeholder="Beschrijf het defect: wat doet het toestel niet meer, sinds wanneer..."></textarea>
+        <textarea class="form-input" id="hs-omschrijving" rows="4" placeholder="Beschrijf het defect: wat werkt niet meer, sinds wanneer..."></textarea>
       </div>
 
       <div class="form-group">
@@ -3382,7 +3392,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="hs-status" style="margin-top:10px"></div>
 
       <div id="hs-lijst-wrap" style="margin-top:20px;display:none">
-        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Gemeld vandaag (dit toestel)</div>
+        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Gemeld vandaag (op dit toestel)</div>
         <div id="hs-lijst"></div>
       </div>
     </div>
@@ -5757,7 +5767,7 @@ function renderMeetstaatPicker() {
   if (regMeetstaatVrijeInvoer) {
     wrap.innerHTML = `
       <div class="form-group">
-        <label class="form-label">Aan welke meetstaatpost(en) werkte je?</label>
+        <label class="form-label">Aan welke meetstaatpost(en) werkte je? <span style="color:#A32D2D">*</span></label>
         <button type="button" onclick="regMeetstaatTerugNaarLijst()" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer;text-align:left">← Terug naar lijst met meetstaatposten</button>
       </div>`;
     if (omschrWrap) omschrWrap.style.display = '';
@@ -5766,7 +5776,7 @@ function renderMeetstaatPicker() {
   if (omschrWrap) omschrWrap.style.display = 'none';
   wrap.innerHTML = `
     <div class="form-group">
-      <label class="form-label">Aan welke meetstaatpost(en) werkte je?</label>
+      <label class="form-label">Aan welke meetstaatpost(en) werkte je? <span style="color:#A32D2D">*</span></label>
       <div style="border:1px solid #ddd;border-radius:10px;max-height:240px;overflow-y:auto;background:#fff">
         ${regMeetstaatPosten.map(p => `
           <label style="display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border-bottom:1px solid #eee;cursor:pointer">
@@ -7487,7 +7497,6 @@ function toonSamenvatting() {
   if (!project0)        ontbrekend.push('Projectnaam');
   if (!datum0)           ontbrekend.push('Datum');
   if (!tl0)               ontbrekend.push('Teamleader');
-  if (!omschrijving0)     ontbrekend.push('Omschrijving van de werken');
   if (!vloer0)            ontbrekend.push('Type ondervloer');
   if (temp0 === '')        ontbrekend.push('Temp. lucht');
   if (rv0 === '')          ontbrekend.push('RH');
@@ -7503,6 +7512,12 @@ function toonSamenvatting() {
   const urenOntbrekend = [];
   if (!uren0) urenOntbrekend.push('Uren per persoon');
   if (!man0)  urenOntbrekend.push('Aantal personen');
+
+  // Aan welke meetstaatpost werd gewerkt is, net als uren/aantal personen, écht verplicht (geen
+  // vrijblijvende melding) zodat kantoor dit altijd kan koppelen bij Meetstaat-controle: ofwel minstens
+  // 1 post aangevinkt uit de lijst, ofwel (geen posten gekend, of "zelf invoeren" gekozen) een omschrijving.
+  const postVerplicht = regMeetstaatPosten.length > 0 && !regMeetstaatVrijeInvoer;
+  const postOntbrekend = postVerplicht ? !regMeetstaatGeselecteerd.size : !omschrijving0;
 
   const missingEl = document.getElementById('samenvatting-missing');
   if (missingEl) {
@@ -7527,7 +7542,14 @@ function toonSamenvatting() {
         '🚫 <strong>Verplicht:</strong> ' + urenOntbrekend.join(' en ') + ' moet' + (urenOntbrekend.length > 1 ? 'en' : '') + ' ingevuld zijn vóór je kan versturen.' +
         '</div>'
       : '';
-    missingEl.innerHTML = productenMelding + urenMelding + optioneleMelding;
+    const postMelding = postOntbrekend
+      ? '<div style="background:#FDECEA;border:1px solid #F5C6C0;border-radius:10px;padding:12px 14px;color:#A32D2D;font-size:13px;margin-bottom:10px">' +
+        (postVerplicht
+          ? '🚫 <strong>Verplicht:</strong> kies minstens één meetstaatpost waaraan je werkte (of "✏️ Mijn werk staat er niet bij").'
+          : '🚫 <strong>Verplicht:</strong> omschrijving van de werken moet ingevuld zijn vóór je kan versturen.') +
+        '</div>'
+      : '';
+    missingEl.innerHTML = productenMelding + urenMelding + postMelding + optioneleMelding;
   }
   const errEl = document.getElementById('r-form-error');
   if (errEl) errEl.innerHTML = '';
@@ -7603,6 +7625,15 @@ async function bevestigEnVerstuur() {
     const statusEl0 = document.getElementById('samenvatting-status');
     const ontbrekendVerplicht = [!urenWaarde && 'Uren per persoon', !manWaarde && 'Aantal personen'].filter(Boolean).join(' en ');
     if (statusEl0) statusEl0.innerHTML = '<span style="color:#A32D2D">🚫 ' + ontbrekendVerplicht + ' moet nog ingevuld worden.</span>';
+    return;
+  }
+  // Meetstaatpost (of, als die nog niet gekend is, een omschrijving) is net als uren/aantal personen
+  // écht verplicht — zie de uitleg bij postVerplicht/postOntbrekend in toonSamenvatting().
+  const postVerplicht0 = regMeetstaatPosten.length > 0 && !regMeetstaatVrijeInvoer;
+  const postOntbrekend0 = postVerplicht0 ? !regMeetstaatGeselecteerd.size : !(document.getElementById('r-omschrijving').value || '').trim();
+  if (postOntbrekend0) {
+    const statusEl0b = document.getElementById('samenvatting-status');
+    if (statusEl0b) statusEl0b.innerHTML = '<span style="color:#A32D2D">🚫 ' + (postVerplicht0 ? 'Kies minstens één meetstaatpost waaraan je werkte (of "zelf invoeren").' : 'Omschrijving van de werken moet nog ingevuld worden.') + '</span>';
     return;
   }
   const selProj = document.getElementById('r-project-select');
@@ -8098,15 +8129,16 @@ function rtRenderLijst() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// MACHINE HERSTEL — defect toestel melden
-// De ploegbaas omschrijft het defect en kiest van wie het toestel is (Decovan, Hilti of eigen toestel), zodat het kantoor weet
-// waar het naartoe moet. De melding gaat via de beveiligde functie submit_herstelling naar WerfKompas Beheer
+// TOOLS HERSTEL — defecte tool of voertuig melden
+// De ploegbaas kiest Tool of Voertuig. Bij een tool omschrijft hij of zij het defect en kiest van wie ze is (Decovan, Hilti of eigen
+// toestel), zodat het kantoor weet waar ze naartoe moet. Bij een voertuig geeft de ploegbaas de nummerplaat en wat er aan scheelt. De melding gaat via de beveiligde functie submit_herstelling naar WerfKompas Beheer
 // (cockpit_herstellingen). Zonder verbinding blijft ze op het toestel staan en wordt ze later verstuurd.
 // ═══════════════════════════════════════════════════════════
 const HS_EIGENAARS = [['Decovan', 'Decovan'], ['Hilti', 'Hilti'], ['Eigen', 'Eigen toestel']];
 const HS_MANUEEL = '__manueel__';
 const HS_MAX_FOTOS = 4;
 let hsEigenaar = '';
+let hsSoort = 'toestel'; // 'toestel' (tool) of 'voertuig'
 let hsFotoData = [], hsFotoUrls = [], hsFotoPaths = [];
 let hsUploadsBezig = 0;
 let hsMaxMelding = ''; // blijft zichtbaar naast de uploadmeldingen
@@ -8140,8 +8172,10 @@ function initHerstelling() {
     + opties.map(o => `<option value="${escapeHtml(o.waarde)}">${escapeHtml(o.tekst)}</option>`).join('')
     + `<option value="${HS_MANUEEL}">✏️ Andere werf (zelf invullen)…</option>`;
   sel.value = laatste || '';
-  ['hs-toestel', 'hs-omschrijving', 'hs-project-manueel'].forEach(id => { document.getElementById(id).value = ''; });
+  ['hs-toestel', 'hs-nummerplaat', 'hs-omschrijving', 'hs-project-manueel'].forEach(id => { document.getElementById(id).value = ''; });
   hsEigenaar = '';
+  hsSoort = 'toestel';
+  hsRenderSoort();
   hsRenderEigenaar();
   hsResetFotos();
   hsProjectGekozen();
@@ -8157,6 +8191,21 @@ function hsRenderEigenaar() {
   }).join('');
 }
 function hsKiesEigenaar(w) { hsEigenaar = w; hsRenderEigenaar(); }
+
+// Tool of voertuig: bepaalt welke velden getoond worden (nummerplaat i.p.v. toestel + eigenaar)
+const HS_SOORTEN = [['toestel', '🔧 Tool'], ['voertuig', '🚐 Voertuig']];
+function hsRenderSoort() {
+  document.getElementById('hs-soort').innerHTML = HS_SOORTEN.map(([waarde, label]) => {
+    const aan = waarde === hsSoort;
+    return `<button type="button" onclick="hsKiesSoort('${waarde}')" style="flex:1;padding:12px 6px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:2px solid ${aan ? '#3547C8' : '#d1d5db'};background:${aan ? '#3547C8' : '#fff'};color:${aan ? '#fff' : '#333'}">${escapeHtml(label)}</button>`;
+  }).join('');
+  const voertuig = hsSoort === 'voertuig';
+  document.getElementById('hs-toestel-groep').style.display = voertuig ? 'none' : '';
+  document.getElementById('hs-eigenaar-groep').style.display = voertuig ? 'none' : '';
+  document.getElementById('hs-voertuig-groep').style.display = voertuig ? '' : 'none';
+  document.getElementById('hs-knop').textContent = voertuig ? '🚐 Defect melden' : '🔧 Defect melden';
+}
+function hsKiesSoort(s) { hsSoort = s; hsRenderSoort(); document.getElementById('hs-fout').style.display = 'none'; }
 
 function hsProjectGekozen() {
   const manueel = document.getElementById('hs-project').value === HS_MANUEEL;
@@ -8229,6 +8278,7 @@ async function hsVerstuur(h) {
   const { error } = await client.rpc('submit_herstelling', { p: {
     client_timestamp: h.timestamp, datum: h.datum, project: h.project, teamleader: h.teamleader,
     toestel: h.toestel, eigenaar: h.eigenaar, omschrijving: h.omschrijving, fotos: h.fotos || [],
+    soort: h.soort || 'toestel', nummerplaat: h.nummerplaat || '',
   } });
   if (error) throw error;
 }
@@ -8238,17 +8288,25 @@ async function hsOpslaan() {
   const fout = document.getElementById('hs-fout');
   const toonFout = t => { fout.textContent = t; fout.style.display = 'block'; };
   fout.style.display = 'none';
-  const toestel = document.getElementById('hs-toestel').value.trim();
+  const voertuig = hsSoort === 'voertuig';
+  const nummerplaat = document.getElementById('hs-nummerplaat').value.trim().toUpperCase().replace(/\s+/g, ' ');
+  // Bij een voertuig is de titel "Voertuig <nummerplaat>" (zo toont het ook bij het kantoor)
+  const toestel = voertuig ? 'Voertuig ' + nummerplaat : document.getElementById('hs-toestel').value.trim();
   const omschrijving = document.getElementById('hs-omschrijving').value.trim();
-  if (!toestel) return toonFout('Vul in welk toestel het is.');
-  if (!hsEigenaar) return toonFout('Kies van wie het toestel is: Decovan, Hilti of eigen toestel.');
-  if (!omschrijving) return toonFout('Omschrijf wat er mee aan de hand is.');
+  if (voertuig) {
+    if (!/^[A-Z0-9][A-Z0-9 .-]{1,14}$/.test(nummerplaat)) return toonFout('Vul de nummerplaat van het voertuig in.');
+  } else {
+    if (!toestel) return toonFout('Vul in welke tool het is.');
+    if (!hsEigenaar) return toonFout('Kies van wie de tool is: Decovan, Hilti of eigen toestel.');
+  }
+  if (!omschrijving) return toonFout(voertuig ? 'Omschrijf wat er aan het voertuig scheelt.' : 'Omschrijf wat er mee aan de hand is.');
   if (hsUploadsBezig > 0) return toonFout('De foto\'s worden nog geüpload. Probeer zo meteen opnieuw.');
   const mij = huidigeGebruiker();
   const h = {
     id: 'hs_' + Date.now(), timestamp: localTimestamp(), datum: docVandaag(), project: hsProject(),
     teamleader: mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''),
-    toestel, eigenaar: hsEigenaar, omschrijving, fotos: hsGetFotos(), _synced: false,
+    toestel, eigenaar: voertuig ? 'Eigen' : hsEigenaar, omschrijving, fotos: hsGetFotos(), _synced: false,
+    soort: hsSoort, nummerplaat: voertuig ? nummerplaat : '',
   };
   hsBezig = true;
   const status = document.getElementById('hs-status');
@@ -8269,7 +8327,7 @@ async function hsOpslaan() {
   }
   hsLaad().push(h);
   hsBewaar();
-  ['hs-toestel', 'hs-omschrijving'].forEach(id => { document.getElementById(id).value = ''; });
+  ['hs-toestel', 'hs-nummerplaat', 'hs-omschrijving'].forEach(id => { document.getElementById(id).value = ''; });
   hsEigenaar = '';
   hsRenderEigenaar();
   hsResetFotos();
@@ -8284,7 +8342,7 @@ function hsRenderLijst() {
   document.getElementById('hs-lijst-wrap').style.display = lijst.length ? 'block' : 'none';
   document.getElementById('hs-lijst').innerHTML = lijst.slice().reverse().map(r =>
     `<div style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
-      <div style="display:flex;justify-content:space-between;gap:8px"><strong>${escapeHtml(r.toestel)}</strong><span style="white-space:nowrap">${escapeHtml(hsEigenaarLabel(r.eigenaar))}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:8px"><strong>${r.soort === 'voertuig' ? '🚐 ' : ''}${escapeHtml(r.toestel)}</strong><span style="white-space:nowrap">${r.soort === 'voertuig' ? 'Voertuig' : escapeHtml(hsEigenaarLabel(r.eigenaar))}</span></div>
       <div style="color:#888;font-size:12px;margin-top:2px">${escapeHtml(r.omschrijving.length > 90 ? r.omschrijving.slice(0, 90) + '…' : r.omschrijving)} · ${r._synced === true ? '✅ verstuurd' : r._synced === false ? '📴 wacht op verbinding' : '⚠️ geweigerd'}</div>
     </div>`).join('');
 }
@@ -11683,6 +11741,12 @@ const CHANGELOG_VA = [
     {icon:"📏", titel:"Eenheden in de dagregistratie", tekst:"Kies je sets, dan rekent de app het correct om naar kilo's met het verpakkingsgewicht van het product, en het kantoor ziet in de beheer-app zowel het aantal sets als de kilo's."},
     {icon:"💶", titel:"Onkostennota: PDF en uren magazijn", tekst:"Een bon kan nu ook een PDF zijn in plaats van een foto. Bij Project staat bovenaan Algemeen met Uren magazijn en bestellingen, voor onkosten die bij geen werf horen."},
     {icon:"🖥️", titel:"Menu op grote schermen", tekst:"Het menu links scrolt nu als niet alles in beeld past, en past zich aan de hoogte van je scherm aan."},
+  ]},
+  { version:5, datum:'19 oktober 2026', items:[
+    {icon:"🚐", titel:"Tools herstel: ook voertuigen", tekst:"Machine herstel heet nu Tools herstel. Kies bovenaan Tool of Voertuig. Bij een voertuig vul je de nummerplaat in en omschrijf je wat er aan scheelt, eventueel met foto's. Het kantoor krijgt het meteen te zien."},
+  ]},
+  { version:6, datum:'19 oktober 2026', items:[
+    {icon:"✅", titel:"Meetstaatpost nu verplicht bij dagregistratie", tekst:"Kies voortaan verplicht aan welke meetstaatpost(en) je werkte. Staat je werk er niet bij of is de meetstaat nog niet gekend? Kies dan 'zelf invoeren' en omschrijf wat je deed — zo kan het kantoor je uren altijd aan de juiste post koppelen."},
   ]},
 ];
 
