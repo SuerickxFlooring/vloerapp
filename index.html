@@ -9357,8 +9357,33 @@ async function submitRegiebon() {
       initRegiebon();
     }, 2000);
   } catch(e) {
-    statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
+    // De projectenlijst wordt elders periodiek volledig vervangen (nieuwe id's) — als het gekozen
+    // project ondertussen niet meer bestaat, krijgt de ploegbaas hier anders een rauwe databasefout
+    // te zien. Ververs de lijst meteen en laat opnieuw kiezen, zonder iets anders uit de bon te
+    // verliezen (producten, handtekeningen, naam, ... blijven gewoon staan).
+    if (/foreign key constraint.*project_id|project_id.*foreign key constraint/i.test(e.message || '')) {
+      statusEl.innerHTML = '<div class="err-box">❌ Dit project is net vernieuwd in het systeem — kies het hieronder opnieuw bij "Project". De rest van je bon (producten, handtekeningen) blijft bewaard. Daarna kan je opnieuw indienen.</div>';
+      await rbVerversProjecten();
+    } else {
+      statusEl.innerHTML = `<div class="err-box">❌ Fout: ${escapeHtml(e.message)}</div>`;
+    }
   }
+}
+
+// Ververst enkel de projectenlijst van het Regiebon-formulier (dropdown), zonder de rest van het
+// formulier (producten, handtekeningen, ...) te resetten — gebruikt na een mislukte indiening
+// omdat het gekozen project intussen niet meer bestaat (zie submitRegiebon hierboven).
+async function rbVerversProjecten() {
+  const sel = document.getElementById('rb-project');
+  if (!sel || !sb) return;
+  try {
+    const { data, error } = await sb.from('projecten').select('id, naam, status').order('naam');
+    if (!error && data) appData.projects = data.map(r => ({ id: r.id, naam: r.naam, status: r.status }));
+  } catch(e) { console.warn('Projecten vernieuwen mislukt:', e); }
+  const prjs = (appData.projects && appData.projects.length) ? appData.projects : [];
+  sel.innerHTML = '<option value="">Kies project...</option>' +
+    prjs.map(p => `<option value="${p.id}">${escapeHtml(p.naam)}</option>`).join('');
+  sel.value = '';
 }
 
 // ════════════════════════════════════════════════════════════
