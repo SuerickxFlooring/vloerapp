@@ -8245,6 +8245,15 @@ function bestLijnen() {
 
 function bestLaad() { try { return JSON.parse(localStorage.getItem('bestellingen_app') || '[]'); } catch (e) { return []; } }
 function bestBewaar(lijst) { try { localStorage.setItem('bestellingen_app', JSON.stringify(lijst.slice(-100))); } catch (e) { } }
+// _synced-vlag zetten door de lijst OPNIEUW in te laden en enkel de betrokken id's aan te passen —
+// nooit een oude snapshot terugschrijven, anders verdwijnt een order die intussen is toegevoegd.
+function bestMarkSynced(ids) {
+  const set = new Set(ids);
+  const vers = bestLaad();
+  let veranderd = false;
+  for (const b of vers) if (set.has(b.id) && !b._synced) { b._synced = true; veranderd = true; }
+  if (veranderd) bestBewaar(vers);
+}
 
 async function bestVerstuur(b) {
   const client = initSbCockpit();
@@ -8281,26 +8290,25 @@ async function bestOpslaan() {
   status.innerHTML = '<div style="color:#888;font-size:14px">⏳ Doorsturen…</div>';
   try {
     await bestVerstuur(b);
-    b._synced = true;
+    bestMarkSynced([b.id]);
     status.innerHTML = '<div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;color:#3B6D11;font-weight:600">✅ Bestelling doorgegeven aan kantoor (' + items.length + ' product' + (items.length === 1 ? '' : 'en') + ')</div>';
   } catch (e) {
     console.warn('[Bestelling] Doorsturen mislukt:', e.message);
     status.innerHTML = '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt doorgestuurd zodra er verbinding is.</div>';
   }
-  bestBewaar(lijst);
   document.getElementById('best-lijnen').innerHTML = ''; bestVoegLijnToe();
   document.getElementById('best-opmerking').value = '';
   bestRenderLijst();
 }
 
 async function bestResync() {
-  const lijst = bestLaad();
-  const open = lijst.filter(b => !b._synced);
+  const open = bestLaad().filter(b => !b._synced);
   if (!open.length) return;
+  const gesynct = [];
   for (const b of open) {
-    try { await bestVerstuur(b); b._synced = true; } catch (e) { /* blijft wachten op verbinding */ }
+    try { await bestVerstuur(b); gesynct.push(b.id); } catch (e) { /* blijft wachten op verbinding */ }
   }
-  bestBewaar(lijst);
+  if (gesynct.length) { bestMarkSynced(gesynct); bestRenderLijst(); }
 }
 
 function bestRenderLijst() {
