@@ -610,6 +610,9 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 
   <div class="sidebar-section-lbl">🏗️ Op de werf</div>
+  <div class="sidebar-nav-item" id="snav-bestelling" onclick="goDesktop('s-bestelling')">
+    <span class="s-icon">📦</span> Bestelling doorgeven
+  </div>
   <div class="sidebar-nav-item" id="snav-regiebon" onclick="goDesktop('s-regiebon')">
     <span class="s-icon">🧾</span> Regiebon
   </div>
@@ -638,9 +641,6 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 
   <div class="sidebar-section-lbl">🔚 Na de werf</div>
-  <div class="sidebar-nav-item" id="snav-bestelling" onclick="goDesktop('s-bestelling')">
-    <span class="s-icon">📦</span> Bestelling doorgeven
-  </div>
   <div class="sidebar-nav-item" id="snav-retour" onclick="goDesktop('s-retour')">
     <span class="s-icon">↩️</span> Retour melden
   </div>
@@ -752,6 +752,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="go('s-registratie')"><div class="ico">📋</div><div class="lbl">Dagregistratie</div><div class="sub">Uren & materiaal</div></button>
 
       <div class="menu-section-lbl">🏗️ Op de werf</div>
+      <button class="menu-btn" onclick="go('s-bestelling')"><div class="ico">📦</div><div class="lbl">Bestelling doorgeven</div><div class="sub">Materiaal bestellen voor de werf</div></button>
       <button class="menu-btn" onclick="go('s-regiebon')"><div class="ico">🧾</div><div class="lbl">Regiebon</div><div class="sub">Materiaal & uren</div></button>
       <button class="menu-btn" onclick="go('s-levering')"><div class="ico">📦</div><div class="lbl">Levering</div><div class="sub">Foto's van bestelling</div></button>
       <button class="menu-btn" onclick="go('s-documenten')"><div class="ico">📎</div><div class="lbl">Projectinformatie</div><div class="sub">TRA & offertes</div></button>
@@ -764,7 +765,6 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
 
       <div class="menu-section-lbl">🔚 Na de werf</div>
-      <button class="menu-btn" onclick="go('s-bestelling')"><div class="ico">📦</div><div class="lbl">Bestelling doorgeven</div><div class="sub">Materiaal bestellen voor de werf</div></button>
       <button class="menu-btn" onclick="go('s-retour')"><div class="ico">↩️</div><div class="lbl">Retour melden</div><div class="sub">Materiaal terug naar magazijn</div></button>
       <button class="menu-btn" onclick="go('s-herstelling')"><div class="ico">🔧</div><div class="lbl">Tools herstel</div><div class="sub">Defecte tool of voertuig melden</div></button>
 
