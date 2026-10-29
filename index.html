@@ -638,6 +638,9 @@ textarea.form-input{min-height:80px;resize:vertical}
   </div>
 
   <div class="sidebar-section-lbl">🔚 Na de werf</div>
+  <div class="sidebar-nav-item" id="snav-bestelling" onclick="goDesktop('s-bestelling')">
+    <span class="s-icon">📦</span> Bestelling doorgeven
+  </div>
   <div class="sidebar-nav-item" id="snav-retour" onclick="goDesktop('s-retour')">
     <span class="s-icon">↩️</span> Retour melden
   </div>
@@ -761,6 +764,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <button class="menu-btn" onclick="go('s-aanrijding')"><div class="ico">🚨</div><div class="lbl">Aanrijding</div><div class="sub">Aanrijdingsformulier</div></button>
 
       <div class="menu-section-lbl">🔚 Na de werf</div>
+      <button class="menu-btn" onclick="go('s-bestelling')"><div class="ico">📦</div><div class="lbl">Bestelling doorgeven</div><div class="sub">Materiaal bestellen voor de werf</div></button>
       <button class="menu-btn" onclick="go('s-retour')"><div class="ico">↩️</div><div class="lbl">Retour melden</div><div class="sub">Materiaal terug naar magazijn</div></button>
       <button class="menu-btn" onclick="go('s-herstelling')"><div class="ico">🔧</div><div class="lbl">Tools herstel</div><div class="sub">Defecte tool of voertuig melden</div></button>
 
@@ -849,6 +853,46 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="rt-lijst-wrap" style="margin-top:20px;display:none">
         <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Retours van vandaag (dit toestel)</div>
         <div id="rt-lijst"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BESTELLING DOORGEVEN ═══════════════════════════════ -->
+<div class="screen" id="s-bestelling">
+  <div class="topbar">
+    <button class="btn-back" onclick="go('s-home')" aria-label="Terug">←</button>
+    <div class="topbar-title">Bestelling doorgeven</div>
+    <span class="topbar-icon">📦</span>
+  </div>
+  <div class="scroll-area">
+    <div class="form-pad">
+      <div style="font-size:13px;color:#666;margin-bottom:14px;line-height:1.5">Geef door welk materiaal er voor deze werf besteld moet worden. Het kantoor krijgt dit meteen binnen als nog te verwerken bestelling.</div>
+
+      <div class="form-group">
+        <label class="form-label">Werf</label>
+        <select class="form-select" id="best-project" onchange="bestProjectGekozen()"></select>
+        <input type="text" class="form-input" id="best-project-manueel" placeholder="Projectnummer en naam" style="display:none;margin-top:8px">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Producten</label>
+        <div id="best-lijnen"></div>
+        <button type="button" onclick="bestVoegLijnToe()" style="margin-top:8px;padding:9px 12px;border:1px dashed #b7c0e0;border-radius:10px;background:#f4f6fc;color:#3547C8;font-size:13px;font-weight:600;cursor:pointer;width:100%">+ Product toevoegen</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Opmerking (optioneel)</label>
+        <input type="text" class="form-input" id="best-opmerking" placeholder="Bv. dringend, leveren voor vrijdag">
+      </div>
+
+      <div id="best-fout" style="display:none;color:#A32D2D;font-size:13px;margin-bottom:8px;font-weight:600"></div>
+      <button type="button" onclick="bestOpslaan()" style="width:100%;padding:13px;background:#3547C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">📦 Bestelling doorgeven</button>
+      <div id="best-status" style="margin-top:10px"></div>
+
+      <div id="best-lijst-wrap" style="margin-top:20px;display:none">
+        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Doorgegeven vandaag (dit toestel)</div>
+        <div id="best-lijst"></div>
       </div>
     </div>
   </div>
@@ -3789,7 +3833,7 @@ function initSupabase() {
 const TOESTEL_ID_SLEUTEL = 'wk_toestel_id';
 const TOESTEL_STAAT_SLEUTEL = 'wk_toestel_staat';
 const TOESTEL_RPC = {
-  submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p',
+  submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p', submit_bestelling: 'p',
   submit_regiebon: 'p_bon', update_aanrijding: 'p', submit_aanrijding: 'p', submit_swb: 'p', submit_werfoplevering: 'p',
   submit_onkostennota: 'p', submit_lmra: 'p',
 };
@@ -5406,6 +5450,7 @@ function goDesktop(id) {
                's-documenten':'snav-documenten',
                's-onkostennota':'snav-onkostennota',
                's-retour':'snav-retour',
+               's-bestelling':'snav-bestelling',
                's-herstelling':'snav-herstelling',
                's-startwerk-kies':'snav-startwerk-kies',
                's-werfoplevering-kies':'snav-werfoplevering-kies'};
@@ -5469,6 +5514,7 @@ function go(id) {
   if (id === 's-weeknieuws') initWeeknieuws();
   if (id === 's-onkostennota') initOnkostennota();
   if (id === 's-retour') initRetour();
+  if (id === 's-bestelling') initBestelling();
   if (id === 's-herstelling') initHerstelling();
   if (id === 's-registratie' || id === 's-regiebon' || id === 's-aanrijding' || id === 's-swb-invullen' || id === 's-lmra' || id === 's-levering') { primeGpsSilently(); updateCopyPrevButtons(); }
   if (id === 's-registratie') regEnterScherm();
@@ -8134,6 +8180,137 @@ function rtRenderLijst() {
     `<div style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
       <div style="display:flex;justify-content:space-between;gap:8px"><strong>${escapeHtml(r.product)}</strong><span style="white-space:nowrap">${r.aantal} ${escapeHtml(r.eenheid)}</span></div>
       <div style="color:#888;font-size:12px;margin-top:2px">${escapeHtml(r.reden || '')}${r.wasVerbruikt ? ' · was al verbruikt' : ''} · ${r._synced ? '✅ verstuurd' : '📴 wacht op verbinding'}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// BESTELLING DOORGEVEN — ploegbaas geeft te bestellen materiaal door aan kantoor.
+// Gaat via de beveiligde functie submit_bestelling naar WerfKompas Beheer: daar verschijnt
+// het als 'Nog te verwerken' bestelling (besteld_via 'App (ploegbaas)') in het Bestellingen-
+// scherm. Zonder verbinding blijft het op het toestel staan en wordt het later verstuurd.
+// ═══════════════════════════════════════════════════════════
+function bestVoegLijnToe() {
+  const wrap = document.getElementById('best-lijnen');
+  const div = document.createElement('div');
+  div.className = 'best-lijn';
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px';
+  div.innerHTML = `<input type="text" class="form-input best-l-product" placeholder="Product" style="flex:1">
+    <input type="text" class="form-input best-l-aantal" placeholder="Aantal" inputmode="decimal" style="width:68px">
+    <input type="text" class="form-input best-l-eenheid" placeholder="eenh." style="width:62px">
+    <button type="button" onclick="this.parentElement.remove()" style="border:none;background:#f3f3f3;border-radius:8px;width:36px;cursor:pointer" aria-label="Verwijderen">✕</button>`;
+  wrap.appendChild(div);
+}
+
+function bestProject() {
+  const sel = document.getElementById('best-project');
+  if (sel.value === '__manueel__') return document.getElementById('best-project-manueel').value.trim();
+  return sel.value || '';
+}
+function bestProjectGekozen() {
+  const sel = document.getElementById('best-project');
+  document.getElementById('best-project-manueel').style.display = sel.value === '__manueel__' ? 'block' : 'none';
+}
+
+function initBestelling() {
+  // Werfkeuze: zelfde bron als Retour/Herstelling — de werven van vandaag, met de laatst
+  // geregistreerde werf voorgeselecteerd.
+  const bron = document.getElementById('r-project-select');
+  const opties = bron ? Array.from(bron.options).filter(o => o.value).map(o => ({ waarde: o.value, tekst: o.textContent })) : [];
+  const vandaagRegs = (appData.registraties || []).filter(r => r.datum === docVandaag());
+  const laatste = vandaagRegs.length ? vandaagRegs[vandaagRegs.length - 1].project : '';
+  if (laatste && !opties.some(o => o.waarde === laatste)) opties.unshift({ waarde: laatste, tekst: laatste });
+  const sel = document.getElementById('best-project');
+  sel.innerHTML = '<option value="">Kies werf…</option>'
+    + opties.map(o => `<option value="${escapeHtml(o.waarde)}">${escapeHtml(o.tekst)}</option>`).join('')
+    + `<option value="__manueel__">✏️ Andere werf (zelf invullen)…</option>`;
+  sel.value = laatste || '';
+  document.getElementById('best-lijnen').innerHTML = '';
+  bestVoegLijnToe();
+  document.getElementById('best-opmerking').value = '';
+  document.getElementById('best-project-manueel').value = '';
+  bestProjectGekozen();
+  document.getElementById('best-fout').style.display = 'none';
+  document.getElementById('best-status').innerHTML = '';
+  bestResync();
+  bestRenderLijst();
+}
+
+function bestLijnen() {
+  return Array.from(document.querySelectorAll('#best-lijnen .best-lijn')).map(r => ({
+    product: r.querySelector('.best-l-product').value.trim(),
+    aantal: r.querySelector('.best-l-aantal').value.trim(),
+    eenheid: r.querySelector('.best-l-eenheid').value.trim(),
+  })).filter(l => l.product);
+}
+
+function bestLaad() { try { return JSON.parse(localStorage.getItem('bestellingen_app') || '[]'); } catch (e) { return []; } }
+function bestBewaar(lijst) { try { localStorage.setItem('bestellingen_app', JSON.stringify(lijst.slice(-100))); } catch (e) { } }
+
+async function bestVerstuur(b) {
+  const client = initSbCockpit();
+  if (!client) throw new Error('Geen verbinding met WerfKompas Beheer');
+  const { error } = await client.rpc('submit_bestelling', { p: {
+    client_timestamp: b.timestamp, project: b.project, werfnaam: b.werfnaam || '', teamleader: b.teamleader || '',
+    opmerking: b.opmerking || '', items: b.items,
+  } });
+  if (error) throw error;
+}
+
+async function bestOpslaan() {
+  const fout = document.getElementById('best-fout');
+  const toonFout = t => { fout.textContent = t; fout.style.display = 'block'; };
+  fout.style.display = 'none';
+  const raw = bestProject();
+  const items = bestLijnen();
+  if (!raw) return toonFout('Kies eerst de werf.');
+  if (!items.length) return toonFout('Voeg minstens één product toe.');
+  // Zuiver projectnummer (bv. F26-00223.001) afleiden zodat kantoor de bestelling aan het
+  // juiste project koppelt; de rest van de tekst is de werfnaam.
+  const codes = projectCodes(raw);
+  const projectnummer = codes[0] || raw;
+  const werfnaam = codes.length ? raw.replace(/[FP]\d{2}-\d{5}\.\d{3}/i, '').replace(/^[\s—–-]+/, '').trim() : '';
+  const mij = huidigeGebruiker();
+  const teamleader = mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : '');
+  const b = {
+    id: 'best_' + Date.now(), timestamp: localTimestamp(), datum: docVandaag(),
+    project: projectnummer, werfnaam, teamleader,
+    opmerking: document.getElementById('best-opmerking').value.trim(), items, _synced: false,
+  };
+  const lijst = bestLaad(); lijst.push(b); bestBewaar(lijst);
+  const status = document.getElementById('best-status');
+  status.innerHTML = '<div style="color:#888;font-size:14px">⏳ Doorsturen…</div>';
+  try {
+    await bestVerstuur(b);
+    b._synced = true;
+    status.innerHTML = '<div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;color:#3B6D11;font-weight:600">✅ Bestelling doorgegeven aan kantoor (' + items.length + ' product' + (items.length === 1 ? '' : 'en') + ')</div>';
+  } catch (e) {
+    console.warn('[Bestelling] Doorsturen mislukt:', e.message);
+    status.innerHTML = '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt doorgestuurd zodra er verbinding is.</div>';
+  }
+  bestBewaar(lijst);
+  document.getElementById('best-lijnen').innerHTML = ''; bestVoegLijnToe();
+  document.getElementById('best-opmerking').value = '';
+  bestRenderLijst();
+}
+
+async function bestResync() {
+  const lijst = bestLaad();
+  const open = lijst.filter(b => !b._synced);
+  if (!open.length) return;
+  for (const b of open) {
+    try { await bestVerstuur(b); b._synced = true; } catch (e) { /* blijft wachten op verbinding */ }
+  }
+  bestBewaar(lijst);
+}
+
+function bestRenderLijst() {
+  const lijst = bestLaad().filter(b => b.datum === docVandaag());
+  document.getElementById('best-lijst-wrap').style.display = lijst.length ? 'block' : 'none';
+  document.getElementById('best-lijst').innerHTML = lijst.slice().reverse().map(b =>
+    `<div style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
+      <div style="font-weight:700">${escapeHtml(b.werfnaam || b.project)}</div>
+      <div style="color:#555;margin-top:2px">${b.items.map(i => escapeHtml(((i.aantal ? i.aantal + ' ' + (i.eenheid || '') + ' ' : '')) + i.product)).join(', ')}</div>
+      <div style="color:#888;font-size:12px;margin-top:3px">${b._synced ? '✅ doorgestuurd' : '📴 wacht op verbinding'}</div>
     </div>`).join('');
 }
 
