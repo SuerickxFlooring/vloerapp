@@ -960,6 +960,10 @@ textarea.form-input{min-height:80px;resize:vertical}
         <label class="form-label">Aantal wachtuur</label>
         <input type="text" inputmode="decimal" class="form-input" id="rb-wacht-uren" placeholder="Bv. 2,5" autocomplete="off">
       </div>
+      <div class="form-group" id="rb-wacht-opm-groep" style="display:none">
+        <label class="form-label">Opmerkingen <span style="font-weight:400;color:#aaa">(optioneel)</span></label>
+        <textarea class="form-input" id="rb-wacht-opmerking" rows="3" placeholder="Extra info over de wachturen..."></textarea>
+      </div>
     </div>
 
     <!-- STAP 2: Artikelen toevoegen -->
@@ -9038,6 +9042,7 @@ function getRbNaam() {
 async function initRegiebon() {
   rbToonKeuze();
   document.getElementById('rb-wacht-uren').value = '';
+  document.getElementById('rb-wacht-opmerking').value = '';
   document.getElementById('rb-datum').value = new Date().toISOString().split('T')[0];
   document.getElementById('rb-naam-manueel').value = '';
   const mij = huidigeGebruiker();
@@ -9117,6 +9122,7 @@ function rbKies(modus) {
   document.getElementById('rb-titel').textContent = wacht ? '⏱ Wachturen' : '🧾 Regiebon';
   document.getElementById('rb-omschrijving-groep').style.display = wacht ? 'none' : '';
   document.getElementById('rb-wacht-groep').style.display = wacht ? '' : 'none';
+  document.getElementById('rb-wacht-opm-groep').style.display = wacht ? '' : 'none';
   rbStapNr = 1;
   updateRbNav();
   const scroll = document.querySelector('#s-regiebon .scroll-area');
@@ -9159,6 +9165,7 @@ function rbRenderWachtSamenvatting() {
         <div><strong>Project:</strong> ${escapeHtml(getRbProjectNaam() || '—')}</div>
         <div><strong>Datum:</strong> ${escapeHtml(document.getElementById('rb-datum').value)}</div>
         <div><strong>Ingediend door:</strong> ${escapeHtml(getRbNaam())}</div>
+        ${(document.getElementById('rb-wacht-opmerking').value || '').trim() ? `<div><strong>Opmerkingen:</strong> ${escapeHtml(document.getElementById('rb-wacht-opmerking').value.trim())}</div>` : ''}
       </div>
     </div>`;
 }
@@ -9517,11 +9524,13 @@ async function submitRegiebon() {
   const sigKlant = rbGetSigData('klant');
   const klantNaam = document.getElementById('rb-klant-naam').value.trim();
 
+  const wachtOpm = rbModus === 'wacht' ? document.getElementById('rb-wacht-opmerking').value.trim() : '';
+
   const bon = {
     project_id:      getRbProjectId() || null,
     project_naam:    getRbProjectNaam(),
     datum:           document.getElementById('rb-datum').value,
-    omschrijving:    rbModus === 'wacht' ? 'Wachturen' : document.getElementById('rb-omschrijving').value.trim(),
+    omschrijving:    rbModus === 'wacht' ? (wachtOpm ? 'Wachturen — ' + wachtOpm : 'Wachturen') : document.getElementById('rb-omschrijving').value.trim(),
     ingediend_door:  getRbNaam(),
     klant_naam:      klantNaam,
     handtekening_pb:    sigPb    || '',
@@ -9531,7 +9540,7 @@ async function submitRegiebon() {
   };
 
   // Wachturen = één regel "Wachturen" in uren; kantoor herkent de bon aan de categorie
-  const items = rbModus === 'wacht' ? [{ categorie: 'Wachturen', omschrijving: 'Wachturen', aantal: String(rbWachtUren()), eenheid: 'UUR', opmerking: '' }] : rbItems.map(item => ({
+  const items = rbModus === 'wacht' ? [{ categorie: 'Wachturen', omschrijving: 'Wachturen', aantal: String(rbWachtUren()), eenheid: 'UUR', opmerking: wachtOpm }] : rbItems.map(item => ({
     categorie:   item.cat,
     omschrijving: item.naam,
     aantal:      String(item.aantal),
