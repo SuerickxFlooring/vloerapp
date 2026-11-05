@@ -891,7 +891,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       <div id="best-status" style="margin-top:10px"></div>
 
       <div id="best-lijst-wrap" style="margin-top:20px;display:none">
-        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Doorgegeven vandaag (dit toestel)</div>
+        <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Mijn bestellingen — opvolging (dit toestel)</div>
         <div id="best-lijst"></div>
       </div>
     </div>
@@ -3837,7 +3837,7 @@ function initSupabase() {
 const TOESTEL_ID_SLEUTEL = 'wk_toestel_id';
 const TOESTEL_STAAT_SLEUTEL = 'wk_toestel_staat';
 const TOESTEL_RPC = {
-  submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p', submit_bestelling: 'p',
+  submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p', submit_bestelling: 'p', app_bestelling_status: 'p',
   submit_regiebon: 'p_bon', update_aanrijding: 'p', submit_aanrijding: 'p', submit_swb: 'p', submit_werfoplevering: 'p',
   submit_onkostennota: 'p', submit_lmra: 'p',
 };
@@ -8315,15 +8315,47 @@ async function bestResync() {
   if (gesynct.length) { bestMarkSynced(gesynct); bestRenderLijst(); }
 }
 
+// Kantoor-status per inzending (rijen met dezelfde client_timestamp). Los van de
+// DOM gehouden zodat ze testbaar is.
+function bestStatusTekst(r) {
+  if (!r)                     return { tekst: '🕓 Nog niet verwerkt', kleur: '#8a6d1a' };
+  if (r.verwerkt >= r.aantal) return { tekst: '✅ Verwerkt door kantoor', kleur: '#3B6D11' };
+  if (r.verwerkt > 0)         return { tekst: `⏳ Deels verwerkt (${r.verwerkt}/${r.aantal})`, kleur: '#8a6d1a' };
+  return { tekst: '🕓 Nog niet verwerkt', kleur: '#8a6d1a' };
+}
+
 function bestRenderLijst() {
-  const lijst = bestLaad().filter(b => b.datum === docVandaag());
+  // Recente dagen (niet enkel vandaag) zodat de ploegbaas zijn bestellingen kan opvolgen.
+  const grens = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10);
+  const lijst = bestLaad().filter(b => (b.datum || '') >= grens);
   document.getElementById('best-lijst-wrap').style.display = lijst.length ? 'block' : 'none';
   document.getElementById('best-lijst').innerHTML = lijst.slice().reverse().map(b =>
-    `<div style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
-      <div style="font-weight:700">${escapeHtml(b.werfnaam || b.project)}</div>
+    `<div data-ts="${escapeHtml(b.timestamp || '')}" data-synced="${b._synced ? '1' : '0'}" style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
+      <div style="font-weight:700">${escapeHtml(b.werfnaam || b.project)} <span style="font-weight:400;color:#999;font-size:11px">· ${escapeHtml(b.datum || '')}</span></div>
       <div style="color:#555;margin-top:2px">${b.items.map(i => escapeHtml(((i.aantal ? i.aantal + ' ' + (i.eenheid || '') + ' ' : '')) + i.product)).join(', ')}</div>
-      <div style="color:#888;font-size:12px;margin-top:3px">${b._synced ? '✅ doorgestuurd' : '📴 wacht op verbinding'}</div>
+      <div class="best-status-regel" style="font-size:12px;margin-top:3px;color:#888">${b._synced ? '⏳ status laden…' : '📴 wacht op verbinding'}</div>
     </div>`).join('');
+  bestStatusLaden(lijst.filter(b => b._synced).map(b => b.timestamp));
+}
+
+// Vraagt bij kantoor op of de doorgegeven bestellingen al verwerkt zijn en werkt
+// elke kaart bij. Offline of zonder antwoord blijft "status laden…" staan.
+async function bestStatusLaden(timestamps) {
+  if (!timestamps.length) return;
+  const client = initSbCockpit();
+  if (!client) return;
+  let data;
+  try { ({ data } = await client.rpc('app_bestelling_status', { p: { client_timestamps: timestamps } })); }
+  catch (e) { return; }
+  const map = {};
+  (data || []).forEach(r => { map[r.client_timestamp] = r; });
+  document.querySelectorAll('#best-lijst [data-synced="1"]').forEach(card => {
+    const el = card.querySelector('.best-status-regel');
+    if (!el) return;
+    const { tekst, kleur } = bestStatusTekst(map[card.getAttribute('data-ts')]);
+    el.textContent = tekst;
+    el.style.color = kleur;
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
