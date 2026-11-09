@@ -875,7 +875,9 @@ textarea.form-input{min-height:80px;resize:vertical}
         <input type="text" class="form-input" id="best-project-manueel" placeholder="Projectnummer en naam" style="display:none;margin-top:8px">
       </div>
 
-      <div class="form-group">
+      <!-- Enkel voor kantoor/beheer (Pablo, Frederik, ...): een ploegbaas op z'n
+           eigen toestel hoort gewoon onder zijn eigen naam — zie initBestelling. -->
+      <div class="form-group" id="best-naam-groep" style="display:none">
         <label class="form-label">Voor welke ploegbaas?</label>
         <select class="form-select" id="best-naam" onchange="bestNaamGekozen()"></select>
         <input type="text" class="form-input" id="best-naam-manueel" placeholder="Naam ploegbaas" style="display:none;margin-top:8px">
@@ -8268,6 +8270,9 @@ function initBestelling() {
   document.getElementById('best-project-manueel').value = '';
   bestProjectGekozen();
   const mij = huidigeGebruiker();
+  // Ploegbaas op eigen toestel: bestelling gaat vanzelf onder zijn eigen naam, geen
+  // keuze nodig. Enkel kantoor/beheer (geen aangemelde ploegbaas) kiest de ploegbaas.
+  document.getElementById('best-naam-groep').style.display = mij ? 'none' : '';
   document.getElementById('best-naam-manueel').value = '';
   bestVulNaamDropdown(mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''));
   document.getElementById('best-fout').style.display = 'none';
