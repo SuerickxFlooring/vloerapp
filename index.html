@@ -3989,15 +3989,15 @@ function isDocActief(p) {
   const einde = p.einddatum  || '9999-12-31';
   return start <= docMorgen() && einde >= docVandaag();
 }
-// Een werf die afgelopen is blijft nog 7 dagen opzoekbaar (zie
-// docZevenDagenGeleden() bij initDocumenten()) zodat een oplevering of
+// Een werf die afgelopen is blijft nog 5 dagen opzoekbaar (zie
+// docVijfDagenGeleden() bij initDocumenten()) zodat een oplevering of
 // startwerkbespreking nog ingevuld kan worden — maar telt nergens nog als
 // actief of binnenkort mee.
 function isDocAfgelopen(p) {
   return !!p.einddatum && p.einddatum < docVandaag();
 }
-function docZevenDagenGeleden() {
-  const d = new Date(); d.setDate(d.getDate()-7);
+function docVijfDagenGeleden() {
+  const d = new Date(); d.setDate(d.getDate()-5);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 // Gedeeld tussen de Projectinfo-lijst en de Werfoplevering-/Startwerk-kiezers.
@@ -4037,13 +4037,13 @@ async function initDocumenten() {
     return;
   }
   // Naast alle actieve/toekomstige werven ook werven die pas gearchiveerd
-  // zijn (afgerond, korter dan 7 dagen geleden) — zodat een oplevering of
+  // zijn (afgerond, korter dan 5 dagen geleden) — zodat een oplevering of
   // startwerkbespreking na afloop van de werf nog ingevuld kan worden i.p.v.
   // meteen onvindbaar te zijn zodra WerfKompas Beheer het project archiveert.
   const [projRes, bijlRes] = await Promise.all([
     client.from('cockpit_projecten')
       .select('id,projectnummer,werfnaam,startdatum,einddatum,gearchiveerd')
-      .or(`gearchiveerd.eq.false,and(gearchiveerd.eq.true,einddatum.gte.${docZevenDagenGeleden()})`)
+      .or(`gearchiveerd.eq.false,and(gearchiveerd.eq.true,einddatum.gte.${docVijfDagenGeleden()})`)
       .order('startdatum', { ascending: true }),
     client.from('cockpit_bijlagen').select('project_id,type')
   ]);
