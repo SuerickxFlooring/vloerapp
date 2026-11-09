@@ -876,6 +876,12 @@ textarea.form-input{min-height:80px;resize:vertical}
       </div>
 
       <div class="form-group">
+        <label class="form-label">Voor welke ploegbaas?</label>
+        <select class="form-select" id="best-naam" onchange="bestNaamGekozen()"></select>
+        <input type="text" class="form-input" id="best-naam-manueel" placeholder="Naam ploegbaas" style="display:none;margin-top:8px">
+      </div>
+
+      <div class="form-group">
         <label class="form-label">Producten</label>
         <div id="best-lijnen"></div>
         <button type="button" onclick="bestVoegLijnToe()" style="margin-top:8px;padding:9px 12px;border:1px dashed #b7c0e0;border-radius:10px;background:#f4f6fc;color:#3547C8;font-size:13px;font-weight:600;cursor:pointer;width:100%">+ Product toevoegen</button>
@@ -8215,6 +8221,34 @@ function bestProjectGekozen() {
   document.getElementById('best-project-manueel').style.display = sel.value === '__manueel__' ? 'block' : 'none';
 }
 
+// "Voor welke ploegbaas?" — zelfde keuzelijst (ploegbazen + kantoor + zelf
+// invullen) als de Regiebon, zodat kantoor een bestelling op naam van de juiste
+// ploegbaas kan doorgeven i.p.v. onder de eigen naam.
+const BEST_NAAM_MANUEEL = '__manueel__';
+function bestVulNaamDropdown(gekozen) {
+  const sel = document.getElementById('best-naam');
+  if (!sel) return;
+  const extra = gekozen && gekozen !== BEST_NAAM_MANUEEL ? gekozen : '';
+  const namen = okNamenLijst(extra).map(t => t.naam);
+  sel.innerHTML = '<option value="">— Kies ploegbaas —</option>'
+    + namen.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
+    + `<option value="${BEST_NAAM_MANUEEL}">✏️ Andere naam invullen…</option>`;
+  sel.value = gekozen || '';
+  bestNaamGekozen();
+}
+function bestNaamGekozen() {
+  const manueel = document.getElementById('best-naam').value === BEST_NAAM_MANUEEL;
+  const inp = document.getElementById('best-naam-manueel');
+  inp.style.display = manueel ? '' : 'none';
+  if (manueel) inp.focus();
+}
+function getBestNaam() {
+  const sel = document.getElementById('best-naam');
+  if (!sel) return '';
+  if (sel.value === BEST_NAAM_MANUEEL) return document.getElementById('best-naam-manueel').value.trim();
+  return (sel.value || '').trim();
+}
+
 function initBestelling() {
   // Werfkeuze: zelfde bron als Retour/Herstelling — de werven van vandaag, met de laatst
   // geregistreerde werf voorgeselecteerd.
@@ -8233,6 +8267,9 @@ function initBestelling() {
   document.getElementById('best-opmerking').value = '';
   document.getElementById('best-project-manueel').value = '';
   bestProjectGekozen();
+  const mij = huidigeGebruiker();
+  document.getElementById('best-naam-manueel').value = '';
+  bestVulNaamDropdown(mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''));
   document.getElementById('best-fout').style.display = 'none';
   document.getElementById('best-status').innerHTML = '';
   bestResync();
@@ -8283,7 +8320,8 @@ async function bestOpslaan() {
   const projectnummer = codes[0] || raw;
   const werfnaam = codes.length ? raw.replace(/[FP]\d{2}-\d{5}\.\d{3}/i, '').replace(/^[\s—–-]+/, '').trim() : '';
   const mij = huidigeGebruiker();
-  const teamleader = mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : '');
+  // Gekozen ploegbaas uit de keuzelijst; valt terug op de aangemelde gebruiker/kantoor.
+  const teamleader = getBestNaam() || (mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''));
   const b = {
     id: 'best_' + Date.now(), timestamp: localTimestamp(), datum: docVandaag(),
     project: projectnummer, werfnaam, teamleader,
