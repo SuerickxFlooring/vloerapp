@@ -4687,47 +4687,103 @@ function verwerkFotos(input) {
     input.value = '';
     return;
   }
-  const toegestaan = Array.from(files).slice(0, beschikbaar);
+  const toegestaan = files.slice(0, beschikbaar);
   if (files.length > beschikbaar) {
     if (statusEl) statusEl.textContent = 'Max. 4 foto\'s — enkel de eerste ' + beschikbaar + ' worden toegevoegd.';
   } else {
-    if (statusEl) statusEl.textContent = toegestaan.length + ' foto(s) geselecteerd...';
+    if (statusEl) statusEl.textContent = toegestaan.length + ' foto(s) verwerken...';
   }
-  const filesToProcess = toegestaan;
-  filesToProcess.forEach(function(file) {
+  input.value = '';
+  // Sequentieel verwerken: op een iPhone kan het gelijktijdig decoderen van
+  // meerdere grote foto's het geheugen doen vollopen, waardoor sommige foto's
+  // stil faalden. Eén voor één is trager maar betrouwbaar.
+  (async function() {
+    for (const file of toegestaan) { await voegFotoToe(file); }
+    if (statusEl && statusEl.textContent.indexOf('mislukt') === -1) {
+      statusEl.textContent = fotoData.filter(Boolean).length + ' foto(s) klaar';
+    }
+  })();
+}
+
+// Voegt één foto toe met preview + upload. Lukt het verkleinen via canvas niet
+// (bv. een HEIC-/onleesbaar formaat dat iOS soms rauw aanlevert in een PWA), dan
+// wordt het ORIGINELE bestand geüpload zodat een foto nooit stil verdwijnt.
+function voegFotoToe(file) {
+  return new Promise(function(resolve) {
+    const i = fotoData.length;
+    const toonPreview = function(src, origineel) {
+      const list = document.getElementById('foto-preview-list');
+      if (!list) return;
+      const w = document.createElement('div');
+      w.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0';
+      w.id = 'foto-prev-' + i;
+      const binnen = origineel
+        ? '<div style="width:80px;height:80px;border-radius:8px;border:2px solid #D0D5F0;background:#EEF0FC;display:flex;align-items:center;justify-content:center;font-size:26px">📷</div>'
+        : '<img src="' + src + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #D0D5F0">';
+      w.innerHTML = binnen +
+        '<button type="button" onclick="verwijderFoto(' + i + ')" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">X</button>';
+      list.appendChild(w);
+    };
+    const terugval = function() {
+      fotoData.push('origineel');
+      toonPreview(null, true);
+      uploadOrigineelBestand(file, i).then(regAutosave).then(resolve, resolve);
+    };
     const reader = new FileReader();
     reader.onload = function(e) {
       verkleenFoto(e.target.result, 1200, function(b64) {
-        const i = fotoData.length;
         fotoData.push(b64);
-        const list = document.getElementById('foto-preview-list');
-        if (list) {
-          const w = document.createElement('div');
-          w.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0';
-          w.id = 'foto-prev-' + i;
-          w.innerHTML = '<img src="' + b64 + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #D0D5F0">' +
-            '<button type="button" onclick="verwijderFoto(' + i + ')" style="position:absolute;top:-6px;right:-6px;background:#A32D2D;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">X</button>';
-          list.appendChild(w);
-        }
-        uploadFoto(b64, i).then(regAutosave);
-      });
+        toonPreview(b64, false);
+        uploadFoto(b64, i).then(regAutosave).then(resolve, resolve);
+      }, terugval);
     };
+    reader.onerror = terugval;
     reader.readAsDataURL(file);
   });
-  input.value = '';
 }
 
-function verkleenFoto(b64, maxW, cb) {
+// cb krijgt de verkleinde JPEG; onFail wordt aangeroepen als de foto niet
+// gedecodeerd/geconverteerd kan worden (onerror, leeg canvas, uitzondering).
+function verkleenFoto(b64, maxW, cb, onFail) {
   const img = new Image();
   img.onload = function() {
-    const cv = document.createElement('canvas');
-    let w = img.width, h = img.height;
-    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-    cv.width = w; cv.height = h;
-    cv.getContext('2d').drawImage(img, 0, 0, w, h);
-    cb(cv.toDataURL('image/jpeg', 0.80));
+    try {
+      let w = img.width, h = img.height;
+      if (!w || !h) { if (onFail) onFail(); return; }
+      const cv = document.createElement('canvas');
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      const out = cv.toDataURL('image/jpeg', 0.80);
+      if (!out || out === 'data:,') { if (onFail) onFail(); return; }
+      cb(out);
+    } catch (e) { if (onFail) onFail(); }
   };
+  img.onerror = function() { if (onFail) onFail(); };
   img.src = b64;
+}
+
+// Terugval: het originele bestand (bv. HEIC) rechtstreeks uploaden zodat de foto
+// toch meegaat, ook als de browser ze niet naar JPEG kon omzetten.
+async function uploadOrigineelBestand(file, i) {
+  const statusEl = document.getElementById('foto-upload-status');
+  if (!sb) { fotoUrls[i] = ''; return; }
+  try {
+    const naamExt = (file.name && file.name.indexOf('.') !== -1)
+      ? file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+    const ext = naamExt || (file.type && file.type.indexOf('/') !== -1 ? file.type.split('/')[1] : 'jpg');
+    const path = 'registraties/' + Date.now() + '-' + i + '.' + (ext || 'jpg');
+    const { error: upErr } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type || 'application/octet-stream' });
+    if (upErr) throw upErr;
+    const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
+    fotoUrls[i] = pub.publicUrl;
+    fotoPaths[i] = path;
+    if (statusEl) statusEl.textContent = 'Foto ' + (i + 1) + ' opgeslagen (origineel formaat)';
+  } catch (e) {
+    fotoUrls[i] = '';
+    fotoPaths[i] = '';
+    if (statusEl) statusEl.textContent = 'Upload mislukt: ' + (e.message || 'onbekende fout');
+  }
 }
 
 function dataURLtoBlob(b64) {
