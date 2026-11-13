@@ -6465,6 +6465,14 @@ function regEnterScherm() {
   const meestRecent = appData.regConcepten[0];
   if (meestRecent) {
     regApplyState(meestRecent);
+    // Een hervat concept kan van een vorige dag dateren (niet afgewerkt, of gewoon nog open
+    // laten staan) — het datumveld moet dan alsnog naar vandaag springen. Anders blijft de
+    // dagregistratie onopgemerkt op de oude werkdag staan zodra je ze alsnog verstuurt.
+    const vandaag0 = new Date().toISOString().split('T')[0];
+    if (meestRecent.datum && meestRecent.datum !== vandaag0) {
+      const datumEl0 = document.getElementById('r-datum');
+      if (datumEl0) datumEl0.value = vandaag0;
+    }
     const banner = document.getElementById('reg-concept-banner');
     const txt = document.getElementById('reg-concept-banner-txt');
     if (banner && txt) {
