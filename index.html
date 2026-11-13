@@ -8434,6 +8434,9 @@ async function bestOpslaan() {
     // verbergt die tekst een werkelijke fout (bv. geweigerde toegang, een validatiefout
     // op de server) achter een onterechte "geen internet"-uitleg. De bestelling blijft
     // wel lokaal bewaard en wordt alsnog automatisch herprobeerd (zie bestResync/online).
+    // _laatsteFout wordt ook door de kaart in "Mijn bestellingen" hieronder gebruikt —
+    // anders bleef die kaart altijd "wacht op verbinding" tonen, ook bij een echte fout.
+    if (navigator.onLine) bestZetLaatsteFout(b.id, e.message || 'onbekende fout');
     status.innerHTML = navigator.onLine
       ? `<div style="background:#FDECEA;border-radius:8px;padding:10px 12px;color:#A32D2D;font-weight:600">❌ Versturen mislukt: ${escapeHtml(e.message || 'onbekende fout')}<br><span style="font-weight:400;font-size:12.5px">De bestelling blijft bewaard en wordt automatisch opnieuw geprobeerd.</span></div>`
       : '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt doorgestuurd zodra er verbinding is.</div>';
@@ -8443,14 +8446,29 @@ async function bestOpslaan() {
   bestRenderLijst();
 }
 
+// Onthoudt de werkelijke foutmelding van de laatste (mislukte) poging bij een
+// nog-niet-verstuurde bestelling — zodat de kaart in "Mijn bestellingen" hieronder
+// de echte reden kan tonen i.p.v. altijd "wacht op verbinding".
+function bestZetLaatsteFout(id, fout) {
+  const lijst = bestLaad();
+  const b = lijst.find(x => x.id === id);
+  if (!b) return;
+  b._laatsteFout = fout;
+  bestBewaar(lijst);
+}
+
 async function bestResync() {
   const open = bestLaad().filter(b => !b._synced);
   if (!open.length) return;
   const gesynct = [];
+  let fouten = false;
   for (const b of open) {
-    try { await bestVerstuur(b); gesynct.push(b.id); } catch (e) { /* blijft wachten op verbinding */ }
+    try { await bestVerstuur(b); gesynct.push(b.id); }
+    catch (e) {
+      if (navigator.onLine) { bestZetLaatsteFout(b.id, e.message || 'onbekende fout'); fouten = true; }
+    }
   }
-  if (gesynct.length) { bestMarkSynced(gesynct); bestRenderLijst(); }
+  if (gesynct.length || fouten) { bestMarkSynced(gesynct); bestRenderLijst(); }
 }
 
 // Kantoor-status per inzending (rijen met dezelfde client_timestamp). Los van de
@@ -8467,11 +8485,18 @@ function bestRenderLijst() {
   const grens = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10);
   const lijst = bestLaad().filter(b => (b.datum || '') >= grens);
   document.getElementById('best-lijst-wrap').style.display = lijst.length ? 'block' : 'none';
+  // Een nog niet verstuurde bestelling toont de werkelijke oorzaak zodra die bekend is
+  // (zie bestZetLaatsteFout) — "wacht op verbinding" enkel wanneer het toestel écht
+  // offline is, anders blijft een reële fout (geweigerde toegang, ...) onzichtbaar.
+  const nietVerstuurdLabel = b => {
+    if (b._laatsteFout && navigator.onLine) return `❌ ${escapeHtml(b._laatsteFout)}`;
+    return navigator.onLine ? '🔄 wordt verstuurd…' : '📴 wacht op verbinding';
+  };
   document.getElementById('best-lijst').innerHTML = lijst.slice().reverse().map(b =>
     `<div data-ts="${escapeHtml(b.timestamp || '')}" data-synced="${b._synced ? '1' : '0'}" style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
       <div style="font-weight:700">${escapeHtml(b.werfnaam || b.project)} <span style="font-weight:400;color:#999;font-size:11px">· ${escapeHtml(b.datum || '')}</span></div>
       <div style="color:#555;margin-top:2px">${b.items.map(i => escapeHtml(((i.aantal ? i.aantal + ' ' + (i.eenheid || '') + ' ' : '')) + i.product)).join(', ')}</div>
-      <div class="best-status-regel" style="font-size:12px;margin-top:3px;color:#888">${b._synced ? '⏳ status laden…' : '📴 wacht op verbinding'}</div>
+      <div class="best-status-regel" style="font-size:12px;margin-top:3px;color:${b._laatsteFout && navigator.onLine ? '#A32D2D' : '#888'}">${b._synced ? '⏳ status laden…' : nietVerstuurdLabel(b)}</div>
     </div>`).join('');
   bestStatusLaden(lijst.filter(b => b._synced).map(b => b.timestamp));
 }
