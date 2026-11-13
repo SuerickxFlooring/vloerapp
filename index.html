@@ -5351,8 +5351,11 @@ async function laadMijnDashboard() {
 
     const naam = escapeHtml(mij.weergave || mij.naam);
     const kaarten = werven.map((werf, idx) => {
-      const regDone  = (regData  || []).some(r => naamOverlap(r.teamleader, mij.weergave) && tekstOverlap(r.project, werf));
-      const lmraDone = (lmraData || []).some(r => naamOverlap(r.teamleader, mij.weergave) && tekstOverlap(r.project, werf));
+      // Per werf, niet per ploegbaas: zodra één ploegbaas op deze werf de
+      // LMRA/dagregistratie van vandaag invulde, is ze voor de werf gedaan en
+      // hoeft een tweede ploegbaas op dezelfde werf geen melding meer te krijgen.
+      const regDone  = (regData  || []).some(r => tekstOverlap(r.project, werf));
+      const lmraDone = (lmraData || []).some(r => tekstOverlap(r.project, werf));
       const swbDone  = (swbData  || []).some(r => tekstOverlap(r.project, werf));
 
       const rijen = [
