@@ -888,6 +888,16 @@ textarea.form-input{min-height:80px;resize:vertical}
         <input type="text" class="form-input" id="best-naam-manueel" placeholder="Naam ploegbaas" style="display:none;margin-top:8px">
       </div>
 
+      <!-- Idem admin-only: hoe moet dit tot bij de werf komen? -->
+      <div class="form-group" id="best-bestemming-groep" style="display:none">
+        <label class="form-label">Hoe moet dit tot bij de werf komen?</label>
+        <select class="form-select" id="best-bestemming">
+          <option value="werf">📦 Bestellen — levering op de werf</option>
+          <option value="magazijn">🏭 Bestellen — levering in het magazijn</option>
+          <option value="stock">✅ Rechtstreeks uit stock halen</option>
+        </select>
+      </div>
+
       <div class="form-group">
         <label class="form-label">Producten</label>
         <div id="best-lijnen"></div>
@@ -8347,6 +8357,8 @@ function initBestelling() {
   // keuze nodig. Enkel kantoor/beheer (geen aangemelde ploegbaas) kiest de ploegbaas.
   document.getElementById('best-naam-groep').style.display = mij ? 'none' : '';
   document.getElementById('best-naam-manueel').value = '';
+  document.getElementById('best-bestemming-groep').style.display = mij ? 'none' : '';
+  document.getElementById('best-bestemming').value = 'werf';
   bestVulNaamDropdown(mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''));
   document.getElementById('best-fout').style.display = 'none';
   document.getElementById('best-status').innerHTML = '';
@@ -8379,7 +8391,7 @@ async function bestVerstuur(b) {
   if (!client) throw new Error('Geen verbinding met WerfKompas Beheer');
   const { error } = await client.rpc('submit_bestelling', { p: {
     client_timestamp: b.timestamp, project: b.project, werfnaam: b.werfnaam || '', teamleader: b.teamleader || '',
-    opmerking: b.opmerking || '', items: b.items, datum: b.datum || '',
+    opmerking: b.opmerking || '', items: b.items, datum: b.datum || '', bestemming: b.bestemming || 'werf',
   } });
   if (error) throw error;
 }
@@ -8400,9 +8412,13 @@ async function bestOpslaan() {
   const mij = huidigeGebruiker();
   // Gekozen ploegbaas uit de keuzelijst; valt terug op de aangemelde gebruiker/kantoor.
   const teamleader = getBestNaam() || (mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''));
+  // Enkel ingevuld/zichtbaar voor kantoor/beheer (zie initBestelling) — een ploegbaas op
+  // z'n eigen toestel heeft dit veld niet en valt terug op de standaardwaarde 'werf'.
+  const bestemmingEl = document.getElementById('best-bestemming');
+  const bestemming = bestemmingEl && bestemmingEl.offsetParent !== null ? bestemmingEl.value : 'werf';
   const b = {
     id: 'best_' + Date.now(), timestamp: localTimestamp(), datum: document.getElementById('best-datum').value || docVandaag(),
-    project: projectnummer, werfnaam, teamleader,
+    project: projectnummer, werfnaam, teamleader, bestemming,
     opmerking: document.getElementById('best-opmerking').value.trim(), items, _synced: false,
   };
   const lijst = bestLaad(); lijst.push(b); bestBewaar(lijst);
