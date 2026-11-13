@@ -8430,7 +8430,13 @@ async function bestOpslaan() {
     status.innerHTML = '<div style="background:#EAF3DE;border-radius:8px;padding:10px 12px;color:#3B6D11;font-weight:600">✅ Bestelling doorgegeven aan kantoor (' + items.length + ' product' + (items.length === 1 ? '' : 'en') + ')</div>';
   } catch (e) {
     console.warn('[Bestelling] Doorsturen mislukt:', e.message);
-    status.innerHTML = '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt doorgestuurd zodra er verbinding is.</div>';
+    // Enkel écht offline toont de (correcte) "wacht op verbinding"-melding — anders
+    // verbergt die tekst een werkelijke fout (bv. geweigerde toegang, een validatiefout
+    // op de server) achter een onterechte "geen internet"-uitleg. De bestelling blijft
+    // wel lokaal bewaard en wordt alsnog automatisch herprobeerd (zie bestResync/online).
+    status.innerHTML = navigator.onLine
+      ? `<div style="background:#FDECEA;border-radius:8px;padding:10px 12px;color:#A32D2D;font-weight:600">❌ Versturen mislukt: ${escapeHtml(e.message || 'onbekende fout')}<br><span style="font-weight:400;font-size:12.5px">De bestelling blijft bewaard en wordt automatisch opnieuw geprobeerd.</span></div>`
+      : '<div style="background:#FFF8EC;border-radius:8px;padding:10px 12px;color:#3547C8">📴 Opgeslagen op toestel. Wordt doorgestuurd zodra er verbinding is.</div>';
   }
   document.getElementById('best-lijnen').innerHTML = ''; bestVoegLijnToe();
   document.getElementById('best-opmerking').value = '';
@@ -8769,6 +8775,7 @@ window.addEventListener('online', () => {
   syncPendingUren();
   syncPendingRetours();
   syncPendingHerstellingen();
+  bestResync(); // ontbrak hier — een mislukte/wachtende bestelling werd anders pas opnieuw verstuurd bij het heropenen van het scherm
   loadRemoteData();
   controleerToegang();
 });
