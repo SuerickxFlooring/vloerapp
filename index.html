@@ -875,6 +875,11 @@ textarea.form-input{min-height:80px;resize:vertical}
         <input type="text" class="form-input" id="best-project-manueel" placeholder="Projectnummer en naam" style="display:none;margin-top:8px">
       </div>
 
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input type="date" class="form-input" id="best-datum">
+      </div>
+
       <!-- Enkel voor kantoor/beheer (Pablo, Frederik, ...): een ploegbaas op z'n
            eigen toestel hoort gewoon onder zijn eigen naam — zie initBestelling. -->
       <div class="form-group" id="best-naam-groep" style="display:none">
@@ -8331,6 +8336,7 @@ function initBestelling() {
     + opties.map(o => `<option value="${escapeHtml(o.waarde)}">${escapeHtml(o.tekst)}</option>`).join('')
     + `<option value="__manueel__">✏️ Andere werf (zelf invullen)…</option>`;
   sel.value = laatste || '';
+  document.getElementById('best-datum').value = docVandaag();
   document.getElementById('best-lijnen').innerHTML = '';
   bestVoegLijnToe();
   document.getElementById('best-opmerking').value = '';
@@ -8373,7 +8379,7 @@ async function bestVerstuur(b) {
   if (!client) throw new Error('Geen verbinding met WerfKompas Beheer');
   const { error } = await client.rpc('submit_bestelling', { p: {
     client_timestamp: b.timestamp, project: b.project, werfnaam: b.werfnaam || '', teamleader: b.teamleader || '',
-    opmerking: b.opmerking || '', items: b.items,
+    opmerking: b.opmerking || '', items: b.items, datum: b.datum || '',
   } });
   if (error) throw error;
 }
@@ -8395,7 +8401,7 @@ async function bestOpslaan() {
   // Gekozen ploegbaas uit de keuzelijst; valt terug op de aangemelde gebruiker/kantoor.
   const teamleader = getBestNaam() || (mij ? mij.naam : (beheerIngelogd && beheerUser ? naamUitEmail(beheerUser.email) : ''));
   const b = {
-    id: 'best_' + Date.now(), timestamp: localTimestamp(), datum: docVandaag(),
+    id: 'best_' + Date.now(), timestamp: localTimestamp(), datum: document.getElementById('best-datum').value || docVandaag(),
     project: projectnummer, werfnaam, teamleader,
     opmerking: document.getElementById('best-opmerking').value.trim(), items, _synced: false,
   };
