@@ -11680,7 +11680,7 @@ function okVoegLijnToe() {
     omschrijving: '', categorie: OK_CATEGORIEEN[0],
     // Zelfde project als de vorige onkost vooraf invullen — meestal horen ze bij dezelfde werf.
     project: (okLijnen.filter(Boolean).slice(-1)[0] || {}).project || '',
-    bedrag: '', fotoData: null, fotoUrl: '', fotoPath: '',
+    bedrag: '', fotos: [], // {url, path}[] — meerdere bonnen/foto's per onkost mogelijk
   });
   renderOkLijn(i);
   okUpdateTotaal();
@@ -11721,11 +11721,11 @@ function renderOkLijn(i) {
         <input type="number" step="0.01" min="0" class="form-input" placeholder="0.00" oninput="okLijnBedrag(${i},this.value)">
       </div>
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">Bon / factuur <span style="font-weight:400;color:#999">(optioneel)</span></label>
-        <div id="ok-lijn-${i}-foto-preview"></div>
+        <label class="form-label">Bon / factuur <span style="font-weight:400;color:#999">(optioneel, meerdere mogelijk)</span></label>
+        <div id="ok-lijn-${i}-foto-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${l.fotos.length?'8px':'0'}"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border:2px dashed #3547C8;border-radius:10px;background:#F7F8FF;cursor:pointer;font-size:13px;font-weight:600;color:#3547C8">
-          📎 Foto of PDF van bon
-          <input type="file" accept="image/*,application/pdf" style="display:none" onchange="okLijnFoto(${i},this)">
+          📎 Foto's of PDF van bon toevoegen
+          <input type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="okLijnFoto(${i},this)">
         </label>
         <div id="ok-lijn-${i}-foto-status" style="font-size:11px;color:#888;margin-top:4px"></div>
       </div>
@@ -11752,62 +11752,87 @@ function okUpdateTotaal() {
 
 // Foto-upload per onkostlijn — zelfde verkleen/upload-patroon als elders
 // (Werfoplevering, Levering), maar in de 'fotos'-bucket onder 'onkostennota/'.
+// Meerdere foto's/PDF's per lijn mogelijk (okLijnen[i].fotos = [{url,path}, ...]);
+// elk bestand wordt apart en onafhankelijk van de rest verwerkt/geüpload.
 function okLijnFoto(i, input) {
-  const file = input.files[0];
+  const files = Array.from(input.files || []);
   input.value = '';
-  if (!file || !okLijnen[i]) return;
-  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { okLijnPdf(i, file); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    verkleenFoto(e.target.result, 1200, b64 => {
-      if (!okLijnen[i]) return;
-      okLijnen[i].fotoData = b64;
-      const prev = document.getElementById('ok-lijn-'+i+'-foto-preview');
-      if (prev) prev.innerHTML = `<img src="${b64}" style="width:70px;height:70px;object-fit:cover;border-radius:10px;margin-bottom:6px">`;
-      okUploadLijnFoto(i, b64);
-    });
-  };
-  reader.readAsDataURL(file);
+  if (!files.length || !okLijnen[i]) return;
+  files.forEach(file => {
+    if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { okLijnPdf(i, file); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      verkleenFoto(e.target.result, 1200, b64 => okUploadLijnFoto(i, b64));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function okRenderLijnFotoGallery(i) {
+  const prev = document.getElementById('ok-lijn-'+i+'-foto-preview');
+  if (!prev || !okLijnen[i]) return;
+  prev.innerHTML = okLijnen[i].fotos.map((f, fi) => {
+    const isPdf = /\.pdf(\?|$)/i.test(f.url || '') || f.type === 'pdf';
+    const inhoud = isPdf
+      ? `<div style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:26px;border-radius:8px;border:1px solid #e4e6f0">📄</div>`
+      : `<img src="${escapeHtml(f.url)}" style="width:60px;height:60px;object-fit:cover;border-radius:8px">`;
+    return `<div style="position:relative">${inhoud}${f.bezig ? '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.6);border-radius:8px;font-size:11px">⏳</div>' : ''}
+      <button type="button" onclick="okVerwijderLijnFoto(${i},${fi})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#A32D2D;color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
+    </div>`;
+  }).join('');
+}
+function okVerwijderLijnFoto(i, fi) {
+  // De 'fotos'-bucket laat enkel toevoegen toe, geen verwijderen vanop een ploegbaas-
+  // toestel (anon-rechten) — we verwijderen daarom enkel lokaal uit deze nota; het
+  // bestand zelf blijft (ongebruikt) in de opslag staan.
+  if (!okLijnen[i]) return;
+  okLijnen[i].fotos.splice(fi, 1);
+  okRenderLijnFotoGallery(i);
 }
 // Een PDF-bon gaat ongewijzigd naar de opslag (geen verkleining zoals bij foto's). De opslag weigert bestanden boven 10 MB.
 async function okLijnPdf(i, file) {
   const statusEl = document.getElementById('ok-lijn-'+i+'-foto-status');
-  const prev = document.getElementById('ok-lijn-'+i+'-foto-preview');
   if (file.size > 10 * 1024 * 1024) {
     if (statusEl) statusEl.textContent = 'PDF is te groot (max. 10 MB). Neem een foto of verklein de PDF.';
     return;
   }
-  okLijnen[i].fotoData = null; okLijnen[i].fotoUrl = ''; okLijnen[i].fotoPath = '';
-  if (prev) prev.innerHTML = `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e4e6f0;border-radius:10px;margin-bottom:6px;font-size:13px;max-width:100%"><span style="font-size:22px">📄</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(file.name)}</span></div>`;
-  if (!sb) { if (statusEl) statusEl.textContent = 'Geen verbinding — PDF niet opgeslagen'; return; }
+  const fi = okLijnen[i].fotos.length;
+  okLijnen[i].fotos.push({ url: '', path: '', type: 'pdf', naam: file.name, bezig: true });
+  okRenderLijnFotoGallery(i);
+  if (!sb) { if (statusEl) statusEl.textContent = 'Geen verbinding — PDF niet opgeslagen'; okLijnen[i].fotos.splice(fi,1); okRenderLijnFotoGallery(i); return; }
   if (statusEl) statusEl.textContent = 'PDF uploaden…';
   try {
-    const path = 'onkostennota/' + Date.now() + '-' + i + '.pdf';
+    const path = 'onkostennota/' + Date.now() + '-' + i + '-' + fi + '.pdf';
     const { error: upErr } = await sb.storage.from('fotos').upload(path, file, { contentType: 'application/pdf' });
     if (upErr) throw upErr;
     const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
-    if (!okLijnen[i]) return;
-    okLijnen[i].fotoUrl = pub.publicUrl;
-    okLijnen[i].fotoPath = path;
+    if (!okLijnen[i] || !okLijnen[i].fotos[fi]) return;
+    okLijnen[i].fotos[fi] = { url: pub.publicUrl, path, type: 'pdf' };
+    okRenderLijnFotoGallery(i);
     if (statusEl) statusEl.textContent = 'PDF opgeslagen ✓';
   } catch(e) {
+    if (okLijnen[i]) { okLijnen[i].fotos.splice(fi,1); okRenderLijnFotoGallery(i); }
     if (statusEl) statusEl.textContent = 'Upload mislukt: ' + (e.message || 'onbekende fout');
   }
 }
 async function okUploadLijnFoto(i, b64) {
+  if (!okLijnen[i]) return;
   const statusEl = document.getElementById('ok-lijn-'+i+'-foto-status');
-  if (!sb) { if (statusEl) statusEl.textContent = 'Geen verbinding — foto niet opgeslagen'; return; }
+  const fi = okLijnen[i].fotos.length;
+  okLijnen[i].fotos.push({ url: b64, path: '', type: 'foto', bezig: true });
+  okRenderLijnFotoGallery(i);
+  if (!sb) { if (statusEl) statusEl.textContent = 'Geen verbinding — foto niet opgeslagen'; okLijnen[i].fotos.splice(fi,1); okRenderLijnFotoGallery(i); return; }
   try {
     const blob = dataURLtoBlob(b64);
-    const path = 'onkostennota/' + Date.now() + '-' + i + '.jpg';
+    const path = 'onkostennota/' + Date.now() + '-' + i + '-' + fi + '.jpg';
     const { error: upErr } = await sb.storage.from('fotos').upload(path, blob, { contentType: 'image/jpeg' });
     if (upErr) throw upErr;
     const { data: pub } = sb.storage.from('fotos').getPublicUrl(path);
-    if (!okLijnen[i]) return;
-    okLijnen[i].fotoUrl = pub.publicUrl;
-    okLijnen[i].fotoPath = path;
+    if (!okLijnen[i] || !okLijnen[i].fotos[fi]) return;
+    okLijnen[i].fotos[fi] = { url: pub.publicUrl, path, type: 'foto' };
+    okRenderLijnFotoGallery(i);
     if (statusEl) statusEl.textContent = 'Foto opgeslagen ✓';
   } catch(e) {
+    if (okLijnen[i]) { okLijnen[i].fotos.splice(fi,1); okRenderLijnFotoGallery(i); }
     if (statusEl) statusEl.textContent = 'Upload mislukt: ' + (e.message || 'onbekende fout');
   }
 }
@@ -11883,7 +11908,8 @@ async function submitOnkostennota() {
     lijnen: actieveLijnen.map(l => ({
       datum: l.datum, omschrijving: l.omschrijving.trim(), categorie: l.categorie,
       project: (l.project||'').trim(), bedrag: parseFloat(l.bedrag)||0,
-      foto_url: l.fotoUrl || '', foto_path: l.fotoPath || '',
+      // Meerdere bonnen/foto's per onkost — enkel de klaar-geüploade (niet 'bezig') meesturen.
+      fotos: (l.fotos||[]).filter(f => f.url && !f.bezig).map(f => ({ url: f.url, path: f.path || '' })),
     })),
     totaal,
   };
