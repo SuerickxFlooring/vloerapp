@@ -3768,6 +3768,42 @@ textarea.form-input{min-height:80px;resize:vertical}
 
 </div><!-- .app -->
 
+<!-- ── Hulp & zoeken: "hoe doe ik...?" — compact, blijft boven de bottom-nav vrij
+     (zie chatbot* in het script hieronder). Positie binnen een onzichtbare wrapper
+     die exact de breedte van .app volgt (zelfde centreer-truc als .bottom-nav),
+     zodat dit ook op een breder scherm netjes bij de app blijft i.p.v. los in de
+     hoek van het venster te hangen. ── -->
+<div id="chatbot-wrap" style="position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:600px;height:0;z-index:210;pointer-events:none">
+  <button id="chatbot-fab" onclick="chatbotTogglePanel()" aria-label="Hulp"
+    style="position:absolute;right:14px;bottom:calc(70px + env(safe-area-inset-bottom,0px));width:46px;height:46px;border-radius:50%;background:#3547C8;color:#fff;border:none;font-size:19px;box-shadow:0 4px 14px rgba(20,30,80,.3);cursor:pointer;pointer-events:auto">💬</button>
+  <div id="chatbot-panel" style="display:none;position:absolute;left:14px;right:14px;bottom:calc(122px + env(safe-area-inset-bottom,0px));max-height:min(60vh, calc(100dvh - 180px));background:#fff;border-radius:14px;box-shadow:0 8px 28px rgba(20,30,80,.28);overflow:hidden;flex-direction:column;pointer-events:auto">
+    <div style="background:#1B2B7A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div style="font-weight:700;font-size:14px">💬 Hulp</div>
+      <button onclick="chatbotTogglePanel()" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:12px 16px;overflow-y:auto;flex:1">
+      <div style="position:relative">
+        <input id="chatbot-input" placeholder="bv. hoe geef ik een bestelling door?" autocomplete="off"
+          oninput="chatbotSuggesties(this.value)"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();chatbotVerbergSuggesties();chatbotVraag();} else if(event.key==='Escape'){chatbotVerbergSuggesties();}"
+          style="width:100%;margin-bottom:8px;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box">
+        <div id="chatbot-suggesties" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid #e4e6f0;border-radius:8px;box-shadow:0 4px 14px rgba(20,30,80,.15);z-index:10;max-height:160px;overflow-y:auto;margin-top:-6px"></div>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="chatbotVerbergSuggesties();chatbotVraag()">Zoeken</button>
+      <div id="chatbot-resultaat" style="margin-top:12px;font-size:13px"></div>
+    </div>
+  </div>
+</div>
+<style>
+/* Vanaf 1024px toont de app een zijbalk i.p.v. de bottom-nav (zie .bottom-nav
+   display:none hierboven) — dan hoeft de chatbot-knop niet langer plaats te
+   laten voor de verdwenen navigatiebalk. */
+@media (min-width:1024px){
+  #chatbot-fab{bottom:20px!important}
+  #chatbot-panel{bottom:76px!important}
+}
+</style>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 // KAART VAN DIT BESTAND — lees dit eerst
@@ -5610,6 +5646,180 @@ function go(id) {
   if (toegangGeweigerd()) {
     if (toegangStaat.veiligheid_ok && VEILIGHEIDS_SCHERMEN.includes(id)) verbergToegangScherm(); else toonToegangScherm();
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// HULP-CHATBOT — "hoe doe ik...?"
+// Zelfde insteek als de hulp-chatbot in WerfKompas Beheer: bewust GEEN open
+// LLM-chat, enkel vaste "hoe doe ik"-vragen die rechtstreeks naar het juiste
+// scherm springen via go() — nooit een gegokt antwoord over echte data.
+// ═══════════════════════════════════════════════════════════
+const CHATBOT_FAQ = [
+  { vraag:'Hoe geef ik een bestelling door?', woorden:['bestelling','materiaal bestellen'],
+    titel:'Een bestelling doorgeven', tekst:'Ga naar Bestellingen en vul de werf en de gewenste producten in.',
+    actie:()=>go('s-bestelling') },
+  { vraag:'Is mijn bestelling al verwerkt?', woorden:['bestelling verwerkt','status bestelling','mijn bestelling'],
+    titel:'Status van je bestellingen opvolgen', tekst:'Bij Bestellingen staat onderaan "Mijn bestellingen" — daar zie je de status van alles wat je doorgaf, ook vanaf een ander toestel.',
+    actie:()=>go('s-bestelling') },
+  { vraag:'Hoe meld ik een defect toestel of voertuig?', woorden:['defect toestel','kapot toestel','defect voertuig','herstelling'],
+    titel:'Een defect toestel of voertuig melden', tekst:'Ga naar Herstellingen en kies Tool of Voertuig.',
+    actie:()=>go('s-herstelling') },
+  { vraag:'Hoe vul ik een regiebon in?', woorden:['regiebon'],
+    titel:'Een regiebon invullen', tekst:'Ga naar Regiebon en vul de gegevens in.',
+    actie:()=>go('s-regiebon') },
+  { vraag:'Hoe meld ik een retour?', woorden:['retour','materiaal terugbrengen'],
+    titel:'Een retour melden', tekst:'Ga naar Retour en vul aan welk product terugkomt.',
+    actie:()=>go('s-retour') },
+  { vraag:'Hoe vul ik de dagregistratie in?', woorden:['dagregistratie'],
+    titel:'De dagregistratie invullen', tekst:'Ga naar Dagregistratie en vul het verbruikte materiaal en de werfgegevens in.',
+    actie:()=>go('s-registratie') },
+  { vraag:'Hoe vul ik de LMRA in?', woorden:['lmra'],
+    titel:'De LMRA invullen', tekst:'Ga naar LMRA — vul deze elke ochtend in vóór de start van de werken.',
+    actie:()=>go('s-lmra') },
+  { vraag:'Hoe vul ik een onkostennota in?', woorden:['onkostennota','onkosten'],
+    titel:'Een onkostennota invullen', tekst:'Ga naar Onkostennota en voeg je kosten met foto toe.',
+    actie:()=>go('s-onkostennota') },
+  { vraag:'Waar vind ik documenten van mijn werf?', woorden:['document','vgm','tra','offerte','wms'],
+    titel:'Documenten van een werf bekijken', tekst:'Ga naar Documenten en kies de werf — daar staan VGM, TRA, offerte en andere bestanden.',
+    actie:()=>go('s-documenten') },
+  { vraag:'Hoe geef ik een levering door?', woorden:['levering'],
+    titel:'Een levering doorgeven', tekst:'Ga naar Levering en vul in wat er geleverd is.',
+    actie:()=>go('s-levering') },
+  { vraag:'Hoe start ik een startwerkbespreking?', woorden:['startwerkbespreking','swb','startwerk'],
+    titel:'Een startwerkbespreking invullen', tekst:'Ga naar Startwerkbespreking en kies de werf.',
+    actie:()=>go('s-startwerk-kies') },
+  { vraag:'Hoe maak ik een werfoplevering?', woorden:['werfoplevering','oplevering'],
+    titel:'Een werfoplevering invullen', tekst:'Ga naar Werfoplevering en kies de werf.',
+    actie:()=>go('s-werfoplevering-kies') },
+  { vraag:'Waar vind ik mijn planning?', woorden:['planning','ingepland'],
+    titel:'Je planning bekijken', tekst:'Ga naar Planning — daar zie je waar je deze week ingedeeld staat.',
+    actie:()=>go('s-planning') },
+  { vraag:'Hoe meld ik een aanrijding?', woorden:['aanrijding','ongeval'],
+    titel:'Een aanrijding melden', tekst:'Ga naar Aanrijding voor het digitale Europees aanrijdingsformulier.',
+    actie:()=>go('s-aanrijding') },
+  { vraag:'Waar vind ik handleidingen?', woorden:['handleiding'],
+    titel:'Handleidingen bekijken', tekst:'Ga naar Handleidingen voor uitleg per product/systeem.',
+    actie:()=>go('s-handleidingen') },
+  { vraag:'Waar vind ik het weeknieuws?', woorden:['weeknieuws','nieuw product'],
+    titel:'Het weeknieuws bekijken', tekst:'Ga naar Weeknieuws voor de laatste updates over producten en werkwijzen.',
+    actie:()=>go('s-weeknieuws') },
+];
+
+function chatbotTogglePanel(){
+  const el = document.getElementById('chatbot-panel');
+  const open = el.style.display === 'flex';
+  el.style.display = open ? 'none' : 'flex';
+  if(!open) document.getElementById('chatbot-input').focus();
+  else chatbotVerbergSuggesties();
+}
+function chatbotVerbergSuggesties(){
+  const el = document.getElementById('chatbot-suggesties');
+  el.style.display = 'none'; el.innerHTML = '';
+}
+
+let chatbotSuggestieCache = [];
+// Zelfde "bevat één getypt woord"-matching als de hulp-chatbot in WerfKompas
+// Beheer: zo toont bv. al "hoe" meteen alle "Hoe ...?"-vragen.
+function chatbotSuggesties(tekst){
+  const q = tekst.trim().toLowerCase();
+  const el = document.getElementById('chatbot-suggesties');
+  if(q.length < 2){ chatbotVerbergSuggesties(); return; }
+  const getypteWoorden = q.split(/\s+/).filter(w=>w.length>=3);
+  const matcht = s => {
+    const sl = s.toLowerCase();
+    if(sl.startsWith(q)) return true;
+    return getypteWoorden.some(w=>sl.includes(w));
+  };
+  const hits = CHATBOT_FAQ.filter(f=>matcht(f.vraag)).map(f=>f.vraag).slice(0, 6);
+  if(!hits.length){ chatbotVerbergSuggesties(); return; }
+  el.innerHTML = hits.map((h,i)=>
+    `<div onclick="chatbotKiesSuggestie(${i})" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #eee">${escapeHtml(h)}</div>`
+  ).join('');
+  chatbotSuggestieCache = hits;
+  el.style.display = 'block';
+}
+function chatbotKiesSuggestie(i){
+  const h = chatbotSuggestieCache[i];
+  if(!h) return;
+  document.getElementById('chatbot-input').value = h;
+  chatbotVerbergSuggesties();
+  chatbotVraag();
+}
+
+function chatbotVindFaq(tekst){
+  const q = tekst.toLowerCase();
+  return CHATBOT_FAQ.find(f=>f.woorden.some(w=>q.includes(w))) || null;
+}
+let chatbotLaatsteFaq = null;
+function chatbotUitvoerenFaq(){
+  if(chatbotLaatsteFaq){ chatbotTogglePanel(); chatbotLaatsteFaq.actie(); }
+}
+
+// "Is mijn bestelling al verwerkt?" — rechtstreeks beantwoord uit de al geladen
+// bestServerCache (alle toestellen van deze ploegbaas, zie bestLaadServerLijst)
+// + de lokaal nog niet verstuurde bestellingen, i.p.v. enkel door te verwijzen
+// naar het Bestellingen-scherm.
+function chatbotVindBestelStatusAntwoord(tekst){
+  const q = tekst.toLowerCase();
+  if(!/bestelling/.test(q)) return null;
+  if(!/(verwerkt|status|klaar)/.test(q)) return null;
+  const serverKaarten = bestServerCache || [];
+  const nogNietVerstuurd = bestLaad().filter(b=>!b._synced).length;
+  return { serverKaarten, nogNietVerstuurd };
+}
+
+function chatbotVraag(retryGedaan){
+  const tekst = (document.getElementById('chatbot-input').value||'').trim();
+  const out = document.getElementById('chatbot-resultaat');
+  if(!tekst){ out.innerHTML=''; return; }
+
+  const bestelstatus = chatbotVindBestelStatusAntwoord(tekst);
+  if(bestelstatus){
+    const mij = huidigeGebruiker();
+    if(!mij){
+      out.innerHTML = `<div style="font-size:12.5px;color:#999">Enkel gekend wanneer je als ploegbaas ingelogd bent.</div>`;
+    } else if(!bestelstatus.serverKaarten.length && !retryGedaan){
+      // Nog niets opgehaald deze sessie — één keer vers ophalen en herbevragen
+      // (retryGedaan voorkomt een oneindige lus als er écht niets bij kantoor
+      // bekend is).
+      out.innerHTML = `<div style="font-size:12.5px;color:#999">⏳ Ophalen bij kantoor…</div>`;
+      bestLaadServerLijst().then(()=>{
+        if((document.getElementById('chatbot-input').value||'').trim() === tekst) chatbotVraag(true);
+      });
+    } else if(!bestelstatus.serverKaarten.length){
+      out.innerHTML = `<div style="font-size:12.5px;color:#999">Geen bestellingen van jou gevonden bij kantoor (laatste 14 dagen).${bestelstatus.nogNietVerstuurd?` Er ${bestelstatus.nogNietVerstuurd===1?'staat':'staan'} nog ${bestelstatus.nogNietVerstuurd} op dit toestel te wachten op verzending.`:''}</div>`;
+    } else {
+      const regels = bestelstatus.serverKaarten.map(k => {
+        const { tekst: statusTekst } = bestStatusVanItems(k.items);
+        return `<div style="margin-bottom:5px"><strong>${escapeHtml(k.werfnaam||k.project)}</strong> — ${escapeHtml(statusTekst)}</div>`;
+      }).join('');
+      out.innerHTML = `<div style="background:#f5f6fa;border-radius:10px;padding:10px 12px">
+        <div style="font-weight:700;margin-bottom:6px">📦 Jouw bestellingen</div>
+        ${regels}
+        ${bestelstatus.nogNietVerstuurd?`<div style="font-size:12px;color:#a66d00;margin-top:4px">+ ${bestelstatus.nogNietVerstuurd} nog niet verstuurd vanaf dit toestel</div>`:''}
+        <button class="btn-primary" style="width:100%;margin-top:8px" onclick="chatbotTogglePanel();go('s-bestelling')">Ga naar Bestellingen</button>
+      </div>`;
+    }
+    return;
+  }
+
+  const faq = chatbotVindFaq(tekst);
+  if(faq){
+    chatbotLaatsteFaq = faq;
+    out.innerHTML = `<div style="background:#f5f6fa;border-radius:10px;padding:10px 12px">
+      <div style="font-weight:700">${escapeHtml(faq.titel)}</div>
+      <div style="font-size:12.5px;color:#555;margin:4px 0 8px">${escapeHtml(faq.tekst)}</div>
+      <button class="btn-primary" style="width:100%" onclick="chatbotUitvoerenFaq()">Ga erheen</button>
+    </div>`;
+    return;
+  }
+  out.innerHTML = `<div style="font-size:12px;color:#999">Niets herkend. Probeer bv.:</div>
+    <ul style="font-size:12px;color:#999;margin:6px 0 0 18px;padding:0">
+      <li>"hoe geef ik een bestelling door?"</li>
+      <li>"hoe meld ik een defect toestel?"</li>
+      <li>"waar vind ik documenten van mijn werf?"</li>
+      <li>"hoe vul ik de LMRA in?"</li>
+    </ul>`;
 }
 
 // SDS/TDS worden nu gelezen uit Google Sheets (kolommen T-Y)
