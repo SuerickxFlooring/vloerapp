@@ -3899,6 +3899,9 @@ const TOESTEL_RPC = {
   submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p', submit_bestelling: 'p', app_bestelling_status: 'p', app_mijn_bestellingen: 'p',
   submit_regiebon: 'p_bon', update_aanrijding: 'p', submit_aanrijding: 'p', submit_swb: 'p', submit_werfoplevering: 'p',
   submit_onkostennota: 'p', submit_lmra: 'p',
+  // Afgeschermde lees-RPC's (vervangen de vroegere directe cockpit-tabel-reads):
+  app_werven: 'p', app_bijlagen_index: 'p', app_bijlagen: 'p', app_plaatsbezoeken: 'p',
+  app_meetstaatposten: 'p', app_leveringen_vandaag: 'p', app_koppel_meetstaat: 'p', app_weekbriefing: 'p',
 };
 const VEILIGHEIDS_SCHERMEN = ['s-lmra', 's-swb-invullen', 's-aanrijding'];
 let toegangStaat = { toegang: 'ok', veiligheid_ok: true };
@@ -4100,11 +4103,8 @@ async function initDocumenten() {
   // startwerkbespreking na afloop van de werf nog ingevuld kan worden i.p.v.
   // meteen onvindbaar te zijn zodra WerfKompas Beheer het project archiveert.
   const [projRes, bijlRes] = await Promise.all([
-    client.from('cockpit_projecten')
-      .select('id,projectnummer,werfnaam,startdatum,einddatum,gearchiveerd')
-      .or(`gearchiveerd.eq.false,and(gearchiveerd.eq.true,einddatum.gte.${docVijfDagenGeleden()})`)
-      .order('startdatum', { ascending: true }),
-    client.from('cockpit_bijlagen').select('project_id,type')
+    client.rpc('app_werven', { p: {} }),
+    client.rpc('app_bijlagen_index', { p: {} })
   ]);
   if (projRes.error) {
     lijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(projRes.error.message)}</div>`;
@@ -4228,8 +4228,7 @@ async function kiesDocProject(projectId) {
   bijlLijst.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px 0">Laden...</div>';
 
   const client = initSbCockpit();
-  const { data, error } = await client.from('cockpit_bijlagen')
-    .select('*').eq('project_id', projectId).order('geupload_op', { ascending: false });
+  const { data, error } = await client.rpc('app_bijlagen', { p: { project_id: String(projectId) } });
   if (error) {
     bijlLijst.innerHTML = `<div style="color:#c0392b;text-align:center;padding:20px 0">Fout bij laden: ${escapeHtml(error.message)}</div>`;
     return [];
@@ -4313,8 +4312,7 @@ async function laadPlaatsbezoekenVoorProject(projectId, proj) {
   wrap.innerHTML = '';
   const client = initSbCockpit();
   if (!client) return;
-  const { data, error } = await client.from('cockpit_plaatsbezoeken')
-    .select('*').eq('project_id', projectId).order('datum', { ascending: false });
+  const { data, error } = await client.rpc('app_plaatsbezoeken', { p: { project_id: String(projectId) } });
   if (error || !data || !data.length) return;
   pbvBezoeken = data;
   wrap.innerHTML = data.map((b, i) => `
@@ -4602,12 +4600,8 @@ async function laadWeeknieuws() {
   const client = initSbCockpit();
   if (!client) return null;
   const vandaag = new Date().toISOString().split('T')[0];
-  const { data } = await client.from('weekbriefing')
-    .select('id,titel,pdf_path,geldig_van,geldig_tot')
-    .lte('geldig_van', vandaag)
-    .gte('geldig_tot', vandaag)
-    .order('geldig_van', { ascending: false });
-  wnGegevens = data || [];
+  const { data } = await client.rpc('app_weekbriefing', { p: {} });
+  wnGegevens = (data || []).filter(b => b.geldig_van <= vandaag && b.geldig_tot >= vandaag);
   return wnGegevens;
 }
 
@@ -4659,10 +4653,7 @@ async function initWeeknieuws() {
     return;
   }
   const vandaag = new Date().toISOString().split('T')[0];
-  const { data, error } = await client.from('weekbriefing')
-    .select('id,titel,pdf_path,geldig_van,geldig_tot')
-    .order('geldig_van', { ascending: false })
-    .limit(20);
+  const { data, error } = await client.rpc('app_weekbriefing', { p: {} });
   if (error || !data || !data.length) {
     lijst.innerHTML = '<div style="color:#bbb;text-align:center;padding:30px 0">Nog geen briefingen beschikbaar.</div>';
     return;
@@ -5351,9 +5342,7 @@ async function laadMijnDashboard() {
         try {
           const client = initSbCockpit();
           if (!client) return [];
-          const { data } = await client.from('cockpit_bestellingen')
-            .select('id,werfnaam,product,aantal,eenheid,leverdatum,status')
-            .eq('leverdatum', vandaag);
+          const { data } = await client.rpc('app_leveringen_vandaag', { p: {} });
           return data || [];
         } catch(e) { console.warn('[Dashboard] bestellingen laden mislukt:', e.message); return []; }
       })(),
@@ -5372,16 +5361,16 @@ async function laadMijnDashboard() {
         try {
           const client = initSbCockpit();
           if (!client) return [];
-          const { data } = await client.from('cockpit_projecten').select('id,projectnummer,werfnaam,einddatum').eq('gearchiveerd', false);
-          return data || [];
+          const { data } = await client.rpc('app_werven', { p: {} });
+          return (data || []).filter(p => !p.gearchiveerd);
         } catch(e) { console.warn('[Dashboard] projecten (einddatum) laden mislukt:', e.message); return []; }
       })(),
       (async () => {
         try {
           const client = initSbCockpit();
           if (!client) return [];
-          const { data } = await client.from('cockpit_bijlagen').select('id,project_id,werfoplevering_werken_json').eq('type', 'Werfoplevering');
-          return data || [];
+          const { data } = await client.rpc('app_bijlagen_index', { p: {} });
+          return (data || []).filter(b => b.type === 'Werfoplevering');
         } catch(e) { console.warn('[Dashboard] werfoplevering-bijlagen laden mislukt:', e.message); return []; }
       })(),
       sb.from('werfoplevering_invullingen').select('project'),
@@ -6091,13 +6080,11 @@ async function laadMeetstaatPostenVoorRegistratie() {
   const wrap = document.getElementById('r-meetstaat-wrap');
   if (wrap) wrap.innerHTML = '<div style="color:#aaa;font-size:13px;padding:6px 0">Meetstaatposten laden...</div>';
   try {
-    const { data: projs } = await client.from('cockpit_projecten')
-      .select('id,projectnummer,werfnaam').eq('gearchiveerd', false);
-    const match = (projs || []).find(p => tekstOverlap(projectTekst, p.projectnummer || '') || tekstOverlap(projectTekst, p.werfnaam || ''));
+    const { data: projsRaw } = await client.rpc('app_werven', { p: {} });
+    const projs = (projsRaw || []).filter(p => !p.gearchiveerd);
+    const match = projs.find(p => tekstOverlap(projectTekst, p.projectnummer || '') || tekstOverlap(projectTekst, p.werfnaam || ''));
     if (!match) { regMeetstaatPosten = []; renderMeetstaatPicker(); return; }
-    const { data: posten } = await client.from('cockpit_meetstaatposten')
-      .select('id,omschrijving,aantal,eenheid')
-      .eq('project_id', match.id).eq('actief', true).order('volgnr');
+    const { data: posten } = await client.rpc('app_meetstaatposten', { p: { project_id: String(match.id) } });
     regMeetstaatPosten = posten || [];
   } catch(e) {
     console.warn('[Meetstaat] Laden mislukt:', e.message);
@@ -8074,9 +8061,7 @@ async function insertRegistratieInSupabase(reg) {
     try {
       const cpClient = initSbCockpit();
       if (cpClient) {
-        await cpClient.from('cockpit_meetstaat_koppelingen').insert(
-          reg.meetstaatpostIds.map(mid => ({ meetstaatpost_id: mid, registratie_id: registratieId }))
-        );
+        await cpClient.rpc('app_koppel_meetstaat', { p: { registratie_id: String(registratieId), meetstaatpost_ids: reg.meetstaatpostIds.map(String) } });
       }
     } catch(e) {
       console.warn('[Meetstaat] Koppeling opslaan mislukt:', e.message);
@@ -11915,10 +11900,8 @@ function okAlgemeneHtml(i, ql) {
 async function okLaadProjecten() {
   const client = initSbCockpit();
   if (!client) return;
-  const { data } = await client.from('cockpit_projecten')
-    .select('id,projectnummer,werfnaam,startdatum,einddatum')
-    .eq('gearchiveerd', false);
-  okProjecten = data || [];
+  const { data } = await client.rpc('app_werven', { p: {} });
+  okProjecten = (data || []).filter(p => !p.gearchiveerd);
 }
 function okProjectRelevant(p) {
   const vandaag = new Date().toISOString().slice(0, 10);
@@ -12290,11 +12273,8 @@ async function lmraLaadProjecten() {
   const client = initSbCockpit();
   if (client) {
     try {
-      const { data } = await client.from('cockpit_projecten')
-        .select('id,projectnummer,werfnaam,startdatum,einddatum')
-        .eq('gearchiveerd', false)
-        .order('startdatum', { ascending: true });
-      docState.projecten = data || [];
+      const { data } = await client.rpc('app_werven', { p: {} });
+      docState.projecten = (data || []).filter(p => !p.gearchiveerd);
     } catch(e) { console.warn('[LMRA] projecten laden mislukt:', e.message); }
   }
   const projs = docState.projecten || [];
