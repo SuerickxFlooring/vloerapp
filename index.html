@@ -3860,7 +3860,7 @@ function initSupabase() {
 const TOESTEL_ID_SLEUTEL = 'wk_toestel_id';
 const TOESTEL_STAAT_SLEUTEL = 'wk_toestel_staat';
 const TOESTEL_RPC = {
-  submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p', submit_bestelling: 'p', app_bestelling_status: 'p',
+  submit_levering: 'p', submit_uren: 'p', submit_registratie: 'p', submit_retour: 'p', submit_herstelling: 'p', submit_bestelling: 'p', app_bestelling_status: 'p', app_mijn_bestellingen: 'p',
   submit_regiebon: 'p_bon', update_aanrijding: 'p', submit_aanrijding: 'p', submit_swb: 'p', submit_werfoplevering: 'p',
   submit_onkostennota: 'p', submit_lmra: 'p',
 };
@@ -8364,6 +8364,7 @@ function initBestelling() {
   document.getElementById('best-status').innerHTML = '';
   bestResync();
   bestRenderLijst();
+  bestLaadServerLijst();
 }
 
 function bestLijnen() {
@@ -8480,10 +8481,56 @@ function bestStatusTekst(r) {
   return { tekst: '🕓 Nog niet verwerkt', kleur: '#8a6d1a' };
 }
 
+// Zelfde als bestStatusTekst, maar rechtstreeks op de productregels van een server-kaart
+// (zie bestLaadServerLijst) — die kennen ook per regel een eventuele "hoeveelheid klaar"
+// die kantoor invulde (bv. bij een deels op voorraad product).
+function bestStatusVanItems(items) {
+  const klaarmeldingen = items.filter(i => i.hoeveelheid_klaar).map(i => `📦 ${i.product}: ${i.hoeveelheid_klaar}`);
+  const verwerkt = items.filter(i => i.status !== 'Nog te verwerken').length;
+  const basis = verwerkt >= items.length ? { tekst: '✅ Verwerkt door kantoor', kleur: '#3B6D11' }
+    : verwerkt > 0 ? { tekst: `⏳ Deels verwerkt (${verwerkt}/${items.length})`, kleur: '#8a6d1a' }
+    : { tekst: '🕓 Nog niet verwerkt', kleur: '#8a6d1a' };
+  return { ...basis, klaarmeldingen };
+}
+
+// Bestellingen van de ingelogde ploegbaas bij kantoor, groepeert de platte rijen
+// (per client_timestamp) tot kaarten in hetzelfde formaat als de lokale lijst.
+function bestKaartenVanServer(rijen) {
+  const map = new Map();
+  for (const r of rijen || []) {
+    if (!map.has(r.client_timestamp)) map.set(r.client_timestamp, { timestamp: r.client_timestamp, project: r.projectnummer, werfnaam: r.werfnaam, datum: r.datum, items: [], _synced: true, _server: true });
+    map.get(r.client_timestamp).items.push({ product: r.product, aantal: r.aantal, eenheid: r.eenheid, status: r.status, hoeveelheid_klaar: r.hoeveelheid_klaar });
+  }
+  return [...map.values()];
+}
+
+let bestServerCache = [];
+
+// Haalt bij kantoor alle bestellingen van de ingelogde ploegbaas op — ongeacht met welk
+// toestel ze oorspronkelijk werden doorgegeven, zodat "Mijn bestellingen" ook op een ander
+// toestel dan waarmee besteld werd, klopt.
+async function bestLaadServerLijst() {
+  const mij = huidigeGebruiker();
+  if (!mij) { bestServerCache = []; return; }
+  const client = initSbCockpit();
+  if (!client) return;
+  try {
+    const { data, error } = await client.rpc('app_mijn_bestellingen', { p: { ploegbaas: mij.naam } });
+    if (error) return;
+    bestServerCache = bestKaartenVanServer(data);
+    bestRenderLijst();
+  } catch (e) { /* stil negeren: de lokale lijst blijft gewoon werken */ }
+}
+
 function bestRenderLijst() {
   // Recente dagen (niet enkel vandaag) zodat de ploegbaas zijn bestellingen kan opvolgen.
   const grens = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10);
-  const lijst = bestLaad().filter(b => (b.datum || '') >= grens);
+  const serverTs = new Set(bestServerCache.map(k => k.timestamp));
+  // Lokale lijst: enkel wat nog niet via de server-lijst (alle toestellen) binnenkomt —
+  // dat is normaliter enkel wat op dit toestel nog niet (volledig) verstuurd is.
+  const lokaal = bestLaad().filter(b => (b.datum || '') >= grens && !serverTs.has(b.timestamp));
+  const lijst = [...bestServerCache.filter(k => (k.datum || '') >= grens), ...lokaal]
+    .sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
   document.getElementById('best-lijst-wrap').style.display = lijst.length ? 'block' : 'none';
   // Een nog niet verstuurde bestelling toont de werkelijke oorzaak zodra die bekend is
   // (zie bestZetLaatsteFout) — "wacht op verbinding" enkel wanneer het toestel écht
@@ -8492,13 +8539,22 @@ function bestRenderLijst() {
     if (b._laatsteFout && navigator.onLine) return `❌ ${escapeHtml(b._laatsteFout)}`;
     return navigator.onLine ? '🔄 wordt verstuurd…' : '📴 wacht op verbinding';
   };
-  document.getElementById('best-lijst').innerHTML = lijst.slice().reverse().map(b =>
-    `<div data-ts="${escapeHtml(b.timestamp || '')}" data-synced="${b._synced ? '1' : '0'}" style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
+  document.getElementById('best-lijst').innerHTML = lijst.map(b => {
+    let statusHtml;
+    if (b._server) {
+      const { tekst, kleur, klaarmeldingen } = bestStatusVanItems(b.items);
+      statusHtml = `<div class="best-status-regel" style="font-size:12px;margin-top:3px;color:${kleur}">${tekst}</div>`
+        + klaarmeldingen.map(m => `<div style="font-size:12px;margin-top:2px;color:#92600C">${escapeHtml(m)}</div>`).join('');
+    } else {
+      statusHtml = `<div class="best-status-regel" style="font-size:12px;margin-top:3px;color:${b._laatsteFout && navigator.onLine ? '#A32D2D' : '#888'}">${b._synced ? '⏳ status laden…' : nietVerstuurdLabel(b)}</div>`;
+    }
+    return `<div data-ts="${escapeHtml(b.timestamp || '')}" data-synced="${b._synced ? '1' : '0'}" style="background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:13px">
       <div style="font-weight:700">${escapeHtml(b.werfnaam || b.project)} <span style="font-weight:400;color:#999;font-size:11px">· ${escapeHtml(b.datum || '')}</span></div>
       <div style="color:#555;margin-top:2px">${b.items.map(i => escapeHtml(((i.aantal ? i.aantal + ' ' + (i.eenheid || '') + ' ' : '')) + i.product)).join(', ')}</div>
-      <div class="best-status-regel" style="font-size:12px;margin-top:3px;color:${b._laatsteFout && navigator.onLine ? '#A32D2D' : '#888'}">${b._synced ? '⏳ status laden…' : nietVerstuurdLabel(b)}</div>
-    </div>`).join('');
-  bestStatusLaden(lijst.filter(b => b._synced).map(b => b.timestamp));
+      ${statusHtml}
+    </div>`;
+  }).join('');
+  bestStatusLaden(lijst.filter(b => b._synced && !b._server).map(b => b.timestamp));
 }
 
 // Vraagt bij kantoor op of de doorgegeven bestellingen al verwerkt zijn en werkt
@@ -8801,6 +8857,7 @@ window.addEventListener('online', () => {
   syncPendingRetours();
   syncPendingHerstellingen();
   bestResync(); // ontbrak hier — een mislukte/wachtende bestelling werd anders pas opnieuw verstuurd bij het heropenen van het scherm
+  bestLaadServerLijst();
   loadRemoteData();
   controleerToegang();
 });
