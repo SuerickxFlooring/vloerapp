@@ -876,7 +876,7 @@ textarea.form-input{min-height:80px;resize:vertical}
       </div>
 
       <div class="form-group">
-        <label class="form-label">Datum</label>
+        <label class="form-label">Datum nodig</label>
         <input type="date" class="form-input" id="best-datum">
       </div>
 
@@ -8602,6 +8602,26 @@ function initBestelling() {
   bestResync();
   bestRenderLijst();
   bestLaadServerLijst();
+  // Cockpit-projecten aanvullen (asynchroon, niet-blokkend) — toont alle actieve werven,
+  // ook als er vandaag geen planning is voor deze ploegbaas.
+  (async () => {
+    try {
+      const client = initSbCockpit();
+      if (!client) return;
+      const { data } = await client.rpc('app_werven', { p: {} });
+      if (!data) return;
+      const sel = document.getElementById('best-project');
+      if (!sel) return;
+      const bestaand = new Set(Array.from(sel.options).map(o => o.value));
+      const manueel = sel.querySelector('option[value="__manueel__"]');
+      (data || []).filter(p => !p.gearchiveerd).forEach(p => {
+        const waarde = p.projectnummer + (p.werfnaam ? ' — ' + p.werfnaam : '');
+        if (!waarde || bestaand.has(waarde)) return;
+        bestaand.add(waarde);
+        sel.insertBefore(new Option(waarde, waarde), manueel);
+      });
+    } catch(e) { /* stil negeren */ }
+  })();
 }
 
 function bestLijnen() {
