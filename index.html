@@ -8770,6 +8770,7 @@ async function bestResync() {
 function bestStatusTekst(r) {
   if (!r)                     return { tekst: '🕓 Nog niet verwerkt', kleur: '#8a6d1a' };
   if (r.verwerkt >= r.aantal) return { tekst: '✅ Verwerkt door kantoor', kleur: '#3B6D11' };
+  if (r.op_stock_wacht > 0)   return { tekst: '📦 Op stock gezet — wacht op bevestiging magazijn', kleur: '#b45309' };
   if (r.verwerkt > 0)         return { tekst: `⏳ Deels verwerkt (${r.verwerkt}/${r.aantal})`, kleur: '#8a6d1a' };
   return { tekst: '🕓 Nog niet verwerkt', kleur: '#8a6d1a' };
 }
@@ -8779,8 +8780,10 @@ function bestStatusTekst(r) {
 // die kantoor invulde (bv. bij een deels op voorraad product).
 function bestStatusVanItems(items) {
   const klaarmeldingen = items.filter(i => i.hoeveelheid_klaar).map(i => `📦 ${i.product}: ${i.hoeveelheid_klaar}`);
-  const verwerkt = items.filter(i => i.status !== 'Nog te verwerken').length;
+  const opStockWacht = items.filter(i => i.status === 'Op stock — nog af te roepen' && !i.stock_bevestigd).length;
+  const verwerkt = items.filter(i => i.status !== 'Nog te verwerken' && !(i.status === 'Op stock — nog af te roepen' && !i.stock_bevestigd)).length;
   const basis = verwerkt >= items.length ? { tekst: '✅ Verwerkt door kantoor', kleur: '#3B6D11' }
+    : opStockWacht > 0 ? { tekst: '📦 Op stock gezet — wacht op bevestiging magazijn', kleur: '#b45309' }
     : verwerkt > 0 ? { tekst: `⏳ Deels verwerkt (${verwerkt}/${items.length})`, kleur: '#8a6d1a' }
     : { tekst: '🕓 Nog niet verwerkt', kleur: '#8a6d1a' };
   return { ...basis, klaarmeldingen };
@@ -8792,7 +8795,7 @@ function bestKaartenVanServer(rijen) {
   const map = new Map();
   for (const r of rijen || []) {
     if (!map.has(r.client_timestamp)) map.set(r.client_timestamp, { timestamp: r.client_timestamp, project: r.projectnummer, werfnaam: r.werfnaam, datum: r.datum, items: [], _synced: true, _server: true });
-    map.get(r.client_timestamp).items.push({ product: r.product, aantal: r.aantal, eenheid: r.eenheid, status: r.status, hoeveelheid_klaar: r.hoeveelheid_klaar });
+    map.get(r.client_timestamp).items.push({ product: r.product, aantal: r.aantal, eenheid: r.eenheid, status: r.status, hoeveelheid_klaar: r.hoeveelheid_klaar, stock_bevestigd: r.stock_bevestigd });
   }
   return [...map.values()];
 }
