@@ -3902,6 +3902,9 @@ const TOESTEL_RPC = {
   // Afgeschermde lees-RPC's (vervangen de vroegere directe cockpit-tabel-reads):
   app_werven: 'p', app_bijlagen_index: 'p', app_bijlagen: 'p', app_plaatsbezoeken: 'p',
   app_meetstaatposten: 'p', app_leveringen_vandaag: 'p', app_koppel_meetstaat: 'p', app_weekbriefing: 'p',
+  // Afgeschermde lees/schrijf-RPC's (vervangen de vroegere directe assistent-DB-reads):
+  app_lees_catalogus: 'p', app_lees_vandaag: 'p', app_lees_planning_scherm: 'p',
+  app_lees_rapport: 'p', app_lees_home_meldingen: 'p', submit_bestelling_bevestiging: 'p',
 };
 const VEILIGHEIDS_SCHERMEN = ['s-lmra', 's-swb-invullen', 's-aanrijding'];
 let toegangStaat = { toegang: 'ok', veiligheid_ok: true };
@@ -5312,16 +5315,13 @@ async function mijnWervenVandaag(mij) {
   if (!sb && !initSupabase()) return [];
   const vandaag = new Date().toISOString().split('T')[0];
   try {
-    const { data: teamledenData } = await sb.from('teamleden').select('id,naam');
-    const mijnTeamlidIds = (teamledenData || []).filter(t => naamOverlap(t.naam, mij.naam)).map(t => t.id);
-    if (!mijnTeamlidIds.length) return [];
-    const { data: planningData } = await sb.from('planning')
-      .select('werf,status')
-      .eq('datum', vandaag)
-      .in('teamlid_id', mijnTeamlidIds);
-    return [...new Set((planningData || [])
-      .filter(p => p.status !== 'niet_beschikbaar' && p.werf && p.werf.trim())
-      .map(p => p.werf.trim()))];
+    const { data } = await sb.rpc('app_lees_vandaag', { p: { datum: vandaag } });
+    const mijnIds = (data?.teamleden || []).filter(t => naamOverlap(t.naam, mij.naam)).map(t => t.id);
+    return [...new Set(
+      (data?.planning || [])
+        .filter(p => mijnIds.includes(p.teamlid_id) && p.status !== 'niet_beschikbaar' && p.werf?.trim())
+        .map(p => p.werf.trim())
+    )];
   } catch(e) {
     console.warn('[Planning] laden mislukt:', e.message);
     return [];
@@ -5344,7 +5344,14 @@ async function laadMijnDashboard() {
   const vandaag = new Date().toISOString().split('T')[0];
 
   try {
-    const werven = await mijnWervenVandaag(mij);
+    // Eén gated RPC haalt alle assistent-DB data op (vervangt mijnWervenVandaag + 5 directe reads)
+    const { data: today } = await sb.rpc('app_lees_vandaag', { p: { datum: vandaag } });
+    const mijnIds = (today?.teamleden || []).filter(t => naamOverlap(t.naam, mij.naam)).map(t => t.id);
+    const werven = [...new Set(
+      (today?.planning || [])
+        .filter(p => mijnIds.includes(p.teamlid_id) && p.status !== 'niet_beschikbaar' && p.werf?.trim())
+        .map(p => p.werf.trim())
+    )];
 
     if (!werven.length) {
       wrap.innerHTML = `<div style="font-weight:700;font-size:16px;margin:4px 0 10px">👋 ${escapeHtml(mij.weergave || mij.naam)}</div>
@@ -5354,10 +5361,13 @@ async function laadMijnDashboard() {
       return;
     }
 
-    const [{ data: regData }, { data: lmraData }, { data: swbData }, bestellingenVandaag, bevestigingenAlle, cockpitProjectenAlle, woBijlagenAlle, { data: woData }] = await Promise.all([
-      sb.from('registraties').select('project,teamleader').eq('datum', vandaag),
-      sb.from('lmra_invullingen').select('project,teamleader').eq('datum', vandaag),
-      sb.from('swb_invullingen').select('project'),
+    const regData           = today?.registraties || [];
+    const lmraData          = today?.lmra || [];
+    const swbData           = today?.swb || [];
+    const bevestigingenAlle = today?.bestelling_bevestigingen || [];
+    const woData            = today?.werfoplevering || [];
+    // Cockpit-data (andere DB) blijft apart zodat een probleem daar de rest niet meeneemt
+    const [bestellingenVandaag, cockpitProjectenAlle, woBijlagenAlle] = await Promise.all([
       // Bestellingen met leverdatum vandaag komen uit het ANDERE Supabase-
       // project (WerfKompas Beheer) — apart afgeschermd zodat een probleem
       // hiermee (bv. dat project tijdelijk onbereikbaar) de rest van het
@@ -5369,14 +5379,6 @@ async function laadMijnDashboard() {
           const { data } = await client.rpc('app_leveringen_vandaag', { p: {} });
           return data || [];
         } catch(e) { console.warn('[Dashboard] bestellingen laden mislukt:', e.message); return []; }
-      })(),
-      // Alle bevestigingen (niet enkel vandaag): een levering die pas een dag
-      // later bevestigd wordt, moet ook dan nog als "Gedaan" tellen.
-      (async () => {
-        try {
-          const { data } = await sb.from('bestelling_bevestigingen').select('bestelling_id');
-          return data || [];
-        } catch(e) { return []; }
       })(),
       // Werfoplevering hoort enkel op/na de laatste dag van de werf te
       // verschijnen (einddatum) — vandaar de projectenlijst (met einddatum)
@@ -5397,7 +5399,6 @@ async function laadMijnDashboard() {
           return (data || []).filter(b => b.type === 'Werfoplevering');
         } catch(e) { console.warn('[Dashboard] werfoplevering-bijlagen laden mislukt:', e.message); return []; }
       })(),
-      sb.from('werfoplevering_invullingen').select('project'),
     ]);
 
     // Vanaf 12u 's middags nog niet ingevuld? Trek extra aandacht met een rood
@@ -5548,15 +5549,16 @@ async function levBevestigDoorsturen() {
   }
 
   try {
-    const { error } = await sb.from('bestelling_bevestigingen').insert({
+    const { error } = await sb.rpc('submit_bestelling_bevestiging', { p: {
       bestelling_id: bestellingId,
       project: werf,
       product: productLabel || '',
       teamleader: mij ? (mij.weergave || mij.naam) : '',
+      naam: mij ? (mij.weergave || mij.naam) : '',
       datum: new Date().toISOString().split('T')[0],
-      foto_url: fotoUrl,
-    });
-    if (error && error.code !== '23505') throw error; // 23505 = al bevestigd door iemand anders, geen probleem
+      foto_url: fotoUrl || null,
+    }});
+    if (error) throw error; // dubbele bevestiging wordt server-side genegeerd (unique_violation)
   } catch(e) {
     console.warn('[Bevestiging] mislukt:', e.message);
     statusEl.innerHTML = '<div class="err-box">❌ Bevestigen mislukt — probeer opnieuw.</div>';
@@ -5922,12 +5924,12 @@ async function loadRemoteData() {
   try {
     document.getElementById('sync-status').textContent = '🔄 Data synchroniseren met Supabase...';
 
-    const [prodRes, projRes, tlRes, tldRes] = await Promise.all([
-      sb.from('producten').select('*').order('id'),
-      sb.from('projecten').select('*').order('id'),
-      sb.from('teamleaders').select('*').order('id'),
-      sb.from('teamleden').select('*').eq('actief', true).order('volgorde'),
-    ]);
+    const { data: cat, error: catErr } = await sb.rpc('app_lees_catalogus', { p: {} });
+    const prodRes = { data: cat?.producten  || [], error: catErr };
+    const projRes = { data: cat?.projecten  || [], error: catErr };
+    const tlRes   = { data: cat?.teamleaders|| [], error: catErr };
+    const tldRes  = { data: cat?.teamleden  || [], error: catErr };
+    if (cat?.kantoor_personen) okKantoor = cat.kantoor_personen;
 
     if (prodRes.error) console.warn('[Supabase] producten fout:', prodRes.error.message);
     if (projRes.error) console.warn('[Supabase] projecten fout:', projRes.error.message);
@@ -7354,12 +7356,7 @@ async function loadHomeMeldingen(force) {
   if (!force && _cachedMeldingen !== null) return _cachedMeldingen;
   if (!sb) return [];
   try {
-    const { data, error } = await sb
-      .from('home_meldingen')
-      .select('*')
-      .eq('actief', true)
-      .order('volgorde', { ascending: true })
-      .order('aangemaakt_op', { ascending: true });
+    const { data, error } = await sb.rpc('app_lees_home_meldingen', { p: {} });
     _cachedMeldingen = error ? [] : (data || []);
   } catch(e) { _cachedMeldingen = []; }
   return _cachedMeldingen;
@@ -9137,11 +9134,14 @@ async function laadPlanning(force) {
     '<div style="text-align:center;color:#aaa;padding:30px 0;font-size:14px">⏳ Laden…</div>';
 
   try {
-    // Teamleden laden (met cache)
+    // Eén gated RPC haalt teamleden + planning op (vervangt twee directe reads)
+    const { data: planRes, error: planErr } = await sb.rpc('app_lees_planning_scherm', {
+      p: { van: vanDatum, tot: totDatum }
+    });
+    if (planErr) throw planErr;
+
     if (!planningTeamleden.length || force) {
-      const { data: leden } = await sb.from('teamleden').select('*')
-        .eq('actief', true).order('volgorde');
-      planningTeamleden = leden || [];
+      planningTeamleden = planRes?.teamleden || [];
     }
 
     // Persoon-filter opties vullen
@@ -9154,15 +9154,7 @@ async function laadPlanning(force) {
       });
     }
 
-    // Planning laden voor deze week
-    const { data, error } = await sb.from('planning')
-      .select('*, teamleden(naam)')
-      .gte('datum', vanDatum)
-      .lte('datum', totDatum)
-      .order('datum').order('teamlid_id');
-
-    if (error) throw error;
-    planningData = data || [];
+    planningData = planRes?.planning || [];
   } catch(e) {
     document.getElementById('planning-lijst').innerHTML =
       '<div class="err-box">❌ Planning kon niet geladen worden.</div>';
@@ -9528,9 +9520,9 @@ async function initRegiebon() {
   // Altijd vers laden van Supabase (niet afhankelijk van laadvolgorde app)
   if (sb) {
     try {
-      const { data, error } = await sb.from('projecten').select('id, naam, status').order('naam');
-      if (!error && data && data.length) {
-        appData.projects = data.map(r => ({ id: r.id, naam: r.naam, status: r.status }));
+      const { data: cat, error } = await sb.rpc('app_lees_catalogus', { p: {} });
+      if (!error && cat?.projecten?.length) {
+        appData.projects = cat.projecten.map(r => ({ id: r.id, naam: r.naam, status: r.status }));
       }
     } catch(e) { console.warn('Projecten laden mislukt:', e); }
   }
@@ -10052,8 +10044,8 @@ async function rbVerversProjecten() {
   const sel = document.getElementById('rb-project');
   if (!sel || !sb) return;
   try {
-    const { data, error } = await sb.from('projecten').select('id, naam, status').order('naam');
-    if (!error && data) appData.projects = data.map(r => ({ id: r.id, naam: r.naam, status: r.status }));
+    const { data: cat, error } = await sb.rpc('app_lees_catalogus', { p: {} });
+    if (!error && cat?.projecten) appData.projects = cat.projecten.map(r => ({ id: r.id, naam: r.naam, status: r.status }));
   } catch(e) { console.warn('Projecten vernieuwen mislukt:', e); }
   const prjs = (appData.projects && appData.projects.length) ? appData.projects : [];
   sel.innerHTML = '<option value="">Kies project...</option>' +
@@ -11850,8 +11842,9 @@ let okKantoor = null;
 async function okLaadKantoor() {
   try {
     if (!sb && !initSupabase()) return;
-    const { data, error } = await sb.from('kantoor_personen').select('naam,statuut');
-    if (!error && data) okKantoor = data;
+    if (okKantoor) return; // al geladen via app_lees_catalogus bij opstarten
+    const { data: cat, error } = await sb.rpc('app_lees_catalogus', { p: {} });
+    if (!error && cat?.kantoor_personen) okKantoor = cat.kantoor_personen;
   } catch (e) { /* geen verbinding: de vaste kantoorlijst hieronder dient als vangnet */ }
 }
 
@@ -12834,17 +12827,15 @@ async function ververRapport() {
   rapportFilter.project = document.getElementById('rap-project').value || '';
   content.innerHTML = '<div style="text-align:center;color:#888;padding:20px">Laden...</div>';
 
-  let regQ = sb.from('registraties').select('*').gte('datum', rapportFilter.van).lte('datum', rapportFilter.tot);
-  let urenQ = sb.from('uren').select('*').gte('datum', rapportFilter.van).lte('datum', rapportFilter.tot);
-  if (rapportFilter.project) { regQ = regQ.eq('project', rapportFilter.project); urenQ = urenQ.eq('project', rapportFilter.project); }
-
-  const [regRes, urenRes] = await Promise.all([regQ, urenQ]);
-  if (regRes.error || urenRes.error) {
-    content.innerHTML = '<div style="color:#A32D2D;padding:14px">Fout bij laden: ' + escapeHtml((regRes.error||urenRes.error).message) + '</div>';
+  const { data: rapRes, error: rapErr } = await sb.rpc('app_lees_rapport', {
+    p: { van: rapportFilter.van, tot: rapportFilter.tot, project: rapportFilter.project || null }
+  });
+  if (rapErr) {
+    content.innerHTML = '<div style="color:#A32D2D;padding:14px">Fout bij laden: ' + escapeHtml(rapErr.message) + '</div>';
     return;
   }
-  const regs = regRes.data || [];
-  const uren = urenRes.data || [];
+  const regs = rapRes?.registraties || [];
+  const uren = rapRes?.uren || [];
 
   const totaalKg = regs.reduce((s,r) => s + (parseFloat(r.kgOpslag != null ? r.kgOpslag : r.kg)||0), 0);
   const totaalUren = uren.reduce((s,r) => s + (parseFloat(r.aantal_uren)||0), 0);
