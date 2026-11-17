@@ -5345,7 +5345,7 @@ async function laadMijnDashboard() {
 
   try {
     // Eén gated RPC haalt alle assistent-DB data op (vervangt mijnWervenVandaag + 5 directe reads)
-    const { data: today } = await sb.rpc('app_lees_vandaag', { p: { datum: vandaag } });
+    const { data: today, error: todayErr } = await sb.rpc('app_lees_vandaag', { p: { datum: vandaag } });
     const mijnIds = (today?.teamleden || []).filter(t => naamOverlap(t.naam, mij.naam)).map(t => t.id);
     const werven = [...new Set(
       (today?.planning || [])
@@ -5353,20 +5353,12 @@ async function laadMijnDashboard() {
         .map(p => p.werf.trim())
     )];
 
-    if (!werven.length) {
-      wrap.innerHTML = `<div style="font-weight:700;font-size:16px;margin:4px 0 10px">👋 ${escapeHtml(mij.weergave || mij.naam)}</div>
-      <div style="background:#fff;border-radius:var(--card-radius);box-shadow:var(--shadow-sm);padding:16px;text-align:center">
-        <div style="font-size:13px;color:#888">Geen geplande werf gevonden voor vandaag in de Planning.</div>
-      </div>`;
-      return;
-    }
-
     const regData           = today?.registraties || [];
     const lmraData          = today?.lmra || [];
     const swbData           = today?.swb || [];
     const bevestigingenAlle = today?.bestelling_bevestigingen || [];
     const woData            = today?.werfoplevering || [];
-    // Cockpit-data (andere DB) blijft apart zodat een probleem daar de rest niet meeneemt
+    // Cockpit-data (andere DB) altijd parallel laden — ontkoppeld van assistent-DB gate
     const [bestellingenVandaag, cockpitProjectenAlle, woBijlagenAlle] = await Promise.all([
       // Bestellingen met leverdatum vandaag komen uit het ANDERE Supabase-
       // project (WerfKompas Beheer) — apart afgeschermd zodat een probleem
@@ -5404,6 +5396,7 @@ async function laadMijnDashboard() {
     // Vanaf 12u 's middags nog niet ingevuld? Trek extra aandacht met een rood
     // kader rond de taak, bovenop de normale "Nog niet"-pil.
     const naTwaalfUur = new Date().getHours() >= 12;
+    const BESTELLING_MELDING_STATUSSEN = ['Besteld bij leverancier', 'Bevestigd door leverancier'];
 
     const taakRij = (icon, iconBg, label, done, actie, isLast, urgent) => `
       <div onclick='${actie}' style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;${urgent
@@ -5415,6 +5408,35 @@ async function laadMijnDashboard() {
       </div>`;
 
     const naam = escapeHtml(mij.weergave || mij.naam);
+
+    if (!werven.length) {
+      // Leveringen voor déze ploegbaas tonen ook zonder planningscontext
+      const mijnLeveringen = (bestellingenVandaag || [])
+        .filter(b => naamOverlap(b.ploegbaas, mij.naam) && BESTELLING_MELDING_STATUSSEN.includes(b.status));
+      const meldingTekst = todayErr?.message
+        ? `⚠️ Toestelcontrole mislukt — vraag kantoor om uw toestel te bevestigen.`
+        : `Geen geplande werf gevonden voor vandaag in de Planning.`;
+      const meldingKleur = todayErr?.message ? '#A32D2D' : '#888';
+      if (!mijnLeveringen.length) {
+        wrap.innerHTML = `<div style="font-weight:700;font-size:16px;margin:4px 0 10px">👋 ${naam}</div>
+        <div style="background:#fff;border-radius:var(--card-radius);box-shadow:var(--shadow-sm);padding:16px;text-align:center">
+          <div style="font-size:13px;color:${meldingKleur}">${meldingTekst}</div>
+        </div>`;
+        return;
+      }
+      const rijenHtml = mijnLeveringen.map((b, i) => {
+        const bevestigd = (bevestigingenAlle || []).some(v => String(v.bestelling_id) === String(b.id));
+        const hoeveelheid = b.aantal ? ' (' + b.aantal + (b.eenheid ? ' ' + b.eenheid : '') + ')' : '';
+        return taakRij('📦', '#FFF3D6', 'Levering verwacht: ' + escapeHtml(b.product || 'product') + hoeveelheid,
+          bevestigd, bevestigd ? '' : `openLevBevestigModal(${b.id}, ${JSON.stringify(b.werfnaam || '')}, ${JSON.stringify(b.product || '')})`,
+          i === mijnLeveringen.length - 1, false);
+      }).join('');
+      wrap.innerHTML = `<div style="font-weight:700;font-size:16px;margin:4px 0 10px">👋 ${naam}</div>
+        <div style="font-size:13px;color:${meldingKleur};margin-bottom:8px">${meldingTekst}</div>
+        <div style="background:#fff;border-radius:var(--card-radius);box-shadow:var(--shadow-sm);overflow:hidden">${rijenHtml}</div>`;
+      return;
+    }
+
     const kaarten = werven.map((werf, idx) => {
       // Per werf, niet per ploegbaas: zodra één ploegbaas op deze werf de
       // LMRA/dagregistratie van vandaag invulde, is ze voor de werf gedaan en
@@ -5443,7 +5465,6 @@ async function laadMijnDashboard() {
       // "Bevestigd door leverancier") zijn hier écht relevant; een bestelling
       // die nog "Nog niet afroepen" of "Op stock" is, komt nooit vandaag op de
       // werf toe en hoort dus niet in deze melding thuis.
-      const BESTELLING_MELDING_STATUSSEN = ['Besteld bij leverancier', 'Bevestigd door leverancier'];
       (bestellingenVandaag || [])
         .filter(b => tekstOverlap(b.werfnaam, werf) && BESTELLING_MELDING_STATUSSEN.includes(b.status))
         .forEach(b => {
