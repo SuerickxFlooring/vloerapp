@@ -3947,10 +3947,28 @@ function metToestelId(client) {
 function toegangGeweigerd() { return toegangStaat.toegang === 'geblokkeerd' || toegangStaat.toegang === 'wacht'; }
 
 function toegangTekst() {
-  if (toegangStaat.toegang === 'wacht') return { titel: 'Toestel wacht op goedkeuring', tekst: 'Dit toestel is nog niet goedgekeurd door kantoor. Neem contact op met kantoor en probeer daarna opnieuw.' };
+  if (toegangStaat.toegang === 'wacht') return { titel: 'Toestel wacht op goedkeuring', tekst: 'Dit toestel is nog niet goedgekeurd. Vraag goedkeuring aan een beheerder en tik daarna op "Opnieuw controleren".' };
   const tot = toegangStaat.tot ? new Date(toegangStaat.tot) : null;
   const tekst = tot && !isNaN(tot) ? 'Je toegang is gepauzeerd tot ' + tot.toLocaleString('nl-BE', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + '.' : 'Je toegang is gepauzeerd.';
-  return { titel: 'Toegang gepauzeerd', tekst: tekst + ' Neem contact op met kantoor.' };
+  return { titel: 'Toegang gepauzeerd', tekst };
+}
+
+// Namen van wie een toestel kan goedkeuren (admin/support in Beheer). Via de
+// ongegate RPC app_goedkeurders, zodat een nog-niet-goedgekeurd toestel ze toch ziet.
+let goedkeurdersNamen = null;
+async function laadGoedkeurders() {
+  if (goedkeurdersNamen) return goedkeurdersNamen;
+  try {
+    const c = initSbCockpit();
+    const { data } = c ? await c.rpc('app_goedkeurders') : { data: [] };
+    goedkeurdersNamen = (data || []).map(r => r.naam).filter(Boolean);
+  } catch (e) { goedkeurdersNamen = []; }
+  return goedkeurdersNamen;
+}
+function goedkeurdersZin(namen) {
+  if (!namen || !namen.length) return 'een beheerder (admin of support) in WerfKompas Beheer';
+  if (namen.length === 1) return namen[0];
+  return namen.slice(0, -1).join(', ') + ' of ' + namen[namen.length - 1];
 }
 
 function verbergToegangScherm() {
@@ -3973,6 +3991,7 @@ function toonToegangScherm() {
     <div style="font-size:44px;line-height:1">🔒</div>
     <div style="font-size:19px;font-weight:800;color:#1a1a2e;margin:10px 0 6px">${escapeHtml(t.titel)}</div>
     <div style="font-size:14.5px;color:#4b5563;line-height:1.45">${escapeHtml(t.tekst)}</div>
+    <div id="toegang-goedkeurders" style="margin-top:14px;padding:12px 14px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;font-size:13.5px;color:#3730a3;line-height:1.5;text-align:left">Goedkeurders laden…</div>
     ${veilig ? `<div style="margin-top:16px;padding:12px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;text-align:left">
       <div style="font-size:13px;font-weight:700;color:#9a3412;margin-bottom:8px">⚠️ Veiligheid blijft altijd mogelijk</div>
       <button type="button" onclick="openVeiligheidsScherm('s-lmra')" style="width:100%;padding:13px;border:none;border-radius:10px;background:#ea580c;color:#fff;font-size:15px;font-weight:700;margin-bottom:8px">LMRA invullen</button>
@@ -3982,6 +4001,11 @@ function toonToegangScherm() {
     ${huidigeGebruiker() ? `<button type="button" onclick="verbergToegangScherm();algemeenUitloggen()" style="margin-top:10px;background:none;border:none;color:#6b7280;font-size:13px;text-decoration:underline">Andere naam kiezen</button>` : ''}
   </div>`;
   el.style.display = 'flex';
+  laadGoedkeurders().then(namen => {
+    const g = document.getElementById('toegang-goedkeurders');
+    if (!g) return;
+    g.innerHTML = `Vraag goedkeuring voor dit toestel aan <b>${escapeHtml(goedkeurdersZin(namen))}</b>. Zij kunnen je toestel goedkeuren in WerfKompas Beheer. Tik daarna op "Opnieuw controleren".`;
+  });
 }
 
 function openVeiligheidsScherm(id) {
