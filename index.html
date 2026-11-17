@@ -871,8 +871,9 @@ textarea.form-input{min-height:80px;resize:vertical}
 
       <div class="form-group">
         <label class="form-label">Werf</label>
-        <input type="search" class="form-input" id="best-project-zoek" placeholder="Zoek werf…" oninput="bestFilterWerven()" style="margin-bottom:6px">
-        <select class="form-select" id="best-project" onchange="bestProjectGekozen()"></select>
+        <input type="search" class="form-input" id="best-project-zoek" placeholder="Zoek werf…" oninput="bestRenderWerfLijst()" onfocus="bestRenderWerfLijst()" autocomplete="off" style="margin-bottom:6px">
+        <div id="best-project-lijst" style="border:1px solid #ddd;border-radius:10px;max-height:200px;overflow-y:auto;background:#fff"></div>
+        <input type="hidden" id="best-project">
         <input type="text" class="form-input" id="best-project-manueel" placeholder="Projectnummer en naam" style="display:none;margin-top:8px">
       </div>
 
@@ -8571,17 +8572,39 @@ function getBestNaam() {
   return (sel.value || '').trim();
 }
 
-function bestFilterWerven() {
+function bestRenderWerfLijst() {
   const zoek = (document.getElementById('best-project-zoek')?.value || '').toLowerCase().trim();
-  const sel = document.getElementById('best-project');
-  if (!sel) return;
-  let opties; try { opties = JSON.parse(sel.dataset.opties || '[]'); } catch(e) { return; }
-  const huidig = sel.value;
+  const hidden = document.getElementById('best-project');
+  const lijst = document.getElementById('best-project-lijst');
+  if (!lijst || !hidden) return;
+  let opties; try { opties = JSON.parse(hidden.dataset.opties || '[]'); } catch(e) { return; }
+  const huidig = hidden.value;
   const gefilterd = zoek ? opties.filter(o => o.tekst.toLowerCase().includes(zoek)) : opties;
-  sel.innerHTML = '<option value="">Kies werf…</option>'
-    + gefilterd.map(o => `<option value="${escapeHtml(o.waarde)}">${escapeHtml(o.tekst)}</option>`).join('')
-    + `<option value="__manueel__">✏️ Andere werf (zelf invullen)…</option>`;
-  sel.value = huidig || '';
+  const rij = (waarde, tekst) => {
+    const actief = waarde === huidig;
+    return `<div onclick="bestKiesWerf(${JSON.stringify(waarde)})" style="padding:10px 12px;border-bottom:1px solid #f0f2f8;cursor:pointer;font-size:14px${actief ? ';background:#EEF0FC;font-weight:600' : ''}">${escapeHtml(tekst)}</div>`;
+  };
+  lijst.innerHTML = (gefilterd.length
+    ? gefilterd.map(o => rij(o.waarde, o.tekst)).join('')
+    : '<div style="padding:12px;text-align:center;color:#aaa;font-size:13px">Geen werven gevonden</div>')
+    + rij('__manueel__', '✏️ Andere werf (zelf invullen)…');
+}
+
+function bestKiesWerf(waarde) {
+  const hidden = document.getElementById('best-project');
+  if (!hidden) return;
+  hidden.value = waarde;
+  const zoek = document.getElementById('best-project-zoek');
+  if (zoek) {
+    if (waarde && waarde !== '__manueel__') {
+      let opties; try { opties = JSON.parse(hidden.dataset.opties || '[]'); } catch(e) { opties = []; }
+      const opt = opties.find(o => o.waarde === waarde);
+      zoek.value = opt ? opt.tekst : waarde;
+    } else {
+      zoek.value = '';
+    }
+  }
+  bestRenderWerfLijst();
   bestProjectGekozen();
 }
 
@@ -8594,18 +8617,13 @@ function initBestelling() {
   const laatste = vandaagRegs.length ? vandaagRegs[vandaagRegs.length - 1].project : '';
   if (laatste && !opties.some(o => o.waarde === laatste)) opties.unshift({ waarde: laatste, tekst: laatste });
   const sel = document.getElementById('best-project');
-  sel.innerHTML = '<option value="">Kies werf…</option>'
-    + opties.map(o => `<option value="${escapeHtml(o.waarde)}">${escapeHtml(o.tekst)}</option>`).join('')
-    + `<option value="__manueel__">✏️ Andere werf (zelf invullen)…</option>`;
   sel.dataset.opties = JSON.stringify(opties);
-  sel.value = laatste || '';
   document.getElementById('best-datum').value = docVandaag();
   document.getElementById('best-lijnen').innerHTML = '';
   bestVoegLijnToe();
   document.getElementById('best-opmerking').value = '';
   document.getElementById('best-project-manueel').value = '';
-  document.getElementById('best-project-zoek').value = '';
-  bestProjectGekozen();
+  bestKiesWerf(laatste || '');
   const mij = huidigeGebruiker();
   // Ploegbaas op eigen toestel: bestelling gaat vanzelf onder zijn eigen naam, geen
   // keuze nodig. Enkel kantoor/beheer (geen aangemelde ploegbaas) kiest de ploegbaas.
@@ -8637,7 +8655,7 @@ function initBestelling() {
       });
       if (!nieuw.length) return;
       sel.dataset.opties = JSON.stringify([...bestaand, ...nieuw]);
-      bestFilterWerven();
+      bestRenderWerfLijst();
     } catch(e) { /* stil negeren */ }
   })();
 }
