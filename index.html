@@ -13214,9 +13214,24 @@ fixAppHeight();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js')
-    .then(reg => console.log('SW actief:', reg.scope))
+    .then(reg => {
+      console.log('SW actief:', reg.scope);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update();
+      });
+    })
     .catch(err => console.warn('SW mislukt:', err));
+  // Toon toast alleen bij echte update (niet bij eerste installatie)
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return;
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999;cursor:pointer;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+    b.textContent = 'Nieuwe versie beschikbaar — tik om te verversen';
+    b.onclick = () => location.reload();
+    document.body.appendChild(b);
+  });
 }
 </script>
 </body>
