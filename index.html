@@ -8582,7 +8582,7 @@ function bestRenderWerfLijst() {
   const gefilterd = zoek ? opties.filter(o => o.tekst.toLowerCase().includes(zoek)) : opties;
   const rij = (waarde, tekst) => {
     const actief = waarde === huidig;
-    return `<div onclick="bestKiesWerf(${JSON.stringify(waarde)})" style="padding:10px 12px;border-bottom:1px solid #f0f2f8;cursor:pointer;font-size:14px${actief ? ';background:#EEF0FC;font-weight:600' : ''}">${escapeHtml(tekst)}</div>`;
+    return `<div data-waarde="${escapeHtml(waarde)}" onclick="bestKiesWerf(this.dataset.waarde)" style="padding:10px 12px;border-bottom:1px solid #f0f2f8;cursor:pointer;font-size:14px${actief ? ';background:#EEF0FC;font-weight:600' : ''}">${escapeHtml(tekst)}</div>`;
   };
   lijst.innerHTML = (gefilterd.length
     ? gefilterd.map(o => rij(o.waarde, o.tekst)).join('')
@@ -8648,10 +8648,16 @@ function initBestelling() {
       const sel = document.getElementById('best-project');
       if (!sel) return;
       let bestaand; try { bestaand = JSON.parse(sel.dataset.opties || '[]'); } catch(e) { bestaand = []; }
-      const bestaandSet = new Set(bestaand.map(o => o.waarde));
+      // Dedupliceren op projectnummer (code), niet op de volledige tekst — dezelfde werf
+      // kan uit de planning ("F26-00407.000 Lawter") en uit cockpit ("F26-00407.000 —
+      // Lawter") in een net iets andere schrijfwijze komen, maar is wel degelijk hetzelfde
+      // unieke project.
+      const sleutel = (w) => { const c = projectCodes(w); return c.length ? c[0] : w; };
+      const bestaandSet = new Set(bestaand.map(o => sleutel(o.waarde)));
       const nieuw = (data || []).filter(p => !p.gearchiveerd).flatMap(p => {
+        const code = String(p.projectnummer || '').toUpperCase();
         const waarde = p.projectnummer + (p.werfnaam ? ' — ' + p.werfnaam : '');
-        return waarde && !bestaandSet.has(waarde) ? [{ waarde, tekst: waarde }] : [];
+        return waarde && code && !bestaandSet.has(code) ? [{ waarde, tekst: waarde }] : [];
       });
       if (!nieuw.length) return;
       sel.dataset.opties = JSON.stringify([...bestaand, ...nieuw]);
