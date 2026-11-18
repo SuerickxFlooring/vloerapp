@@ -6057,6 +6057,17 @@ async function loadRemoteData() {
       appData.projects.length + ' projecten, ' +
       appData.teamleaders.length + ' teamleaders';
     localStorage.setItem('cached_timestamp', new Date().toISOString());
+    try {
+      localStorage.setItem('appData_cache', JSON.stringify({
+        products: appData.products,
+        projects: appData.projects,
+        teamleaders: appData.teamleaders,
+        teamleden: appData.teamleden,
+        okKantoor,
+      }));
+    } catch(cacheErr) {
+      console.warn('[Cache] Kon appData niet opslaan in localStorage (quota?):', cacheErr);
+    }
     renderProds();
     updateActiveProject();
     updateTeamleaderDropdown();
@@ -6076,18 +6087,36 @@ async function loadRemoteData() {
 }
 
 function useFallback(msg) {
-  // Gebruik gecachte data als beschikbaar, anders hardcoded demo-data
-  if (!appData.products.length)    appData.products    = [...fallbackProducts];
-  if (!appData.projects.length)    appData.projects    = [...fallbackProjects];
-  if (!appData.teamleaders.length) appData.teamleaders = [...fallbackTeamleaders];
-
-  // Toon wanneer data voor het laatst gesynchroniseerd werd
   const ts = localStorage.getItem('cached_timestamp');
-  const tsMsg = ts
-    ? ' (laatst gesync: ' + new Date(ts).toLocaleString('nl-BE') + ')'
-    : '';
+  const tsMsg = ts ? ' (laatst gesync: ' + new Date(ts).toLocaleString('nl-BE') + ')' : '';
+
+  // Gebruik gecachte echte data als beschikbaar, anders hardcoded demo-data als laatste redmiddel
+  let vanCache = false;
+  if (!appData.products.length) {
+    try {
+      const raw = localStorage.getItem('appData_cache');
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (cached.products?.length)    appData.products    = cached.products;
+        if (cached.projects?.length)    appData.projects    = cached.projects;
+        if (cached.teamleaders?.length) appData.teamleaders = cached.teamleaders;
+        if (cached.teamleden?.length)   appData.teamleden   = cached.teamleden;
+        if (cached.okKantoor?.length)   okKantoor           = cached.okKantoor;
+        vanCache = true;
+      }
+    } catch(e) {
+      console.warn('[Cache] Leesfout appData_cache:', e);
+    }
+    if (!appData.products.length)    appData.products    = [...fallbackProducts];
+    if (!appData.projects.length)    appData.projects    = [...fallbackProjects];
+    if (!appData.teamleaders.length) appData.teamleaders = [...fallbackTeamleaders];
+  }
+
   if (msg) {
-    document.getElementById('sync-status').innerHTML = '📴 ' + msg + tsMsg;
+    const offline = vanCache
+      ? `📴 Offline — laatst gekende data van${tsMsg}`
+      : `📴 ${msg}${tsMsg}`;
+    document.getElementById('sync-status').innerHTML = offline;
   } else if (ts) {
     document.getElementById('sync-status').innerHTML = '💾 Gecachte data geladen' + tsMsg;
   }
