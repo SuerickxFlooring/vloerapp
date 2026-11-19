@@ -6183,7 +6183,7 @@ function renderMeetstaatPicker() {
   if (regMeetstaatVrijeInvoer) {
     wrap.innerHTML = `
       <div class="form-group">
-        <label class="form-label">Aan welke meetstaatpost(en) werkte je? <span style="color:#A32D2D">*</span></label>
+        <label class="form-label">Waar ben je mee bezig? <span style="color:#A32D2D">*</span></label>
         <button type="button" onclick="regMeetstaatTerugNaarLijst()" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;font-size:13px;cursor:pointer;text-align:left">← Terug naar lijst met meetstaatposten</button>
       </div>`;
     if (omschrWrap) omschrWrap.style.display = '';
@@ -6192,7 +6192,7 @@ function renderMeetstaatPicker() {
   if (omschrWrap) omschrWrap.style.display = 'none';
   wrap.innerHTML = `
     <div class="form-group">
-      <label class="form-label">Aan welke meetstaatpost(en) werkte je? <span style="color:#A32D2D">*</span></label>
+      <label class="form-label">Waar ben je mee bezig? <span style="color:#A32D2D">*</span></label>
       <div style="border:1px solid #ddd;border-radius:10px;max-height:240px;overflow-y:auto;background:#fff">
         ${regMeetstaatPosten.map(p => `
           <label style="display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border-bottom:1px solid #eee;cursor:pointer">
@@ -7964,7 +7964,7 @@ function toonSamenvatting() {
     const postMelding = postOntbrekend
       ? '<div style="background:#FDECEA;border:1px solid #F5C6C0;border-radius:10px;padding:12px 14px;color:#A32D2D;font-size:13px;margin-bottom:10px">' +
         (postVerplicht
-          ? '🚫 <strong>Verplicht:</strong> kies minstens één meetstaatpost waaraan je werkte (of "✏️ Mijn werk staat er niet bij").'
+          ? '🚫 <strong>Verplicht:</strong> kies bij "Waar ben je mee bezig?" minstens één optie (of "✏️ Mijn werk staat er niet bij").'
           : '🚫 <strong>Verplicht:</strong> omschrijving van de werken moet ingevuld zijn vóór je kan versturen.') +
         '</div>'
       : '';
@@ -8052,7 +8052,7 @@ async function bevestigEnVerstuur() {
   const postOntbrekend0 = postVerplicht0 ? !regMeetstaatGeselecteerd.size : !(document.getElementById('r-omschrijving').value || '').trim();
   if (postOntbrekend0) {
     const statusEl0b = document.getElementById('samenvatting-status');
-    if (statusEl0b) statusEl0b.innerHTML = '<span style="color:#A32D2D">🚫 ' + (postVerplicht0 ? 'Kies minstens één meetstaatpost waaraan je werkte (of "zelf invoeren").' : 'Omschrijving van de werken moet nog ingevuld worden.') + '</span>';
+    if (statusEl0b) statusEl0b.innerHTML = '<span style="color:#A32D2D">🚫 ' + (postVerplicht0 ? 'Kies bij "Waar ben je mee bezig?" minstens één optie (of "zelf invoeren").' : 'Omschrijving van de werken moet nog ingevuld worden.') + '</span>';
     return;
   }
   const selProj = document.getElementById('r-project-select');
