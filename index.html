@@ -4041,6 +4041,20 @@ async function controleerToegang(toon) {
   return toegangStaat;
 }
 
+// Kantoor/beheer-gebruikers slaan de toestelcontrole hierboven over (ze hoeven niet
+// goedgekeurd te worden), maar daardoor bleef hun eigen toestel in Beheer → Toestellen
+// altijd op "Nog niet gekoppeld aan een naam" staan: de allereerste controleerToegang()
+// bij het opstarten (vóór checkBeheerSession() het beheer-login had hersteld) registreerde
+// het toestel al zonder naam, en zonder deze koppeling werd dat nooit meer rechtgezet.
+// Eén keer bij het herkennen van een geldige beheer-login alsnog de naam doorsturen
+// (los van de toegangsbeslissing, die we hier niet gebruiken) lost dat op.
+async function koppelToestelAanBeheerder(email) {
+  if (!sb || !email) return;
+  try {
+    await sb.rpc('toestel_controle', { p: { toestel_id: toestelId(), naam: email, user_agent: (navigator.userAgent || '').slice(0, 300) } });
+  } catch (e) { /* niet kritiek — probeert het de volgende keer opnieuw */ }
+}
+
 function supabaseConfigured() {
   return !!((localStorage.getItem('supabaseUrl') || DEFAULT_SUPABASE_URL) && (localStorage.getItem('supabaseKey') || DEFAULT_SUPABASE_KEY));
 }
@@ -12843,6 +12857,7 @@ function showBeheerPanel(user) {
   document.getElementById('beheer-user-email').textContent = user.email || '';
   setAdminUiVisible(true);
   setBeheerTab(beheerActiveTable);
+  koppelToestelAanBeheerder(user.email);
 }
 
 function renderBeheerTabs() {
